@@ -59,11 +59,11 @@ handle_info({tcp_closed, _Port}, State) ->
 
 handle_info({tcp, _Port, DataNew}, State0=#state{data=DataOld}) ->
     Data = <<DataOld/binary, DataNew/binary>>,
-    lager:warning("~p", [Data]),
+    lager:debug("~p", [Data]),
     {noreply, State0#state{data=Data}};
 
 handle_info({handshake, wolfpack, _, _, _}, State) ->
-    lager:warning("handshake"),
+    lager:debug("handshake"),
     {noreply, State};
 
 handle_info(_What, State) ->
