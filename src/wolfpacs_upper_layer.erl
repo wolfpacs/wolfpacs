@@ -59,8 +59,13 @@ handle_info({tcp_closed, _Port}, State) ->
 
 handle_info({tcp, _Port, DataNew}, State0=#state{data=DataOld}) ->
     Data = <<DataOld/binary, DataNew/binary>>,
-    lager:debug("~p", [Data]),
-    {noreply, State0#state{data=Data}};
+    case protocol_data_unit_complete(Data) of
+	{ok, PDU, Rest} ->
+	    handle_protocol_data_unit(PDU),
+	    {noreply, State0#state{data=Rest}};
+	{error, Data} ->
+	    {noreply, State0#state{data=Data}}
+    end;
 
 handle_info({handshake, wolfpack, _, _, _}, State) ->
     lager:debug("handshake"),
@@ -80,7 +85,26 @@ code_change(_OldVsn, State, _Extra) ->
 %%------------------------------------------------------------------------------
 %% Private
 %%------------------------------------------------------------------------------
+protocol_data_unit_complete(Data = <<1, _, PDUSize:32, Payload/binary>>) ->
+    FullSize = byte_size(Payload),
+    case FullSize >= PDUSize of
+	true ->
+	    PDU = binary:part(Payload, 0, PDUSize),
+	    Rest = binary:part(Payload, PDUSize, FullSize - PDUSize),
+	    {ok, PDU, Rest};
+	false ->
+	    {error, Data}
+    end;
+protocol_data_unit_complete(Data) ->
+    {error, Data}.
+
+handle_protocol_data_unit(PDU) ->
+    lager:warning("unhandle pdu: ~p", [PDU]).
 
 %%------------------------------------------------------------------------------
 %% Test
 %%------------------------------------------------------------------------------
+
+protocol_data_unit_complete_test_() ->
+    [ ?_assert(protocol_data_unit_complete(<<>>) =:= {error, <<>>}),
+      ?_assert(protocol_data_unit_complete(<<1, 5, 2:32, 42, 43, 44, 45>>) =:= {ok, <<42, 43>>, <<44, 45>>})].
