@@ -61,7 +61,7 @@ handle_info({tcp, _Port, DataNew}, State0=#state{data=DataOld}) ->
     Data = <<DataOld/binary, DataNew/binary>>,
     case protocol_data_unit_complete(Data) of
 	{ok, PDU, Rest} ->
-	    handle_protocol_data_unit(PDU),
+	    wolfpacs_pdu:handle_pdu(PDU),
 	    {noreply, State0#state{data=Rest}};
 	{error, Data} ->
 	    {noreply, State0#state{data=Data}}
@@ -85,6 +85,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%------------------------------------------------------------------------------
 %% Private
 %%------------------------------------------------------------------------------
+
 protocol_data_unit_complete(Data = <<1, _, PDUSize:32, Payload/binary>>) ->
     FullSize = byte_size(Payload),
     case FullSize >= PDUSize of
@@ -97,9 +98,6 @@ protocol_data_unit_complete(Data = <<1, _, PDUSize:32, Payload/binary>>) ->
     end;
 protocol_data_unit_complete(Data) ->
     {error, Data}.
-
-handle_protocol_data_unit(PDU) ->
-    lager:warning("unhandle pdu: ~p", [PDU]).
 
 %%------------------------------------------------------------------------------
 %% Test
