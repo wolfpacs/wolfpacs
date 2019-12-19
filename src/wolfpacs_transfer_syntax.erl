@@ -1,29 +1,36 @@
--module(wolfpacs_abstract_syntax).
+-module(wolfpacs_transfer_syntax).
 -include_lib("eunit/include/eunit.hrl").
--export([verification/0,
+-export([implicit_vr_little_endian/0,
+	 explicit_vr_little_endian/0,
+	 explicit_vr_big_endian/0,
 	 encode/1,
 	 decode/1]).
 
--spec verification() -> binary().
-verification() ->
-    <<"1.2.840.10008.1.1">>.
+implicit_vr_little_endian() ->
+    <<"1.2.840.10008.1.2">>.
+
+explicit_vr_little_endian() ->
+    <<"1.2.840.10008.1.2.1">>.
+
+explicit_vr_big_endian() ->
+    <<"1.2.840.10008.1.2.2">>.
 
 -spec encode(binary()) -> binary().
-encode(AbstractSyntaxString) ->
-    Length = byte_size(AbstractSyntaxString),
-    <<16#30,
+encode(TransferSyntaxString) ->
+    Length = byte_size(TransferSyntaxString),
+    <<16#40,
       0,
       Length:16,
-      AbstractSyntaxString/binary>>.
+      TransferSyntaxString/binary>>.
 
 -spec decode(binary()) -> {ok, binary(), binary()} | {error, binary()}.
-decode(<<16#30, _, Length:16, Data/binary>>) ->
+decode(<<16#40, _, Length:16, Data/binary>>) ->
     NbBytes = byte_size(Data),
     case Length =< NbBytes of
 	true ->
-	    AbstractSyntaxString = binary:part(Data, 0, Length),
+	    TransferSyntaxString = binary:part(Data, 0, Length),
 	    Rest = binary:part(Data, Length, NbBytes - Length),
-	    {ok, AbstractSyntaxString, Rest};
+	    {ok, TransferSyntaxString, Rest};
 	false ->
 	    {error, Data}
     end;
@@ -35,7 +42,7 @@ decode(Data) ->
 %%------------------------------------------------------------------------------
 
 test_encode_test_() ->
-    V0 = verification(),
+    V0 = implicit_vr_little_endian(),
     E0 = encode(V0),
     E1 = <<E0/binary, 42>>,
     <<_, I0/binary>> = E0,
