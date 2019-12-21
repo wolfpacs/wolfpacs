@@ -8,6 +8,7 @@
 	 encode_list/1,
 	 decode_list/1]).
 -import(wolfpacs_utils, [drop_last_byte/1]).
+-include("wolfpacs_types.hrl").
 
 implicit_vr_little_endian() ->
     <<"1.2.840.10008.1.2">>.
@@ -26,7 +27,7 @@ encode(TransferSyntaxString) ->
       Length:16,
       TransferSyntaxString/binary>>.
 
--spec decode(binary()) -> {ok, binary(), binary()} | {error, binary()}.
+-spec decode(binary()) -> decoded().
 decode(Payload = <<16#40, _, Length:16, Data/binary>>) ->
     NbBytes = byte_size(Data),
     case Length =< NbBytes of
@@ -39,6 +40,34 @@ decode(Payload = <<16#40, _, Length:16, Data/binary>>) ->
     end;
 decode(Data) ->
     {error, Data}.
+
+-spec encode_list(list(binary())) -> binary().
+encode_list(ListOfTransferSyntax) ->
+    encode_list(ListOfTransferSyntax, <<>>).
+
+-spec decode_list(binary()) -> decoded_list().
+decode_list(ListOfTransferSyntax) ->
+    decode_list(decode(ListOfTransferSyntax), []).
+
+%%------------------------------------------------------------------------------
+%% Private
+%%------------------------------------------------------------------------------
+
+-spec encode_list(list(binary()), binary()) -> binary().
+encode_list([], Acc) ->
+    Acc;
+encode_list([H|T], Acc) ->
+    Encoded = encode(H),
+    encode_list(T, <<Acc/binary,
+		     Encoded/binary>>).
+
+-spec decode_list(decoded(), list(binary())) -> decoded_list().
+decode_list({error, Data}, []) ->
+    {error, Data};
+decode_list({error, Rest}, Acc) ->
+    {ok, lists:reverse(Acc), Rest};
+decode_list({ok, Decoded, Rest}, Acc) ->
+    decode_list(decode(Rest), [Decoded|Acc]).
 
 %%------------------------------------------------------------------------------
 %% Test
@@ -59,7 +88,9 @@ test_encode_list_test_() ->
     Offer = [implicit_vr_little_endian(),
 	     explicit_vr_little_endian(),
 	     explicit_vr_big_endian()],
-    Encoded = encode_list(Offer),
+    Encoded0 = encode_list(Offer),
+    Encoded1 = <<Encoded0/binary, 42>>,
     Incorrect = <<1,2,3,4>>,
-    [ ?_assert(decode_list(Encoded) =:= {ok, Offer}),
+    [ ?_assert(decode_list(Encoded0) =:= {ok, Offer, <<>>}),
+      ?_assert(decode_list(Encoded1) =:= {ok, Offer, <<42>>}),
       ?_assert(decode_list(Incorrect) =:= {error, Incorrect}) ].
