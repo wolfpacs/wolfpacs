@@ -29,7 +29,8 @@ log_hex_to_int([H, L]) ->
     hv(H) * 16 + hv(L).
 
 log_to_binary(LogData) ->
-    Tokens = string:tokens(LogData, ", \n\t"),
+    Cleaned = re:replace(LogData, "D:", "", [global, {return, list}]),
+    Tokens = string:tokens(Cleaned, ", \n\t"),
     list_to_binary(lists:map(fun log_hex_to_int/1, Tokens)).
 
 %%------------------------------------------------------------------------------
