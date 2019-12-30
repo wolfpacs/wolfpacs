@@ -7,3 +7,8 @@ WolfPACS
 [![License Apache 2](https://img.shields.io/badge/License-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 WolfPACS is open-source Picture Archiving and Communication System (PACS) solution written in Erlang.
+
+Links and references
+--------------------
+
+[How to Write Erlang Documentation](https://docs.2600hz.com/dev/doc/engineering/erlang-documentation/)
