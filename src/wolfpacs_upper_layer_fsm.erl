@@ -113,7 +113,7 @@ handle_p_data_tf({ok, PDataTF, _Rest}, Data) ->
     lager:warning("p data tf ok, ~p", [PDataTF]),
     [{pdv_item, 1, true, true, Raw}] = PDataTF,
     EchoRQ = wolfpacs_dimse_protocol:decode(Raw),
-    EchoResp = wolfpacs_c_echo:react(EchoRQ),
+    EchoResp = wolfpacs_c_echo_scp:react(EchoRQ),
 
     PDVItem = #pdv_item{pr_cid=1,
 			is_command=true,

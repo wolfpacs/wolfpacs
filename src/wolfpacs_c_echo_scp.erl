@@ -1,4 +1,4 @@
--module(wolfpacs_c_echo).
+-module(wolfpacs_c_echo_scp).
 -export([react/1]).
 
 -define(CMD, 16#0000).
