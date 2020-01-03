@@ -64,7 +64,13 @@ idle(cast, {pdu, 5, PDU}, Data) ->
     MaybeReleaseRQ = wolfpacs_release_rq:decode(PDU),
     handle_release_rq(MaybeReleaseRQ, Data);
 
+idle(cast, {pdu, 7, PDU}, Data) ->
+    MaybeAbort = wolfpacs_abort:decode(PDU),
+    handle_abort(MaybeAbort, Data);
+
 idle(cast, {pdu, N, _PDU}, Data) ->
+    #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
+    UpperLayer ! {unknown_pdu, N},
     lager:warning("unknown pdu type ~p", [N]),
     {keep_state, Data, []};
 
@@ -90,9 +96,13 @@ handle_associate_rq(AssociateRQ, Data) ->
 
     {ok,
      CalledAE, CallingAE, R,
-     PrCID, _AbstractSyntax, _TransferSyntax,
+     Contexts,
      _MaxSize, Class, VersionName,
      _Rest} = AssociateRQ,
+
+    %% TODO: We need to extract the correct PrCIDs here,
+    %% that correspond to what we support
+    [{PrCID, _AbstractSyntax, _TransferSyntexes}|_] = Contexts,
 
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
 
@@ -101,6 +111,12 @@ handle_associate_rq(AssociateRQ, Data) ->
 					       MaxPDUSize, Class, VersionName),
 
     UpperLayer ! {send_response, AssociateAC},
+    {keep_state, Data, []}.
+
+handle_abort({error, _}, Data) ->
+    {keep_state, Data, []};
+handle_abort({ok, Source, Reason, _}, Data) ->
+    lager:debug("[upper_layer_fsm] received abort"),
     {keep_state, Data, []}.
 
 handle_p_data_tf({error, _}, Data) ->
@@ -132,3 +148,22 @@ handle_release_rq({ok, R, _}, Data) ->
     ReleaseRP = wolfpacs_release_rp:encode(R),
     UpperLayer ! {send_response, ReleaseRP},
     {keep_state, Data, []}.
+
+%%==============================================================================
+%% Test
+%%==============================================================================
+
+-include_lib("eunit/include/eunit.hrl").
+
+minimal_test() ->
+    {ok, FMS} = start(self()),
+    pdu(FMS, 12345, <<1, 2, 3, 4, 5>>),
+    Success = receive
+		  {unknown_pdu, _N} ->
+		      true;
+		  _ ->
+		      false
+	      after 1000 ->
+		      false
+	      end,
+    ?assert(Success).

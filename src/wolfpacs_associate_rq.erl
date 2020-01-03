@@ -45,10 +45,9 @@ decode_called_and_calling(OrgData, _) ->
     {error, OrgData}.
 
 decode_variable_items(_OrgData, CalledAE, CallingAE, R, {ok,
-							 PrCID,
-							 AbstractSyntax, TransferSyntax,
+							 Contexts,
 							 MaxSize, Class, VersionName, Rest}) ->
-    {ok, CalledAE, CallingAE, R, PrCID, AbstractSyntax, TransferSyntax, MaxSize, Class, VersionName, Rest};
+    {ok, CalledAE, CallingAE, R, Contexts, MaxSize, Class, VersionName, Rest};
 decode_variable_items(OrgData, _, _, _, _) ->
     lager:warning("error: decode variable items"),
     {error, OrgData}.
@@ -109,8 +108,7 @@ encode_echoscu_test() ->
 		79,70,70,73,83,95,68,67,77,84,75,95,51,54,52>>,
     ?assertEqual(decode(Correct),
 		 {ok, CalledAE, CallingAE, R,
-		  PrCID,
-		  AbstractSyntax, TransferSyntax,
+		  [{PrCID, AbstractSyntax, TransferSyntax}],
 		  MaxSize, Class, VersionName,
 		  <<>>}).
 
@@ -131,13 +129,11 @@ encode_decode_test_() ->
     Incorrect1 = <<1, 2, 3, 4>>,
 
     [?_assertEqual(decode(Encoded0), {ok, CalledAE, CallingAE, R,
-				      PrCID,
-				      AbstractSyntax, TransferSyntax,
+				      [{PrCID, AbstractSyntax, TransferSyntax}],
 				      MaxPDUSize, Class, VersionName,
 				      <<>>}),
      ?_assertEqual(decode(Encoded1), {ok, CalledAE, CallingAE, R,
-				      PrCID,
-				      AbstractSyntax, TransferSyntax,
+				      [{PrCID, AbstractSyntax, TransferSyntax}],
 				      MaxPDUSize, Class, VersionName,
 				      <<42>>}),
      ?_assertEqual(decode(Incorrect0), {error,  Incorrect0}),

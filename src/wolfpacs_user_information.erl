@@ -18,7 +18,8 @@ decode(Data = <<16#50, _, _Length:16, UserInformation/binary>>) ->
 	Succes ->
 	    Succes
     end;
-decode(Data) ->
+decode(Data = <<H, _/binary>>) ->
+    lager:warning("[user_information] not user information ~p", [H]),
     {error, Data}.
 
 %%------------------------------------------------------------------------------
@@ -36,17 +37,20 @@ decode_with_max_length({ok, MaxSize, Rest}) ->
     MaybeImplementationClass = wolfpacs_implementation_class:decode(Rest),
     decode_with_implementation_class(MaxSize, MaybeImplementationClass);
 decode_with_max_length(_) ->
+    lager:warning("[user_information] error with_max_length"),
     error.
 
 decode_with_implementation_class(MaxSize, {ok, ImplementationClass, Rest}) ->
     MaybeVersionName = wolfpacs_version_name:decode(Rest),
     decode_with_version_name(MaxSize, ImplementationClass, MaybeVersionName);
 decode_with_implementation_class(_, _) ->
+    lager:warning("[user_information] error with_implimentation_class"),
     error.
 
 decode_with_version_name(MaxSize, ImplementationClass, {ok, VersionName, Rest}) ->
     {ok, MaxSize, ImplementationClass, VersionName, Rest};
 decode_with_version_name(_, _, _) ->
+    lager:warning("[user_information] error with_version_name"),
     error.
 
 %%------------------------------------------------------------------------------
@@ -74,11 +78,20 @@ encode_echoscu_test() ->
 
 encode_decode_test_() ->
     MaxSize = 16384,
-    Class = <<"1.2.276.0.7230010.3.0.3.6.4">>,
-    VersionName = <<"OFFIS_DCMTK_364">>,
+    Class = <<"1">>,
+    VersionName = <<"A">>,
     Encoded0 = encode(MaxSize, Class, VersionName),
     Encoded1 = <<Encoded0/binary, 42>>,
-    Incorrect0 = <<1,2,3,4>>,
+    Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
+    Incorrect1 = <<1,2,3,4>>,
+    {ok, Incorrect2} = wolfpacs_utils:clear_byte(Encoded0,  7),
+    {ok, Incorrect3} = wolfpacs_utils:clear_byte(Encoded0, 12),
+    {ok, Incorrect4} = wolfpacs_utils:clear_byte(Encoded0, 17),
+
     [ ?_assertEqual(decode(Encoded0), {ok, MaxSize, Class, VersionName, <<>>}),
       ?_assertEqual(decode(Encoded1), {ok, MaxSize, Class, VersionName, <<42>>}),
-      ?_assertEqual(decode(Incorrect0), {error, Incorrect0}) ].
+      ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
+      ?_assertEqual(decode(Incorrect1), {error, Incorrect1}),
+      ?_assertEqual(decode(Incorrect2), {error, Incorrect2}),
+      ?_assertEqual(decode(Incorrect3), {error, Incorrect3}),
+      ?_assertEqual(decode(Incorrect4), {error, Incorrect4}) ].

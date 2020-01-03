@@ -3,7 +3,8 @@
 -export([drop_last_byte/1,
 	 split/2,
 	 log_hex_to_int/1,
-	 log_to_binary/1]).
+	 log_to_binary/1,
+	 clear_byte/2]).
 
 -spec drop_last_byte(binary()) -> binary().
 drop_last_byte(Data) ->
@@ -32,6 +33,17 @@ log_to_binary(LogData) ->
     Cleaned = re:replace(LogData, "D:", "", [global, {return, list}]),
     Tokens = string:tokens(Cleaned, ", \n\t"),
     list_to_binary(lists:map(fun log_hex_to_int/1, Tokens)).
+
+clear_byte(Data, At) ->
+    Size = byte_size(Data),
+    case At < Size of
+	true ->
+	    Head = binary:part(Data, 0, At),
+	    Tail = binary:part(Data, At+1, Size - At - 1),
+	    {ok, <<Head/binary, 0, Tail/binary>>};
+	false ->
+	    {error, Data}
+    end.
 
 %%------------------------------------------------------------------------------
 %% Private
@@ -86,3 +98,12 @@ log_to_binary_test_() ->
     [ ?_assertEqual(log_to_binary(Value0), Correct0),
       ?_assertEqual(log_to_binary(Value1), Correct1),
       ?_assertEqual(log_to_binary(Value2), Correct2) ].
+
+clear_byte_test_() ->
+    Value = <<0, 1, 2, 3, 4>>,
+    [ ?_assertEqual(clear_byte(Value, 0), {ok, <<0, 1, 2, 3, 4>>}),
+      ?_assertEqual(clear_byte(Value, 1), {ok, <<0, 0, 2, 3, 4>>}),
+      ?_assertEqual(clear_byte(Value, 2), {ok, <<0, 1, 0, 3, 4>>}),
+      ?_assertEqual(clear_byte(Value, 3), {ok, <<0, 1, 2, 0, 4>>}),
+      ?_assertEqual(clear_byte(Value, 4), {ok, <<0, 1, 2, 3, 0>>}),
+      ?_assertEqual(clear_byte(Value, 5), {error, <<0, 1, 2, 3, 4>>}) ].
