@@ -11,7 +11,7 @@ encode(PrCID, AbstractSyntax, TransferSyntax, MaxPDUSize, Class, VersionName) ->
 		UserInformation/binary>>,
     encode(Payload).
 
-decode(OrgData = <<16#10, 0, Size:16, "1.2.840.10008.3.1.1.1", Data/binary>>) ->
+decode(OrgData = <<16#10, 0, _Size:16, "1.2.840.10008.3.1.1.1", Data/binary>>) ->
     MaybePresentationContext = wolfpacs_presentation_context_request:decode(Data),
     decode_presentation_context(OrgData, MaybePresentationContext);
 decode(Data) ->
@@ -34,7 +34,7 @@ decode_presentation_context(OrgData, {ok, PrCID, AbstractSyntax, TransferSyntax,
 decode_presentation_context(OrgData, _) ->
     {error, OrgData}.
 
-decode_user_information(OrgData, PrCID, AbstractSyntax, TransferSyntax, {ok, MaxSize, Class, VersionName, Rest}) ->
+decode_user_information(_OrgData, PrCID, AbstractSyntax, TransferSyntax, {ok, MaxSize, Class, VersionName, Rest}) ->
     {ok, PrCID, AbstractSyntax, TransferSyntax, MaxSize, Class, VersionName, Rest};
 decode_user_information(OrgData, _, _, _, _) ->
     {error, OrgData}.
@@ -47,7 +47,7 @@ decode_user_information(OrgData, _, _, _, _) ->
 
 encode_decode_test_() ->
     PrCID = 42,
-    AbstractSyntax = wolfpacs_abstract_syntax:verification(),
+    AbstractSyntax = wolfpacs_sop:verification(),
     TransferSyntax = [wolfpacs_transfer_syntax:implicit_vr_little_endian(),
 		      wolfpacs_transfer_syntax:explicit_vr_little_endian(),
 		      wolfpacs_transfer_syntax:explicit_vr_big_endian()],
