@@ -32,7 +32,6 @@ pdu(FSM, PDUType, PDU) ->
 %%-----------------------------------------------------------------------------
 
 -record(wolfpacs_upper_layer_fsm_data, {upper_layer :: pid()}).
--type data() :: #wolfpacs_upper_layer_fsm_data{}.
 
 init(UpperLayer) ->
     State = idle,
@@ -92,8 +91,8 @@ handle_associate_rq(AssociateRQ, Data) ->
     {ok,
      CalledAE, CallingAE, R,
      PrCID, _AbstractSyntax, _TransferSyntax,
-     MaxSize, Class, VersionName,
-     Rest} = AssociateRQ,
+     _MaxSize, Class, VersionName,
+     _Rest} = AssociateRQ,
 
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
 
@@ -128,7 +127,7 @@ handle_p_data_tf({ok, PDataTF, _Rest}, Data) ->
 
 handle_release_rq({error, _}, Data) ->
     {keep_state, Data, []};
-handle_release_rq({ok, R}, Data) ->
+handle_release_rq({ok, R, _}, Data) ->
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
     ReleaseRP = wolfpacs_release_rp:encode(R),
     UpperLayer ! {send_response, ReleaseRP},
