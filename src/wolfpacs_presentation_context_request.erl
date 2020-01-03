@@ -11,7 +11,6 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_presentation_context_request).
--include_lib("eunit/include/eunit.hrl").
 -export([encode/3,
 	 decode/1]).
 -import(wolfpacs_utils, [drop_last_byte/1]).
@@ -66,9 +65,9 @@ decode(AllData = <<16#20, _, Length:16, Payload/binary>>) ->
 decode(Payload) ->
     {error, Payload}.
 
-%%------------------------------------------------------------------------------
+%%==============================================================================
 %% Private
-%%------------------------------------------------------------------------------
+%%==============================================================================
 
 -spec try_decode(byte(), binary()) -> {ok, byte(), binary(), list(binary()), binary()} | {error, atom()}.
 try_decode(PrCID, Data) ->
@@ -86,11 +85,13 @@ decode_with_transfer_syntax(PrCID, AbstractSyntax, {ok, TransferSyntax, Rest}) -
 decode_with_transfer_syntax(_, _, _) ->
     {error, transfer_syntax}.
 
-%%------------------------------------------------------------------------------
+%%==============================================================================
 %% Test
-%%------------------------------------------------------------------------------
+%%==============================================================================
 
-test_encode_test_() ->
+-include_lib("eunit/include/eunit.hrl").
+
+encode_decode_test_() ->
     PrCID = 42,
     AbstractSyntax = wolfpacs_sop:verification(),
     TransferSyntax = [wolfpacs_transfer_syntax:implicit_vr_little_endian(),
