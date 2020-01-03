@@ -72,13 +72,17 @@ split_test_() ->
      ?_assert(split(<<1, 2, 3, 4>>, 4) =:= {ok, <<1 ,2, 3 ,4>>, <<>>}),
      ?_assert(split(<<1, 2, 3, 4>>, 3) =:= {ok, <<1 ,2, 3>>, << 4>>}),
      ?_assert(split(<<1, 2, 3, 4>>, 2) =:= {ok, <<1 ,2>>, <<3, 4>>}),
-     ?_assert(split(<<1, 2, 3, 4>>, 1) =:= {ok, <<1>>, <<2, 3, 4>>})
+     ?_assert(split(<<1, 2, 3, 4>>, 1) =:= {ok, <<1>>, <<2, 3, 4>>}),
+     ?_assert(split(<<1, 2, 3, 4>>, 5) =:= {error, <<1, 2, 3, 4>>})
     ].
 
 log_to_binary_test_() ->
     Value0 = "31, 2e, 32, 2e, 38, 34, 30, 2e, 31, 30, 30, 30, 38, 2e, 31, 2e, 32",
     Value1 = "31 2e 32 2e 38 34 30 2e 31 30 30 30 38 2e 31 2e 32",
+    Value2 = "1 2 3 4 5 6 7 8 9 A B C D E F",
     Correct0 = <<"1.2.840.10008.1.2">>,
     Correct1 = Correct0,
+    Correct2 = <<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15>>,
     [ ?_assertEqual(log_to_binary(Value0), Correct0),
-      ?_assertEqual(log_to_binary(Value1), Correct1) ].
+      ?_assertEqual(log_to_binary(Value1), Correct1),
+      ?_assertEqual(log_to_binary(Value2), Correct2) ].
