@@ -92,9 +92,13 @@ handle_associate_rq(AssociateRQ, Data) ->
 
     {ok,
      CalledAE, CallingAE, R,
-     PrCID, _AbstractSyntax, _TransferSyntax,
+     Contexts,
      _MaxSize, Class, VersionName,
      _Rest} = AssociateRQ,
+
+    %% TODO: We need to extract the correct PrCIDs here,
+    %% that correspond to what we support
+    [{PrCID, _AbstractSyntax, _TransferSyntexes}|_] = Contexts,
 
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
 

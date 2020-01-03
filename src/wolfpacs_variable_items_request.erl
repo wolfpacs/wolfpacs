@@ -12,7 +12,7 @@ encode(PrCID, AbstractSyntax, TransferSyntax, MaxPDUSize, Class, VersionName) ->
     encode(Payload).
 
 decode(OrgData = <<16#10, 0, _Size:16, "1.2.840.10008.3.1.1.1", Data/binary>>) ->
-    MaybePresentationContext = wolfpacs_presentation_context_request:decode(Data),
+    MaybePresentationContext = wolfpacs_presentation_contexts_request:decode(Data),
     decode_presentation_context(OrgData, MaybePresentationContext);
 decode(Data) ->
     {error, Data}.
@@ -28,15 +28,15 @@ encode(Payload) ->
       Length:16,
       Payload/binary>>.
 
-decode_presentation_context(OrgData, {ok, PrCID, AbstractSyntax, TransferSyntax, Data}) ->
+decode_presentation_context(OrgData, {ok, Contexts, Data}) ->
     MaybeUserInformation = wolfpacs_user_information:decode(Data),
-    decode_user_information(OrgData, PrCID, AbstractSyntax, TransferSyntax, MaybeUserInformation);
+    decode_user_information(OrgData, Contexts, MaybeUserInformation);
 decode_presentation_context(OrgData, _) ->
     {error, OrgData}.
 
-decode_user_information(_OrgData, PrCID, AbstractSyntax, TransferSyntax, {ok, MaxSize, Class, VersionName, Rest}) ->
-    {ok, PrCID, AbstractSyntax, TransferSyntax, MaxSize, Class, VersionName, Rest};
-decode_user_information(OrgData, _, _, _, _) ->
+decode_user_information(_OrgData, Contexts, {ok, MaxSize, Class, VersionName, Rest}) ->
+    {ok, Contexts, MaxSize, Class, VersionName, Rest};
+decode_user_information(OrgData, _,  _) ->
     {error, OrgData}.
 
 %%------------------------------------------------------------------------------
@@ -59,9 +59,9 @@ encode_decode_test_() ->
     Incorrect0 = drop_last_byte(Encoded0),
     Incorrect1 = <<1,2,3,4>>,
 
-    [ ?_assertEqual(decode(Encoded0), {ok, PrCID, AbstractSyntax, TransferSyntax,
+    [ ?_assertEqual(decode(Encoded0), {ok, [{PrCID, AbstractSyntax, TransferSyntax}],
 				       MaxPDUSize, Class, VersionName, <<>>}),
-      ?_assertEqual(decode(Encoded1), {ok, PrCID, AbstractSyntax, TransferSyntax,
+      ?_assertEqual(decode(Encoded1), {ok, [{PrCID, AbstractSyntax, TransferSyntax}],
 				       MaxPDUSize, Class, VersionName, <<42>>}),
       ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
       ?_assertEqual(decode(Incorrect1), {error, Incorrect1}) ].
