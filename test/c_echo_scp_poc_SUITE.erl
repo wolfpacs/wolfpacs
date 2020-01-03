@@ -1,13 +1,21 @@
 -module(c_echo_scp_poc_SUITE).
 -include_lib("common_test/include/ct.hrl").
 
--export([all/0]).
--export([test_connection/1]).
+-export([all/0,
+	 init_per_suite/1,
+	 end_per_suite/1]).
+-export([test_c_echo_scp_scu/1]).
 
-all() -> [test_connection].
+all() -> [test_c_echo_scp_scu].
 
-test_connection(_Config) ->
+init_per_suite(Cfg) ->
+    lager_common_test_backend:bounce(debug),
+    Cfg.
+
+end_per_suite(Cfg) ->
+    Cfg.
+
+test_c_echo_scp_scu(_Config) ->
     application:ensure_all_started(wolfpacs),
-    {ok, Sock} = gen_tcp:connect("localhost", 11112, [binary]),
-    ok = gen_tcp:send(Sock, test_data_echo:c_echo_scu()),
-    ok = gen_tcp:close(Sock).
+    {ok, Echo} = wolfpacs_c_echo_scu:start_link(),
+    {ok, success} = wolfpacs_c_echo_scu:echo(Echo, "localhost", 11112, <<"testtest">>).
