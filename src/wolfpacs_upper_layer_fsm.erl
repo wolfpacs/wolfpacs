@@ -64,6 +64,10 @@ idle(cast, {pdu, 5, PDU}, Data) ->
     MaybeReleaseRQ = wolfpacs_release_rq:decode(PDU),
     handle_release_rq(MaybeReleaseRQ, Data);
 
+idle(cast, {pdu, 7, PDU}, Data) ->
+    MaybeAbort = wolfpacs_abort:decode(PDU),
+    handle_abort(MaybeAbort, Data);
+
 idle(cast, {pdu, N, _PDU}, Data) ->
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
     UpperLayer ! {unknown_pdu, N},
@@ -107,6 +111,12 @@ handle_associate_rq(AssociateRQ, Data) ->
 					       MaxPDUSize, Class, VersionName),
 
     UpperLayer ! {send_response, AssociateAC},
+    {keep_state, Data, []}.
+
+handle_abort({error, _}, Data) ->
+    {keep_state, Data, []};
+handle_abort({ok, Source, Reason, _}, Data) ->
+    lager:debug("[upper_layer_fsm] received abort"),
     {keep_state, Data, []}.
 
 handle_p_data_tf({error, _}, Data) ->
