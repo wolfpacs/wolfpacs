@@ -5,11 +5,26 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_associate_rq).
--export([encode/1,
+-export([encode/8,
 	 decode/1]).
 
-encode(_) ->
-    <<>>.
+encode(CalledAE, CallingAE, PrCID, AbstractSyntax, TransferSyntax, MaxPDUSize, Class, VersionName) ->
+    VariableItems = wolfpacs_variable_items_request:encode(PrCID,
+							   AbstractSyntax,
+							   TransferSyntax,
+							   MaxPDUSize,
+							   Class,
+							   VersionName),
+    Data = <<1:16,  %% Protocol Version
+	     0:16,  %% Reserved
+	     CalledAE/binary,
+	     CallingAE/binary,
+	     0:256,
+	     VariableItems/binary>>,
+
+    Length = byte_size(Data),
+
+    <<16#1, 0, Length:32, Data/binary>>.
 
 decode(OrgData = <<16#1, _, _Length:32, Data/binary>>) ->
     decode_called_and_calling(OrgData, Data);
@@ -46,7 +61,7 @@ decode_variable_items(OrgData, _, _, _, _) ->
 
 encode_echoscu_test() ->
     PrCID = 1,
-    AbstractSyntax = wolfpacs_abstract_syntax:verification(),
+    AbstractSyntax = wolfpacs_sop:verification(),
     TransferSyntax = [wolfpacs_transfer_syntax:implicit_vr_little_endian()],
     CalledAE  = <<"ANY-SCP         ">>,
     CallingAE = <<"bbbbbb          ">>,
@@ -98,3 +113,33 @@ encode_echoscu_test() ->
 		  AbstractSyntax, TransferSyntax,
 		  MaxSize, Class, VersionName,
 		  <<>>}).
+
+encode_decode_test_() ->
+    PrCID = 1,
+    AbstractSyntax = wolfpacs_sop:verification(),
+    TransferSyntax = [wolfpacs_transfer_syntax:implicit_vr_little_endian()],
+    CalledAE  = <<"ANY-SCP         ">>,
+    CallingAE = <<"bbbbbb          ">>,
+    R = <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>,
+    MaxPDUSize = 16384,
+    Class = <<"1.2.276.0.7230010.3.0.3.6.4">>,
+    VersionName = <<"OFFIS_DCMTK_364">>,
+
+    Encoded0 = encode(CalledAE, CallingAE, PrCID, AbstractSyntax, TransferSyntax, MaxPDUSize, Class, VersionName),
+    Encoded1 = <<Encoded0/binary, 42>>,
+    Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
+    Incorrect1 = <<1, 2, 3, 4>>,
+
+    [?_assertEqual(decode(Encoded0), {ok, CalledAE, CallingAE, R,
+				      PrCID,
+				      AbstractSyntax, TransferSyntax,
+				      MaxPDUSize, Class, VersionName,
+				      <<>>}),
+     ?_assertEqual(decode(Encoded1), {ok, CalledAE, CallingAE, R,
+				      PrCID,
+				      AbstractSyntax, TransferSyntax,
+				      MaxPDUSize, Class, VersionName,
+				      <<42>>}),
+     ?_assertEqual(decode(Incorrect0), {error,  Incorrect0}),
+     ?_assertEqual(decode(Incorrect1), {error,  Incorrect1})
+    ].
