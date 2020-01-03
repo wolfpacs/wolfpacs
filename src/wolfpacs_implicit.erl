@@ -8,4 +8,4 @@ vr(16#0000, 16#0110) -> us;
 vr(16#0000, 16#0800) -> us;
 
 %% Last catch all
-vr(Group, Element) -> unknown.
+vr(_Group, _Element) -> unknown.

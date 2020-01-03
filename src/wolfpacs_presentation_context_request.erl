@@ -92,7 +92,7 @@ decode_with_transfer_syntax(_, _, _) ->
 
 test_encode_test_() ->
     PrCID = 42,
-    AbstractSyntax = wolfpacs_abstract_syntax:verification(),
+    AbstractSyntax = wolfpacs_sop:verification(),
     TransferSyntax = [wolfpacs_transfer_syntax:implicit_vr_little_endian(),
 		      wolfpacs_transfer_syntax:explicit_vr_little_endian(),
 		      wolfpacs_transfer_syntax:explicit_vr_big_endian()],

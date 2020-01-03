@@ -33,12 +33,34 @@ encode(CalledAE, CallingAE, R, PrCID, TransferSyntax, MaxPDUSize, Class, Version
 %%
 %% @end
 %%-------------------------------------------------------------------
-decode(_) ->
-    <<>>.
+decode(AllData = <<16#2, _, Length:32, Data/binary>>) ->
+    case wolfpacs_utils:split(Data, Length) of
+	{ok, Part, Rest} ->
+	    case decode_info(Part) of
+		{ok, CalledAE, CallingAE, R, PrCID, TransferSyntax, MaxPDUSize, Class, VersionName, _} ->
+		    {ok, CalledAE, CallingAE, R, PrCID, TransferSyntax, MaxPDUSize, Class, VersionName, Rest};
+		_ ->
+		    lager:warning("[associate_ac] unable to decode"),
+		    {error, AllData}
+	    end;
+	_ ->
+	    lager:warning("[associate_ac] unable to decode - not enough data"),
+	    {error, AllData}
+    end;
+decode(AllData) ->
+    {error, AllData}.
 
 %%==============================================================================
 %% Private
 %%==============================================================================
+
+decode_info(AllData = <<_:16, _:16, CalledAE:128/bitstring, CallingAE:128/bitstring, R:256/bitstring, Data/binary>>) ->
+    case wolfpacs_variable_items_accept:decode(Data) of
+	{ok, _, PrCID, TransferSyntax, MaxPDUSize, Class, VersionName, _} ->
+	    {ok, CalledAE, CallingAE, R, PrCID, TransferSyntax, MaxPDUSize, Class, VersionName, <<>>};
+	_ ->
+	    {error, AllData}
+    end.
 
 %%==============================================================================
 %% Test
@@ -85,3 +107,29 @@ storescp_echoscu_test() ->
          4f, 46, 46, 49, 53, 5f, 44, 43, 4d, 54, 4b, 5f, 33, 36, 34"),
     ?assertEqual(encode(CalledAE, CallingAE, R, PrCID, TransferSyntax, MaxPDUSize, Class, VersionName),
 		 Correct).
+
+encode_decode_test_() ->
+    CalledAE =  <<"ANY-SCP         ">>,
+    CallingAE = <<"ECHOSCU         ">>,
+    R = <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+    PrCID = 1,
+    TransferSyntax = <<"1.2.840.10008.1.2">>,
+    MaxPDUSize = 16384,
+    Class = <<"1.2.276.0.7230010.3.0.3.6.4">>,
+    VersionName = <<"OFFIS_DCMTK_364">>,
+
+    Encoded0 = encode(CalledAE, CallingAE, R, PrCID, TransferSyntax, MaxPDUSize, Class, VersionName),
+    Encoded1 = <<Encoded0/binary, 42>>,
+
+    Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
+    Incorrect1 = <<1, 2, 3, 4, 5>>,
+
+    Correct0 = {ok, CalledAE, CallingAE, R, PrCID, TransferSyntax, MaxPDUSize, Class, VersionName, <<>>},
+    Correct1 = {ok, CalledAE, CallingAE, R, PrCID, TransferSyntax, MaxPDUSize, Class, VersionName, <<42>>},
+
+    [?_assertEqual(decode(Encoded0), Correct0),
+     ?_assertEqual(decode(Encoded1), Correct1),
+     ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
+     ?_assertEqual(decode(Incorrect1), {error, Incorrect1})
+    ].

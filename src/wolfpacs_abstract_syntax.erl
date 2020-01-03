@@ -1,23 +1,35 @@
+%%%-------------------------------------------------------------------
+%% @doc Abstract Syntax.
+%%
+%% Abstract Syntax concerns what information is exchanged.
+%%
+%% @end
+%%%-------------------------------------------------------------------
+
 -module(wolfpacs_abstract_syntax).
--include_lib("eunit/include/eunit.hrl").
--export([verification/0,
-	 encode/1,
+-export([encode/1,
 	 decode/1]).
 -import(wolfpacs_utils, [drop_last_byte/1]).
 
--spec verification() -> binary().
-verification() ->
-    <<"1.2.840.10008.1.1">>.
-
--spec encode(binary()) -> binary().
-encode(AbstractSyntaxString) ->
-    Length = byte_size(AbstractSyntaxString),
+%%-------------------------------------------------------------------
+%% @doc Encodes an Abstract Syntax UID.
+%%
+%% @end
+%%-------------------------------------------------------------------
+-spec encode(AbstractSyntaxUID :: binary()) -> binary().
+encode(AbstractSyntaxUID) ->
+    Length = byte_size(AbstractSyntaxUID),
     <<16#30,
       0,
       Length:16,
-      AbstractSyntaxString/binary>>.
+      AbstractSyntaxUID/binary>>.
 
--spec decode(binary()) -> {ok, binary(), binary()} | {error, binary()}.
+%%-------------------------------------------------------------------
+%% @doc Decodes an Abstract Syntax UID.
+%%
+%% @end
+%%-------------------------------------------------------------------
+-spec decode(binary()) -> {ok, UID :: binary(), Rest :: binary()} | {error, Data :: binary()}.
 decode(Payload = <<16#30, _, Length:16, Data/binary>>) ->
     NbBytes = byte_size(Data),
     case Length =< NbBytes of
@@ -31,12 +43,14 @@ decode(Payload = <<16#30, _, Length:16, Data/binary>>) ->
 decode(Data) ->
     {error, Data}.
 
-%%------------------------------------------------------------------------------
+%%==============================================================================
 %% Test
-%%------------------------------------------------------------------------------
+%%==============================================================================
+
+-include_lib("eunit/include/eunit.hrl").
 
 test_encode_test_() ->
-    V0 = verification(),
+    V0 = wolfpacs_sop:verification(),
     E0 = encode(V0),
     E1 = <<E0/binary, 42>>,
     I0 = drop_last_byte(E0),

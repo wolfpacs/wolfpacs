@@ -6,7 +6,7 @@ WolfPACS
 [![Docker build](https://img.shields.io/docker/cloud/build/wolfpacs/wolfpacs.svg?color=green)](https://hub.docker.com/r/wolfpacs/wolfpacs)
 [![License Apache 2](https://img.shields.io/badge/License-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-WolfPACS is open-source Picture Archiving and Communication System (PACS) solution written in Erlang.
+WolfPACS is an open-source Picture Archiving and Communication System (PACS) solution written in Erlang.
 
 DICOM Conformance Statement
 ---------------------------

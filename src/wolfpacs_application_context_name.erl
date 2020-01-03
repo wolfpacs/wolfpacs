@@ -24,9 +24,11 @@ decode(Payload = <<16#10, _, Length:16, Data/binary>>) ->
 	true ->
 	    wolfpacs_utils:split(Data, Length);
 	false ->
+	    lager:warning("[application_context_name] unable to decode - not enough data"),
 	    {error, Payload}
     end;
 decode(Data) ->
+    lager:warning("[application_context_name] unable to decode - header"),
     {error, Data}.
 
 %%==============================================================================

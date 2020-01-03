@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%% @doc Release Response (RP)
+%% @doc Release Response (RP).
 %%
 %% @end
 %%%-------------------------------------------------------------------
@@ -9,18 +9,35 @@
 	 encode/1,
 	 decode/1]).
 
+-spec encode() -> binary().
 encode() ->
-    encode(0).
+    encode(<<0, 0, 0, 0>>).
 
+-spec encode(binary()) -> binary().
 encode(R) ->
-    <<16#6, 0, 4:32, R:32>>.
+    <<16#6, 0, 4:32, R:32/bitstring>>.
 
-decode(<<16#6, 0, 4:32, R:32>>) ->
-    {ok, R};
+-spec decode(binary()) -> {ok, binary(), binary()} | {error, binary()}.
+decode(<<16#6, _, 4:32, R:32/bitstring, Rest/binary>>) ->
+    {ok, R, Rest};
 decode(Data) ->
     {error, Data}.
+
+%%==============================================================================
+%% Test
+%%==============================================================================
 
 -include_lib("eunit/include/eunit.hrl").
 
 encode_decode_test_() ->
-    [?_assertEqual(decode(encode()), {ok, 0})].
+    R = <<0, 0, 0, 0>>,
+    Encoded0 = encode(R),
+    Encoded1 = <<Encoded0/binary, 42>>,
+
+    Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
+    Incorrect1 = <<1, 2, 3, 4, 5>>,
+
+    [?_assertEqual(decode(Encoded0), {ok, R, <<>>}),
+     ?_assertEqual(decode(Encoded1), {ok, R, <<42>>}),
+     ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
+     ?_assertEqual(decode(Incorrect1), {error, Incorrect1})].
