@@ -18,4 +18,5 @@ end_per_suite(Cfg) ->
 test_c_echo_scp_scu(_Config) ->
     application:ensure_all_started(wolfpacs),
     {ok, Echo} = wolfpacs_c_echo_scu:start_link(),
-    {ok, success} = wolfpacs_c_echo_scu:echo(Echo, "localhost", 11112, <<"testtest">>).
+    {ok, success} = wolfpacs_c_echo_scu:echo(Echo, "localhost", 11112, <<"testtest">>),
+    application:stop(wolfpacs).
