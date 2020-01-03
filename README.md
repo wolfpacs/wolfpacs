@@ -21,9 +21,9 @@ The following transfer syntax are are supported:
 
 The following services are supported:
 
-| Name        | UID               | SCP | SCU |
-|-------------|-------------------|-----|-----|
-|Verification | 1.2.840.10008.1.1 | Yes | NO  |
+| Name        | UID               | SCP       | SCU       |
+|-------------|-------------------|-----------|-----------|
+|Verification | 1.2.840.10008.1.1 | Yes (PoC) | Yes (PoC) |
 
 Links and references
 --------------------
