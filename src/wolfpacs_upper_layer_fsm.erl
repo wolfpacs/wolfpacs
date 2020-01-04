@@ -108,14 +108,12 @@ handle_associate_rq(AssociateRQ, Data) ->
      _MaxSize, Class, VersionName,
      _Rest} = AssociateRQ,
 
-    %% TODO: We need to extract the correct PrCIDs here,
-    %% that correspond to what we support
-    [{PrCID, _AbstractSyntax, _TransferSyntexes}|_] = Contexts,
+    {ok, SupportedContexts} = wolfpacs_conformance:supported(Contexts),
 
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
 
     AssociateAC = wolfpacs_associate_ac:encode(CalledAE, CallingAE, R,
-					       PrCID, TransferSyntax,
+					       SupportedContexts,
 					       MaxPDUSize, Class, VersionName),
 
     UpperLayer ! {send_response, AssociateAC},
