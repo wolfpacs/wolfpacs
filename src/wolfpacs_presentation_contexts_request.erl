@@ -1,3 +1,9 @@
+%%%-------------------------------------------------------------------
+%% @doc DICOM Presentation Contexts.
+%%
+%% @end
+%%%-------------------------------------------------------------------
+
 -module(wolfpacs_presentation_contexts_request).
 -export([encode/1,
 	 decode/1]).

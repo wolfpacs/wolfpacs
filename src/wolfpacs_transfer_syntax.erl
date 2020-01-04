@@ -1,5 +1,10 @@
+%%%-------------------------------------------------------------------
+%% @doc Transfer Syntax.
+%%
+%% @end
+%%%-------------------------------------------------------------------
+
 -module(wolfpacs_transfer_syntax).
--include_lib("eunit/include/eunit.hrl").
 -export([implicit_vr_little_endian/0,
 	 explicit_vr_little_endian/0,
 	 explicit_vr_big_endian/0,
@@ -49,9 +54,9 @@ encode_list(ListOfTransferSyntax) ->
 decode_list(ListOfTransferSyntax) ->
     decode_list(decode(ListOfTransferSyntax), []).
 
-%%------------------------------------------------------------------------------
+%%==============================================================================
 %% Private
-%%------------------------------------------------------------------------------
+%%==============================================================================
 
 -spec encode_list(list(binary()), binary()) -> binary().
 encode_list([], Acc) ->
@@ -69,9 +74,11 @@ decode_list({error, Rest}, Acc) ->
 decode_list({ok, Decoded, Rest}, Acc) ->
     decode_list(decode(Rest), [Decoded|Acc]).
 
-%%------------------------------------------------------------------------------
+%%==============================================================================
 %% Test
-%%------------------------------------------------------------------------------
+%%==============================================================================
+
+-include_lib("eunit/include/eunit.hrl").
 
 test_encode_test_() ->
     V0 = implicit_vr_little_endian(),

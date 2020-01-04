@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%% @doc WolfPACS's DICOM Presentation Context
+%% @doc WolfPACS's DICOM Presentation Context.
 %%
 %% A presentation Context, during Association-RQ, is composed of one Abstract Syntax and
 %% a list of negotiable Transfer Syntax.
