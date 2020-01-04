@@ -8,6 +8,11 @@ WolfPACS
 
 WolfPACS is an open-source Picture Archiving and Communication System (PACS) solution written in Erlang.
 
+Status
+------
+
+**WolfPACS** is under active development and is far from v1.0.0.
+
 Quick Start
 -----------
 
