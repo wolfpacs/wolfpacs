@@ -71,7 +71,7 @@ code_change(_OldVsn, State, _Extra) ->
 
 handle_data(Data = <<16#2, _/binary>>, State) ->
     case wolfpacs_associate_ac:decode(Data) of
-	{ok, _CalledAE, _CallingAE, _R, _PrCID, _TransferSyntax, _, _Class, _VersionName, Rest} ->
+	{ok, _CalledAE, _CallingAE, _R, _Contexts, _, _Class, _VersionName, Rest} ->
 	    {noreply, send_release_rq(State#{data => Rest})};
 	{error, Data}  ->
 	    lager:warning("[c_echo_scu] associate_ac decode error"),
