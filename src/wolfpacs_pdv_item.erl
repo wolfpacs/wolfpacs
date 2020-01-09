@@ -19,11 +19,11 @@
 -spec encode(#pdv_item{}) -> binary().
 encode(PDVItem) ->
     #pdv_item{pr_cid=PrCID,
-	      is_command=IsCommand,
 	      is_last=IsLast,
+	      is_command=IsCommand,
 	      pdv_data=PDVData} = PDVItem,
-    Fragment = wolfpacs_pdv_item_fragement:encode(IsCommand,
-						  IsLast,
+    Fragment = wolfpacs_pdv_item_fragement:encode(IsLast,
+						  IsCommand,
 						  PDVData),
     Data = <<PrCID, Fragment/binary>>,
     NbBytes = byte_size(Data),
@@ -40,10 +40,10 @@ decode(AllData = <<Length:32, Data/binary>>) ->
     case wolfpacs_utils:split(Data, Length) of
 	{ok, <<PrCID, FragmentData/binary>>, Rest} ->
 	    case wolfpacs_pdv_item_fragement:decode(FragmentData) of
-		{ok, IsCommand, IsLast, PDVData} ->
+		{ok, IsLast, IsCommand, PDVData} ->
 		    PDVItem = #pdv_item{pr_cid=PrCID,
-					is_command=IsCommand,
 					is_last=IsLast,
+					is_command=IsCommand,
 					pdv_data=PDVData},
 		    {ok, PDVItem, Rest};
 		_ ->
@@ -62,8 +62,8 @@ decode(AllData = <<Length:32, Data/binary>>) ->
 encode_decode_test_() ->
     PDVData = <<1, 2, 3, 4, 5>>,
     PDVItem = #pdv_item{pr_cid=42,
-			is_command=true,
 			is_last=false,
+			is_command=true,
 			pdv_data=PDVData},
     Rest = <<42, 44>>,
 
