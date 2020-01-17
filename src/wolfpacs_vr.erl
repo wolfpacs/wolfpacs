@@ -5,7 +5,13 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr).
--export([ui/1, ae/1]).
+-export([ul/1,
+	 ui/1,
+	 ae/1]).
+
+-spec ul(non_neg_integer()) -> binary().
+ul(X) ->
+    <<X:32>>.
 
 -spec ae(binary()) -> binary().
 ae(AE) ->

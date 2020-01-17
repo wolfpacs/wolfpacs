@@ -14,7 +14,7 @@ encode(UI) ->
 
 -spec decode(list()) -> binary().
 decode(Data) ->
-    string:trim(binary_to_list(Data)).
+    string:strip(binary_to_list(Data)).
 
 %%==============================================================================
 %% Private
