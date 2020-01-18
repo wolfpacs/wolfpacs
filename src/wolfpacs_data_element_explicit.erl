@@ -23,6 +23,8 @@ encode(G, E, "UI", Title) ->
     encode_common_short(G, E, "UI", wolfpacs_vr_ui:encode(Title));
 encode(G, E, "US", US) ->
     encode_common_short(G, E, "US", wolfpacs_vr_us:encode_little(US));
+encode(G, E, "UL", US) ->
+    encode_common_short(G, E, "UL", wolfpacs_vr_ul:encode_little(US));
 encode(G, E, "PN", Name) ->
     encode_common_short(G, E, "PN", wolfpacs_vr_pn:encode(Name));
 encode(_, _, VRTag, _) ->
@@ -59,7 +61,7 @@ decode(OrgData = <<G:16/little, E:16/little, "PN", Len:16/little, Data/bitstring
 	{error, _ } ->
 	    {error, OrgData};
 	{ok, Bytes, Rest} ->
-	    {ok, {{G, E}, wolfpacs_vr_ob:decode(Bytes)}, Rest}
+	    {ok, {{G, E}, wolfpacs_vr_pn:decode(Bytes)}, Rest}
     end;
 decode(OrgData = <<G:16/little, E:16/little, "AE", Len:16/little, Data/bitstring>>) ->
     case wolfpacs_utils:split(Data, Len) of
@@ -134,13 +136,13 @@ encode_commont_test() ->
 
 encode_book_example_test() ->
     %% Page 51
-    TestData = <<16, 0, 16, 0, "PN", 10, 0, "Smith^Joe ">>,
+    TestData = <<16, 0, 16, 0, "PN", 10, 0, "Smith^Joe", 0>>,
     ?assertEqual(encode(16, 16, "PN", "Smith^Joe"), TestData).
 
 decode_book_example_test() ->
     %% Page 51
-    TestData = <<16, 0, 16, 0, "PN", 10, 0, "Smith^Joe ">>,
-    Correct = {{16, 16}, "Smith^Joe "},
+    TestData = <<16, 0, 16, 0, "PN", 10, 0, "Smith^Joe", 0>>,
+    Correct = {{16, 16}, <<"Smith^Joe">>},
     ?assertEqual(decode(TestData), {ok, Correct, <<>>}).
 
 encode_decode_basic_test() ->
@@ -148,3 +150,42 @@ encode_decode_basic_test() ->
     Correct = {{100, 200}, Data},
     Encoded0 = encode(100, 200, "OB", Data),
     ?assertEqual(decode(Encoded0), {ok, Correct, <<>>}).
+
+encode_missing_test() ->
+    ?assertEqual(encode(0, 0, "XY", 123), <<"errorXY">>).
+
+encode_decode_common(VR, Data) ->
+    G = 512,
+    E = 1024,
+    Encoded0 = encode(G, E, VR, Data),
+    Encoded1 = <<Encoded0/binary, 42>>,
+    Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
+    Incorrect1 = <<1>>,
+    [?_assertEqual(decode(Encoded0), {ok, {{G, E}, Data}, <<>>}),
+     ?_assertEqual(decode(Encoded1), {ok, {{G, E}, Data}, <<42>>}),
+     ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
+     ?_assertEqual(decode(Incorrect1), {error, Incorrect1})].
+
+encode_decode_ob_test_() ->
+    encode_decode_common("OB", [1, 2, 3, 4, 5]).
+
+encode_decode_ow_test_() ->
+    encode_decode_common("OW", [1, 2, 3, 4, 5]).
+
+encode_decode_of_test_() ->
+    encode_decode_common("OF", [1, 2, 3, 4, 5]).
+
+encode_decode_pn_test_() ->
+    encode_decode_common("PN", <<"Smith^Joe">>).
+
+encode_decode_ae_test_() ->
+    encode_decode_common("AE", <<"AE1">>).
+
+encode_decode_ui_test_() ->
+    encode_decode_common("UI", <<"1.2.3">>).
+
+encode_decode_us_test_() ->
+    encode_decode_common("US", 1024).
+
+encode_decode_ul_test_() ->
+    encode_decode_common("UL", 1024).
