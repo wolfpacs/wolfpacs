@@ -12,7 +12,7 @@
 encode(UI) ->
     list_to_binary(limit(pad(UI))).
 
--spec decode(list()) -> binary().
+-spec decode(binary()) -> list().
 decode(Data) ->
     string:strip(binary_to_list(Data)).
 
