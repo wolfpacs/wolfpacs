@@ -6,7 +6,6 @@
 
 -module(wolfpacs_c_echo_scu).
 -behaviour(gen_server).
--import(wolfpacs_vr, [ae/1]).
 
 -export([start_link/0,
 	 echo/4]).
@@ -91,17 +90,18 @@ handle_data(Data, State) ->
     lager:warning("[c_echo_scu] unable to handle data ~p", [Data]),
     {noreply, State}.
 
-send_associate_rq(State=#{sock := Sock, calledae := CalledAE}) ->
+send_associate_rq(State=#{sock := Sock, calledae := CalledAE_}) ->
     ImplicitLittleEndian = wolfpacs_transfer_syntax:implicit_vr_little_endian(),
     PrCID = 1,
     AbstractSyntax = wolfpacs_sop:verification(),
     TransferSyntax = [ImplicitLittleEndian],
     MaxPDUSize = 16384,
-    CallingAE = <<"WolfPACS">>,
+    CallingAE = wolfpacs_vr_ae:encode(<<"WolfPACS">>),
+    CalledAE = wolfpacs_vr_ae:encode(CalledAE_),
     Class = <<"1.2.276.0.7230010.3.0.3.6.4">>, %% TODO Change
     VersionName = <<"WolfPACS_000">>,
 
-    AssociateRQ = wolfpacs_associate_rq:encode(ae(CalledAE), ae(CallingAE),
+    AssociateRQ = wolfpacs_associate_rq:encode(CalledAE, CallingAE,
 					       PrCID, AbstractSyntax, TransferSyntax,
 					       MaxPDUSize, Class, VersionName),
 
