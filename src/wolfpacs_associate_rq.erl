@@ -49,7 +49,7 @@ decode_variable_items(_OrgData, CalledAE, CallingAE, R, {ok,
 							 MaxSize, Class, VersionName, Rest}) ->
     {ok, CalledAE, CallingAE, R, Contexts, MaxSize, Class, VersionName, Rest};
 decode_variable_items(OrgData, _, _, _, _) ->
-    lager:warning("error: decode variable items"),
+    lager:warning("[associate_rq] error: decode variable items"),
     {error, OrgData}.
 
 %%==============================================================================
