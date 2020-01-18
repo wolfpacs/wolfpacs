@@ -52,12 +52,21 @@ decode(OrgData = <<G:16/little, E:16/little, "OF", _:16, Len:32/little, Data/bit
 	{ok, Bytes, Rest} ->
 	    {ok, {{G, E}, wolfpacs_vr_of:decode_little(Bytes)}, Rest}
     end;
+
+%% Non-special decodes (16 bit length)
 decode(OrgData = <<G:16/little, E:16/little, "PN", Len:16/little, Data/bitstring>>) ->
     case wolfpacs_utils:split(Data, Len) of
 	{error, _ } ->
 	    {error, OrgData};
 	{ok, Bytes, Rest} ->
 	    {ok, {{G, E}, wolfpacs_vr_ob:decode(Bytes)}, Rest}
+    end;
+decode(OrgData = <<G:16/little, E:16/little, "AE", Len:16/little, Data/bitstring>>) ->
+    case wolfpacs_utils:split(Data, Len) of
+	{error, _ } ->
+	    {error, OrgData};
+	{ok, Bytes, Rest} ->
+	    {ok, {{G, E}, wolfpacs_vr_ae:decode(Bytes)}, Rest}
     end;
 decode(OrgData = <<G:16/little, E:16/little, "UI", Len:16/little, Data/bitstring>>) ->
     lager:debug("[data_element_explicit] Patient Name"),
@@ -74,13 +83,20 @@ decode(OrgData = <<G:16/little, E:16/little, "US", Len:16/little, Data/bitstring
 	{ok, Bytes, Rest} ->
 	    {ok, {{G, E}, wolfpacs_vr_us:decode_little(Bytes)}, Rest}
     end;
+decode(OrgData = <<G:16/little, E:16/little, "UL", Len:16/little, Data/bitstring>>) ->
+    case wolfpacs_utils:split(Data, Len) of
+	{error, _ } ->
+	    {error, OrgData};
+	{ok, Bytes, Rest} ->
+	    {ok, {{G, E}, wolfpacs_vr_ul:decode_little(Bytes)}, Rest}
+    end;
 decode(OrgData = <<G:16/little, E:16/little, VR:16/bitstring, Len:16/little, Data/bitstring>>) ->
     lager:debug("[data_element_explicit] generic vr ~p", [VR]),
     case wolfpacs_utils:split(Data, Len) of
 	{error, _ } ->
 	    {error, OrgData};
 	{ok, Bytes, Rest} ->
-	    {ok, {{G, E}, Bytes}, Rest}
+	    {ok, {{G, E}, {VR, Bytes}}, Rest}
     end;
 decode(OrgData) ->
     {error, OrgData}.
