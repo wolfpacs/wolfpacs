@@ -10,7 +10,8 @@
 	 split/2,
 	 log_hex_to_int/1,
 	 log_to_binary/1,
-	 clear_byte/2]).
+	 clear_byte/2,
+	 remove_keys/2]).
 
 -spec drop_first_byte(binary()) -> binary().
 drop_first_byte(<<_, Data/binary>>) ->
@@ -54,6 +55,11 @@ clear_byte(Data, At) ->
 	false ->
 	    {error, Data}
     end.
+
+remove_keys([], Map) ->
+    Map;
+remove_keys([Key|Keys], Map) ->
+    remove_keys(Keys, maps:remove(Key, Map)).
 
 %%==============================================================================
 %% Private
@@ -122,3 +128,11 @@ clear_byte_test_() ->
       ?_assertEqual(clear_byte(Value, 3), {ok, <<0, 1, 2, 0, 4>>}),
       ?_assertEqual(clear_byte(Value, 4), {ok, <<0, 1, 2, 3, 0>>}),
       ?_assertEqual(clear_byte(Value, 5), {error, <<0, 1, 2, 3, 4>>}) ].
+
+remove_keys_test_() ->
+    Map = #{1 => 2, 3 => 4, 5 => 6},
+    [ ?_assertEqual(remove_keys([], Map), Map),
+      ?_assertEqual(remove_keys([7], Map), Map),
+      ?_assertEqual(remove_keys([1, 3, 5], Map), #{}),
+      ?_assertEqual(remove_keys([1], Map), #{3 => 4, 5 => 6}),
+      ?_assertEqual(remove_keys([1, 5], Map), #{3 => 4}) ].

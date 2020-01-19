@@ -25,8 +25,6 @@ decode(Data) ->
 %% Private Encoders
 %%==============================================================================
 
-encode([], <<>>) ->
-    {error, empty_encode_list};
 encode([], Acc) ->
     Acc;
 encode([{{G, E}, Data}|Rest], Acc) ->
@@ -35,8 +33,6 @@ encode([{{G, E}, Data}|Rest], Acc) ->
     encode(Rest, <<Acc/binary, Encoded/binary>>).
 
 -spec decode(binary(), list()) -> {ok, map(), binary()} | {error, binary()}.
-decode(<<>>, []) ->
-    {error, <<>>};
 decode(<<>>, Acc) ->
     {ok, maps:from_list(Acc), <<>>};
 decode(Data, []) ->
@@ -69,13 +65,13 @@ decode(Data, Acc) ->
 -define(SET, 16#0800).
 -define(STU, 16#0900).
 
-encode_test() ->
+encode_list_test() ->
     UID = <<"1.2.3.4">>,
     Items = [{{?CMD, ?UID}, UID}],
     Correct = wolfpacs_data_element_explicit:encode(?CMD, ?UID, "UI", UID),
     ?assertEqual(encode_list(Items), Correct).
 
-encode_decode_test() ->
+encode_decode_list_test() ->
     UID = <<"1.2.3.4">>,
     Items = [{{?CMD, ?UID}, UID},
 	     {{?CMD, ?FLD}, 16#8030},
@@ -85,3 +81,18 @@ encode_decode_test() ->
     Correct = maps:from_list(Items),
     Encoded0 = encode_list(Items),
     ?assertEqual(decode(Encoded0), {ok, Correct, <<>>}).
+
+encode_decode_map_test() ->
+    UID = <<"1.2.3.4">>,
+    Items = #{{?CMD, ?UID} => UID,
+	      {?CMD, ?FLD} => 16#8030,
+	      {?CMD, ?RPID} => ?RQID,
+	      {?CMD, ?SET} => 16#0101,
+	      {?CMD, ?STU} => 16#0000},
+    Encoded0 = encode_map(Items),
+    ?assertEqual(decode(Encoded0), {ok, Items, <<>>}).
+
+encode_decode_empty_map_test() ->
+    Items = #{},
+    Encoded0 = encode_map(Items),
+    ?assertEqual(decode(Encoded0), {ok, Items, <<>>}).
