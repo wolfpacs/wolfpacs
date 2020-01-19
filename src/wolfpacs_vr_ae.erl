@@ -11,7 +11,7 @@
 			    exact_binary/2,
 			    trim_binary/1]).
 
--spec encode(list()) -> binary().
+-spec encode(list() | binary()) -> binary().
 encode(UI) when is_list(UI) ->
     encode(list_to_binary(UI));
 encode(UI) ->
