@@ -6,10 +6,15 @@
 
 -module(wolfpacs_utils).
 -export([drop_last_byte/1,
+	 drop_first_byte/1,
 	 split/2,
 	 log_hex_to_int/1,
 	 log_to_binary/1,
 	 clear_byte/2]).
+
+-spec drop_first_byte(binary()) -> binary().
+drop_first_byte(<<_, Data/binary>>) ->
+    Data.
 
 -spec drop_last_byte(binary()) -> binary().
 drop_last_byte(Data) ->
@@ -82,6 +87,9 @@ hv($f) -> 15.
 %%==============================================================================
 
 -include_lib("eunit/include/eunit.hrl").
+
+drop_first_byte_test_() ->
+    [?_assert(drop_first_byte(<<1, 2, 3>>) =:= <<2 ,3>>) ].
 
 drop_last_byte_test_() ->
     [?_assert(drop_last_byte(<<1, 2, 3>>) =:= <<1 ,2>>) ].
