@@ -27,8 +27,11 @@ encode(G, E, "UL", US) ->
     encode_common_short(G, E, "UL", wolfpacs_vr_ul:encode_little(US));
 encode(G, E, "PN", Name) ->
     encode_common_short(G, E, "PN", wolfpacs_vr_pn:encode(Name));
-encode(_, _, VRTag, _) ->
-    lager:warning("[data_element_explicit] unable to encode ~p", [VRTag]),
+encode(G, E, "ox", _) ->
+    lager:warning("[data_element_explicit] unable to encode ox (OB or OW)", [G, E]),
+    <<>>;
+encode(G, E, VRTag, _) ->
+    lager:warning("[data_element_explicit] unable to encode ~p ~p ~p", [G, E, VRTag]),
     VR = list_to_binary(VRTag),
     <<"error", VR/binary>>.
 
@@ -71,7 +74,6 @@ decode(OrgData = <<G:16/little, E:16/little, "AE", Len:16/little, Data/bitstring
 	    {ok, {{G, E}, wolfpacs_vr_ae:decode(Bytes)}, Rest}
     end;
 decode(OrgData = <<G:16/little, E:16/little, "UI", Len:16/little, Data/bitstring>>) ->
-    lager:debug("[data_element_explicit] Patient Name"),
     case wolfpacs_utils:split(Data, Len) of
 	{error, _ } ->
 	    {error, OrgData};
@@ -93,7 +95,6 @@ decode(OrgData = <<G:16/little, E:16/little, "UL", Len:16/little, Data/bitstring
 	    {ok, {{G, E}, wolfpacs_vr_ul:decode_little(Bytes)}, Rest}
     end;
 decode(OrgData = <<G:16/little, E:16/little, VR:16/bitstring, Len:16/little, Data/bitstring>>) ->
-    lager:debug("[data_element_explicit] generic vr ~p", [VR]),
     case wolfpacs_utils:split(Data, Len) of
 	{error, _ } ->
 	    {error, OrgData};

@@ -30,6 +30,9 @@ encode([], Acc) ->
 encode([{{G, E}, Data}|Rest], Acc) ->
     VR = wolfpacs_group_elements:vr(G, E),
     Encoded = wolfpacs_data_element_explicit:encode(G, E, VR, Data),
+    encode(Rest, <<Acc/binary, Encoded/binary>>);
+encode([{{G, E, VR}, Data}|Rest], Acc) ->
+    Encoded = wolfpacs_data_element_explicit:encode(G, E, VR, Data),
     encode(Rest, <<Acc/binary, Encoded/binary>>).
 
 -spec decode(binary(), list()) -> {ok, map(), binary()} | {error, binary()}.

@@ -4,9 +4,11 @@
 -export([all/0,
 	 init_per_suite/1,
 	 end_per_suite/1]).
--export([test_file_meta_information/1]).
+-export([test_file_meta_information/1,
+	 test_file_format/1]).
 
-all() -> [test_file_meta_information].
+all() -> [test_file_meta_information,
+	  test_file_format].
 
 init_per_suite(Cfg) ->
     lager_common_test_backend:bounce(debug),
@@ -48,3 +50,16 @@ test_file_meta_information(Config) ->
 
     %% OK
     ok.
+
+test_file_format(_Config) ->
+    Group = 16#7fe0,
+    Element = 16#10,
+    RawData = [255, 254, 255, 254],
+
+    Content = #{{Group, Element, "OB"} => RawData},
+    EncodedContent = wolfpacs_data_elements_explicit:encode_map(Content),
+    BinData = wolfpacs_file_format:encode(EncodedContent),
+
+    {ok, {_Meta, Content2}, _Rest} = wolfpacs_file_format:decode(BinData),
+
+    RawData = maps:get({Group, Element}, Content2).
