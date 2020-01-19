@@ -39,11 +39,16 @@ pdu(FSM, PDUType, PDU) ->
 %% Behaviour Callbacks
 %%=============================================================================
 
--record(wolfpacs_upper_layer_fsm_data, {upper_layer :: pid()}).
+-record(wolfpacs_upper_layer_fsm_data, {upper_layer :: pid(),
+					context_map :: map(),
+					blob :: binary()}).
 
 init(UpperLayer) ->
+    lager:warning("************** FSM ***************"),
     State = idle,
-    Data = #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer},
+    Data = #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer,
+					  context_map=#{},
+					  blob = <<>>},
     {ok, State, Data}.
 
 callback_mode() ->
@@ -61,8 +66,7 @@ code_change(_Vsn, State, Data, _Extra) ->
 
 idle(cast, {pdu, 1, PDU}, Data) ->
     MaybeAssociateRQ = wolfpacs_associate_rq:decode(PDU),
-    handle_associate_rq(MaybeAssociateRQ, Data),
-    {keep_state, Data, []};
+    handle_associate_rq(MaybeAssociateRQ, Data);
 
 idle(cast, {pdu, 4, PDU}, Data) ->
     MaybePDataTF = wolfpacs_p_data_tf:decode(PDU),
@@ -100,7 +104,6 @@ handle_associate_rq({error, _}, Data) ->
 
 handle_associate_rq(AssociateRQ, Data) ->
     MaxPDUSize = 65536, %% TODO: Refactor this magic value
-    TransferSyntax = wolfpacs_transfer_syntax:implicit_vr_little_endian(),
 
     {ok,
      CalledAE, CallingAE, R,
@@ -108,8 +111,7 @@ handle_associate_rq(AssociateRQ, Data) ->
      _MaxSize, Class, VersionName,
      _Rest} = AssociateRQ,
 
-    {ok, SupportedContexts} = wolfpacs_conformance:supported(Contexts),
-
+    {ok, SupportedContexts, ContextMap} = wolfpacs_conformance:supported(Contexts),
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
 
     AssociateAC = wolfpacs_associate_ac:encode(CalledAE, CallingAE, R,
@@ -117,7 +119,7 @@ handle_associate_rq(AssociateRQ, Data) ->
 					       MaxPDUSize, Class, VersionName),
 
     UpperLayer ! {send_response, AssociateAC},
-    {keep_state, Data, []}.
+    {keep_state, Data#wolfpacs_upper_layer_fsm_data{context_map=ContextMap}, []}.
 
 handle_abort({error, _}, Data) ->
     {keep_state, Data, []};
@@ -129,23 +131,12 @@ handle_p_data_tf({error, _}, Data) ->
     {keep_state, Data, []};
 
 handle_p_data_tf({ok, PDataTF, _Rest}, Data) ->
-    #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
-
+    #wolfpacs_upper_layer_fsm_data{context_map=ContextMap} = Data,
     lager:warning("p data tf ok, ~p", [PDataTF]),
-    [{pdv_item, 1, true, true, Raw}] = PDataTF,
-    EchoRQ = wolfpacs_dimse_protocol:decode(Raw),
-    EchoResp = wolfpacs_c_echo_scp:react(EchoRQ),
+    [{pdv_item, PrCID, IsLast, IsCommand, Raw}] = PDataTF,
 
-    PDVItem = #pdv_item{pr_cid=1,
-			is_command=true,
-			is_last=true,
-			pdv_data=EchoResp},
-
-    EchoRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
-
-    UpperLayer ! {send_response, EchoRespPDataTF},
-
-    {keep_state, Data, []}.
+    ConformanceTag = maps:get(PrCID, ContextMap, missing),
+    handle_pdv_item(ConformanceTag, PrCID, IsLast, IsCommand, Raw, Data).
 
 handle_release_rq({error, _}, Data) ->
     {keep_state, Data, []};
@@ -153,6 +144,42 @@ handle_release_rq({ok, R, _}, Data) ->
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
     ReleaseRP = wolfpacs_release_rp:encode(R),
     UpperLayer ! {send_response, ReleaseRP},
+    {keep_state, Data, []}.
+
+handle_pdv_item(verification_explicit_little, PrCID, IsLast, IsCommand, Raw, Data) ->
+    #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
+
+    EchoRQ = wolfpacs_dimse_protocol:decode(Raw),
+    EchoResp = wolfpacs_c_echo_scp:react(EchoRQ),
+
+    PDVItem = #pdv_item{pr_cid=1,
+			is_last=true,
+			is_command=true,
+			pdv_data=EchoResp},
+
+    EchoRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+
+    UpperLayer ! {send_response, EchoRespPDataTF},
+
+    {keep_state, Data, []};
+
+handle_pdv_item(ct_image_storage_explicit_little, _, false, false, Fragment, Data) ->
+    #wolfpacs_upper_layer_fsm_data{blob=OldBlob} = Data,
+    NewBlob = <<OldBlob/binary, Fragment/binary>>,
+    NewData = Data#wolfpacs_upper_layer_fsm_data{blob=NewBlob},
+    {keep_state, NewData, []};
+
+handle_pdv_item(ct_image_storage_explicit_little, _, true, false, Fragment, Data) ->
+    #wolfpacs_upper_layer_fsm_data{blob=OldBlob} = Data,
+    NewBlob = <<OldBlob/binary, Fragment/binary>>,
+    FileData = wolfpacs_file_format:encode(NewBlob),
+    file:write_file("abc.dcm", FileData),
+    NewData = Data#wolfpacs_upper_layer_fsm_data{blob = <<>>},
+    {keep_state, NewData, []};
+
+handle_pdv_item(Tag, PrCID, _, _, _, Data) ->
+    #wolfpacs_upper_layer_fsm_data{context_map=ContextMap} = Data,
+    lager:warning("unhandle pdv item ~p, ~p, ~p", [Tag, PrCID, ContextMap]),
     {keep_state, Data, []}.
 
 %%==============================================================================
