@@ -5,11 +5,17 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_data_elements_explicit).
--export([decode/1]).
+-export([encode_map/1,
+	 encode_list/1,
+	 decode/1]).
 
--spec encode(list(any())) -> binary().
-encode(Elements) ->
-    encode(Elements, <<>>).
+-spec encode_map(map()) -> binary().
+encode_map(Info) ->
+    encode_list(maps:to_list(Info)).
+
+-spec encode_list(list(any())) -> binary().
+encode_list(Elements) ->
+    encode(lists:sort(Elements), <<>>).
 
 -spec decode(binary()) -> {ok, map(), binary()} | {error, binary()}.
 decode(Data) ->
@@ -67,7 +73,7 @@ encode_test() ->
     UID = <<"1.2.3.4">>,
     Items = [{{?CMD, ?UID}, UID}],
     Correct = wolfpacs_data_element_explicit:encode(?CMD, ?UID, "UI", UID),
-    ?assertEqual(encode(Items), Correct).
+    ?assertEqual(encode_list(Items), Correct).
 
 encode_decode_test() ->
     UID = <<"1.2.3.4">>,
@@ -77,5 +83,5 @@ encode_decode_test() ->
 	     {{?CMD, ?SET}, 16#0101},
 	     {{?CMD, ?STU}, 16#0000}],
     Correct = maps:from_list(Items),
-    Encoded0 = encode(Items),
+    Encoded0 = encode_list(Items),
     ?assertEqual(decode(Encoded0), {ok, Correct, <<>>}).
