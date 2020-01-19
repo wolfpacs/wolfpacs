@@ -16,8 +16,13 @@
 -spec encode(map()) -> binary().
 encode(Info) ->
     Data = wolfpacs_data_elements_explicit:encode_map(Info),
+
+    NbBytes = byte_size(Data),
+    GroupLength = wolfpacs_data_element_explicit:encode(2, 0, "UL", NbBytes),
+
     <<0:1024,
       "DICM",
+      GroupLength/binary,
       Data/binary>>.
 
 %%-------------------------------------------------------------------
@@ -42,7 +47,7 @@ decode(Data) ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_decode_test_() ->
-    Info = #{{2, 0} => 194,
+    Info = #{{2, 0} => 60,
 	     {2, 1} => [0, 1],
 	     {2, 2} => <<"1.2.840.10008.5.1.4.1.1.2">>},
     Encoded0 = encode(Info),
