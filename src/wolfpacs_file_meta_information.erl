@@ -13,17 +13,20 @@
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec encode(binary()) -> binary().
-encode(Data) ->
-    <<>>.
+-spec encode(map()) -> binary().
+encode(Info) ->
+    Data = wolfpacs_data_elements_explicit:encode_map(Info),
+    <<0:1024,
+      "DICM",
+      Data/binary>>.
 
 %%-------------------------------------------------------------------
 %% @doc Decode File Meta Information.
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec decode(binary()) -> {ok, binary(), binary()} | {error, binary()}.
-decode(OrgData = <<_:1024, "DICM", Data/binary>>) ->
+-spec decode(binary()) -> {ok, map(), binary()} | {error, binary()}.
+decode(<<_:1024, "DICM", Data/binary>>) ->
     wolfpacs_data_elements_explicit:decode(Data);
 decode(Data) ->
     {error, Data}.
@@ -39,4 +42,15 @@ decode(Data) ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_decode_test_() ->
-    [].
+    Info = #{{2, 0} => 194,
+	     {2, 1} => [0, 1],
+	     {2, 2} => <<"1.2.840.10008.5.1.4.1.1.2">>},
+    Encoded0 = encode(Info),
+    Encoded1 = <<Encoded0/binary, 42>>,
+    Incorrect0 = wolfpacs_utils:drop_first_byte(Encoded0),
+    Incorrect1 = <<1, 2, 3, 4>>,
+
+    [ ?_assertEqual(decode(Encoded0), {ok, Info, <<>>}),
+      ?_assertEqual(decode(Encoded1), {ok, Info, <<42>>}),
+      ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
+      ?_assertEqual(decode(Incorrect1), {error, Incorrect1}) ].
