@@ -27,6 +27,7 @@ encode(Data) ->
 decode(Data) ->
     case wolfpacs_file_meta_information:decode(Data) of
 	{error, _} ->
+	    lager:warning("[file_format] Failed to decode file meta information"),
 	    {error, Data};
 	{ok, Info, Rest} ->
 	    {Meta, Content} = split_meta_content(Info),
@@ -75,10 +76,15 @@ split_meta_content(Info) ->
 
 encode_decode_test_() ->
     Info = maps:put({2, 0}, 200, meta_info()),
-    Payload = <<"this is important data">>,
-    Encoded0 = encode(Payload),
+
+    Content = #{{16#7fe0, 16#10, "OB"} => [255, 254, 255, 254]},
+    Content2 = #{{16#7fe0, 16#10} => [255, 254, 255, 254]},
+    Data = wolfpacs_data_elements_explicit:encode_map(Content),
+
+    Encoded0 = encode(Data),
     Incorrect0 = wolfpacs_utils:drop_first_byte(Encoded0),
     Incorrect1 = <<1, 2, 3, 4, 5>>,
-    [ ?_assertEqual(decode(Encoded0), {ok, {Info, #{}}, Payload}),
+
+    [ ?_assertEqual(decode(Encoded0), {ok, {Info, Content2}, <<>>}),
       ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
       ?_assertEqual(decode(Incorrect1), {error, Incorrect1}) ].
