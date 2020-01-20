@@ -27,9 +27,6 @@ test_file_meta_information(Config) ->
     %% Extract correct information using
     %% $ dcmdump testdata1.bin
 
-    %% (0002,0000) UL 194
-    194 = Get(2, 0),
-
     %% (0002,0001) OB 00\01
     [0, 1] = Get(2, 1),
 
