@@ -16,7 +16,6 @@
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec supported(list({integer(), binary(), list(binary())})) -> {ok, list({integer(), binary(), map()})}.
 supported(PresentationContexts) ->
     supported(PresentationContexts, [], #{}).
 
