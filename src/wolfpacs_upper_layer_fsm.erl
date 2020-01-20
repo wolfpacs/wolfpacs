@@ -132,7 +132,6 @@ handle_p_data_tf({error, _}, Data) ->
 
 handle_p_data_tf({ok, PDataTF, _Rest}, Data) ->
     #wolfpacs_upper_layer_fsm_data{context_map=ContextMap} = Data,
-    lager:warning("p data tf ok, ~p", [PDataTF]),
     [{pdv_item, PrCID, IsLast, IsCommand, Raw}] = PDataTF,
 
     ConformanceTag = maps:get(PrCID, ContextMap, missing),
@@ -177,9 +176,8 @@ handle_pdv_item(ct_image_storage_explicit_little, _, true, false, Fragment, Data
     NewData = Data#wolfpacs_upper_layer_fsm_data{blob = <<>>},
     {keep_state, NewData, []};
 
-handle_pdv_item(Tag, PrCID, _, _, _, Data) ->
-    #wolfpacs_upper_layer_fsm_data{context_map=ContextMap} = Data,
-    lager:warning("unhandle pdv item ~p, ~p, ~p", [Tag, PrCID, ContextMap]),
+handle_pdv_item(Tag, PrCID, A, B, _, Data) ->
+    lager:warning("unhandle pdv item ~p, ~p, ~p, ~p", [Tag, PrCID, A, B]),
     {keep_state, Data, []}.
 
 %%==============================================================================
