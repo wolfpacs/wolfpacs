@@ -23,7 +23,7 @@ encode(Data) ->
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec decode(binary()) -> {ok, {map(), binary()}, binary()} | {error, binary()}.
+-spec decode(binary()) -> {ok, {map(), map()}, binary()} | {error, binary()}.
 decode(Data) ->
     case wolfpacs_file_meta_information:decode(Data) of
 	{error, _} ->
@@ -42,6 +42,7 @@ decode(Data) ->
 %% Private
 %%==============================================================================
 
+-spec meta_info() -> map().
 meta_info() ->
     #{{2, 1} => [0, 1],
       {2, 2} => <<"1.2.840.10008.5.1.4.1.1.2">>,
