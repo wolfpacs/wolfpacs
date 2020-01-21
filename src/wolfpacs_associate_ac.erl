@@ -125,13 +125,15 @@ encode_decode_test_() ->
     Encoded1 = <<Encoded0/binary, 42>>,
 
     Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
-    Incorrect1 = <<1, 2, 3, 4, 5>>,
+    Incorrect1 = wolfpacs_utils:drop_first_byte(Encoded0),
+    Incorrect2 = <<1, 2, 3, 4, 5>>,
 
     Correct0 = {ok, CalledAE, CallingAE, R, [{PrCID, TransferSyntax}], MaxPDUSize, Class, VersionName, <<>>},
     Correct1 = {ok, CalledAE, CallingAE, R, [{PrCID, TransferSyntax}], MaxPDUSize, Class, VersionName, <<42>>},
 
-    [?_assertEqual(decode(Encoded0), Correct0),
-     ?_assertEqual(decode(Encoded1), Correct1),
-     ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
-     ?_assertEqual(decode(Incorrect1), {error, Incorrect1})
+    [ ?_assertEqual(decode(Encoded0), Correct0)
+    , ?_assertEqual(decode(Encoded1), Correct1)
+    , ?_assertEqual(decode(Incorrect0), {error, Incorrect0})
+    , ?_assertEqual(decode(Incorrect1), {error, Incorrect1})
+    , ?_assertEqual(decode(Incorrect2), {error, Incorrect2})
     ].
