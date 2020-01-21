@@ -72,9 +72,12 @@ encode_decode_test_() ->
     Incorrect0 = wolfpacs_utils:drop_first_byte(Encoded0),
     Incorrect1 = wolfpacs_utils:drop_last_byte(Encoded0),
     Incorrect2 = <<1, 2, 3, 4>>,
+    Incorrect3 = <<0:1024, "DICM", 1, 2>>,
 
-    [ ?_assertEqual(decode(Encoded0), {ok, Info, <<>>}),
-      ?_assertEqual(decode(Encoded1), {ok, Info, <<42>>}),
-      ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
-      ?_assertEqual(decode(Incorrect1), {error, Incorrect1}),
-      ?_assertEqual(decode(Incorrect2), {error, Incorrect2}) ].
+    [ ?_assertEqual(decode(Encoded0), {ok, Info, <<>>})
+    , ?_assertEqual(decode(Encoded1), {ok, Info, <<42>>})
+    , ?_assertEqual(decode(Incorrect0), {error, Incorrect0})
+    , ?_assertEqual(decode(Incorrect1), {error, Incorrect1})
+    , ?_assertEqual(decode(Incorrect2), {error, Incorrect2})
+    , ?_assertEqual(decode(Incorrect3), {error, Incorrect3})
+    ].
