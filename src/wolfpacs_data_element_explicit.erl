@@ -190,3 +190,21 @@ encode_decode_us_test_() ->
 
 encode_decode_ul_test_() ->
     encode_decode_common("UL", 1024).
+
+encode_decode_zz_test_() ->
+    Data = <<1, 2, 3, 4>>,
+    G = 10,
+    E = 20,
+    VR = <<"ZZ">>,
+    Len = byte_size(Data),
+
+    Encoded0 = <<G:16/little, E:16/little, VR/binary, Len:16/little, Data/bitstring>>,
+    Encoded1 = <<Encoded0/binary, 42>>,
+    Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
+    Incorrect1 = <<1>>,
+
+    [ ?_assertEqual(decode(Encoded0), {ok, {{G, E}, {VR, Data}}, <<>>})
+    , ?_assertEqual(decode(Encoded1), {ok, {{G, E}, {VR, Data}}, <<42>>})
+    , ?_assertEqual(decode(Incorrect0), {error, Incorrect0})
+    , ?_assertEqual(decode(Incorrect1), {error, Incorrect1})
+    ].
