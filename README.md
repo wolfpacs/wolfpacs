@@ -11,7 +11,21 @@ WolfPACS is an open-source Picture Archiving and Communication System (PACS) sol
 Status
 ------
 
-**WolfPACS** is under active development and is far from v1.0.0.
+**WolfPACS** is under active development and not ready for production.
+
+Test plan
+---------
+
+A PACS is classified as a medical device and needs to be painstakingly tested.
+
+We use four different test in WolfPACS and we aim to test the software thoroughly.
+
+| Test                   | Target                | Method                   |
+|------------------------|-----------------------|--------------------------|
+| Unit tests             | One Module            | Erlang Eunit             |
+| Integration tests      | Many Modules          | Erlang Common Tests (ct) |
+| Validation testing     | User requirements     | Python Robot Framework   |
+| Property based testing | Hidden bugs / Fussing | Erlang proper            |
 
 Quick Start
 -----------
