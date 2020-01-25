@@ -14,7 +14,13 @@ install:
   - pip install --user --disable-pip-version-check codecov
   - wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
 
+jobs:
+  exclude:
+    - otp_release: 19.3
+      arch: ppc64le
+
 script:
+  - lscpu | grep Endian
   - ./rebar3 compile
   - ./rebar3 eunit --cover
   - ./rebar3 proper --cover
