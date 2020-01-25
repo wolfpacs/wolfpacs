@@ -1,0 +1,8 @@
+# Little Endian Implicit
+echoscu -v -d localhost 11112 -pts 1
+
+# Little Endian Explicit
+echoscu -v -d localhost 11112 -pts 2
+
+http://justsolve.archiveteam.org/wiki/DICOM
+https://dicomiseasy.blogspot.com/2012/01/introduction-to-dicom-chapter-6.html

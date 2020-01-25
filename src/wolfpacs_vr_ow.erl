@@ -5,50 +5,36 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_ow).
--export([encode_little/1,
-	 decode_little/1,
-	 encode_big/1,
-	 decode_big/1]).
+-export([encode/2,
+	 decode/2]).
+-include("wolfpacs_types.hrl").
 
--spec encode_little(list()) -> binary().
-encode_little(List) ->
-    encode_little(List, <<>>).
+-spec encode(strategy(), list()) -> binary().
+encode(Strategy, List) ->
+    encode(Strategy, List, <<>>).
 
-decode_little(Data) ->
-    decode_little(Data, []).
-
--spec encode_big(list()) -> binary().
-encode_big(List) ->
-    encode_big(List, <<>>).
-
-decode_big(Data) ->
-    decode_big(Data, []).
+-spec decode(strategy(), binary()) -> list().
+decode(Strategy, Data) ->
+    decode(Strategy, Data, []).
 
 %%==============================================================================
 %% Private
 %%==============================================================================
 
--spec encode_little(list(), binary()) -> binary().
-encode_little([], Acc) ->
+-spec encode(strategy(), list(), binary()) -> binary().
+encode(_, [], Acc) ->
     Acc;
-encode_little([H|T], Acc) ->
-    encode_little(T, <<Acc/binary, H:16/little>>).
+encode(Strategy = {_, little}, [Head|Tail], Acc) ->
+    encode(Strategy, Tail, <<Acc/binary, Head:16/little>>);
+encode(Strategy = {_, big}, [Head|Tail], Acc) ->
+    encode(Strategy, Tail, <<Acc/binary, Head:16/big>>).
 
-decode_little(<<>>, Acc) ->
+decode(_, <<>>, Acc) ->
     lists:reverse(Acc);
-decode_little(<<Val:16/little, Rest/bitstring>>, Acc) ->
-    decode_little(Rest, [Val|Acc]).
-
--spec encode_big(list(), binary()) -> binary().
-encode_big([], Acc) ->
-    Acc;
-encode_big([H|T], Acc) ->
-    encode_big(T, <<Acc/binary, H:16/big>>).
-
-decode_big(<<>>, Acc) ->
-    lists:reverse(Acc);
-decode_big(<<Val:16/big, Rest/bitstring>>, Acc) ->
-    decode_big(Rest, [Val|Acc]).
+decode(Strategy = {_, little}, <<Val:16/little, Rest/bitstring>>, Acc) ->
+    decode(Strategy, Rest, [Val|Acc]);
+decode(Strategy = {_, big}, <<Val:16/big, Rest/bitstring>>, Acc) ->
+    decode(Strategy, Rest, [Val|Acc]).
 
 %%==============================================================================
 %% Test
@@ -56,10 +42,16 @@ decode_big(<<Val:16/big, Rest/bitstring>>, Acc) ->
 
 -include_lib("eunit/include/eunit.hrl").
 
+encode_decode_common(Strategy, Data) ->
+    Encoded = encode(Strategy, Data),
+    [ ?_assertEqual(decode(Strategy, Encoded), Data) ].
+
 encode_decode_little_test_() ->
     Data = [1, 2, 3, 4, 5],
-    [ ?_assertEqual(decode_little(encode_little(Data)), Data) ].
+    Strategy = {explicit, little},
+    encode_decode_common(Strategy, Data).
 
 encode_decode_big_test_() ->
     Data = [1, 2, 3, 4, 5],
-    [ ?_assertEqual(decode_big(encode_big(Data)), Data) ].
+    Strategy = {explicit, big},
+    encode_decode_common(Strategy, Data).

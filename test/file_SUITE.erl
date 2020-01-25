@@ -54,7 +54,7 @@ test_file_format(_Config) ->
     RawData = [255, 254, 255, 254],
 
     Content = #{{Group, Element, "OB"} => RawData},
-    EncodedContent = wolfpacs_data_elements_explicit:encode_map(Content),
+    EncodedContent = wolfpacs_data_elements:encode({explicit, little}, Content),
     BinData = wolfpacs_file_format:encode(EncodedContent),
 
     {ok, {_Meta, Content2}, _Rest} = wolfpacs_file_format:decode(BinData),

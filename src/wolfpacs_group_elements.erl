@@ -6,6 +6,7 @@
 
 -module(wolfpacs_group_elements).
 -export([vr/2]).
+-export([vr_to_example_group_element/1]).
 
 -spec vr(integer(), integer()) -> list().
 vr(Group, Element) ->
@@ -17,6 +18,22 @@ vr_lookup(Group, Element, missing) ->
     "UN";
 vr_lookup(_, _, VR) ->
     VR.
+
+%%-------------------------------------------------------------------
+%% @doc Return an example {Group, Element} for a VR.
+%% Useful when writing implicit test cases.
+%%
+%% @end
+%%-------------------------------------------------------------------
+vr_to_example_group_element("OB") -> {16#0002, 16#0001};
+vr_to_example_group_element("OW") -> {16#0028, 16#1201};
+vr_to_example_group_element("OF") -> {16#0064, 16#0009};
+vr_to_example_group_element("PN") -> {16#0008, 16#0090};
+vr_to_example_group_element("AE") -> {16#0040, 16#0001};
+vr_to_example_group_element("UI") -> {16#0040, 16#0554};
+vr_to_example_group_element("US") -> {16#0040, 16#A0B0};
+vr_to_example_group_element("UL") -> {16#0040, 16#A132};
+vr_to_example_group_element(VR) -> {error, VR, "No example found"}.
 
 %%==============================================================================
 %% Test

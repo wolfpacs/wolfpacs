@@ -6,10 +6,8 @@
 
 -module(wolfpacs_conformance).
 -export([supported/1]).
-
--define(VERIFICATION, <<"1.2.840.10008.1.1">>).
--define(SECONDARY_CAPTURE, <<"1.2.840.10008.5.1.4.1.1.7">>).
--define(CT_IMAGE_STORAGE, <<"1.2.840.10008.5.1.4.1.1.2">>).
+-include("transfer_syntax.hrl").
+-include("abstract_syntax.hrl").
 
 %%-------------------------------------------------------------------
 %% @doc Supported.
@@ -30,6 +28,7 @@ supported([{PrCID, AbstractSyntax, TransferSyntexes}|Contexts], Acc, Map) ->
 	no ->
 	    supported(Contexts, Acc, Map);
 	{yes, TransferSyntax, ConformanceTag} ->
+	    lager:warning("[conformance] Picked ~p", [TransferSyntax]),
 	    supported(Contexts, [{PrCID, TransferSyntax}|Acc], Map#{PrCID => ConformanceTag})
     end.
 
@@ -43,12 +42,23 @@ supported_abstract_syntax(AbstractSyntax, [TransferSyntax|TransferSyntaxes]) ->
 	    {yes, TransferSyntax, ConformanceTag}
     end.
 
-supported_transfer_syntax(?VERIFICATION, <<"1.2.840.10008.1.2">>) ->
+supported_transfer_syntax(?VERIFICATION, ?EXPLICIT_LITTLE_ENDIAN) ->
     verification_explicit_little;
-supported_transfer_syntax(?SECONDARY_CAPTURE, <<"1.2.840.10008.1.2">>) ->
+supported_transfer_syntax(?VERIFICATION, ?IMPLICIT_LITTLE_ENDIAN) ->
+    verification_implicit_little;
+supported_transfer_syntax(?VERIFICATION, ?EXPLICIT_BIG_ENDIAN) ->
+    verification_explicit_big;
+
+supported_transfer_syntax(?SECONDARY_CAPTURE, ?EXPLICIT_LITTLE_ENDIAN) ->
     secondary_capture_explicit_little;
-supported_transfer_syntax(?CT_IMAGE_STORAGE, <<"1.2.840.10008.1.2">>) ->
+supported_transfer_syntax(?SECONDARY_CAPTURE, ?IMPLICIT_LITTLE_ENDIAN) ->
+    secondary_capture_implicit_little;
+
+supported_transfer_syntax(?CT_IMAGE_STORAGE, ?EXPLICIT_LITTLE_ENDIAN) ->
     ct_image_storage_explicit_little;
+supported_transfer_syntax(?CT_IMAGE_STORAGE, ?IMPLICIT_LITTLE_ENDIAN) ->
+    ct_image_storage_implicit_little;
+
 supported_transfer_syntax(_, _) ->
     no.
 
@@ -59,24 +69,20 @@ supported_transfer_syntax(_, _) ->
 -include_lib("eunit/include/eunit.hrl").
 
 supported_test() ->
-    Verification = wolfpacs_sop:verification(),
-    PrintJob = <<"1.2.840.10008.5.1.1.14">>,
+    Contexts = [{42, ?VERIFICATION, [?IMPLICIT_LITTLE_ENDIAN]},
+		{43, ?VERIFICATION, [?EXPLICIT_LITTLE_ENDIAN]},
+		{44, ?VERIFICATION, [?EXPLICIT_LITTLE_ENDIAN, ?IMPLICIT_LITTLE_ENDIAN]},
 
-    ImplicitLittle = wolfpacs_transfer_syntax:implicit_vr_little_endian(),
-    ExplicitLittle = wolfpacs_transfer_syntax:explicit_vr_little_endian(),
+		{45, ?PRINT_JOB, [?IMPLICIT_LITTLE_ENDIAN]},
+		{46, ?PRINT_JOB, [?EXPLICIT_LITTLE_ENDIAN]},
+		{47, ?PRINT_JOB, [?EXPLICIT_LITTLE_ENDIAN, ?IMPLICIT_LITTLE_ENDIAN]}],
 
-    Contexts = [{42, Verification, [ImplicitLittle]},
-		{43, Verification, [ExplicitLittle]},
-		{44, Verification, [ExplicitLittle, ImplicitLittle]},
+    Correct = [{42, ?IMPLICIT_LITTLE_ENDIAN},
+	       {43, ?EXPLICIT_LITTLE_ENDIAN},
+	       {44, ?EXPLICIT_LITTLE_ENDIAN}],
 
-		{45, PrintJob, [ImplicitLittle]},
-		{46, PrintJob, [ExplicitLittle]},
-		{47, PrintJob, [ExplicitLittle, ImplicitLittle]}],
-
-    Correct = [{42, ImplicitLittle},
-	       {44, ImplicitLittle}],
-
-    CorrectMap = #{42 => verification_explicit_little,
+    CorrectMap = #{42 => verification_implicit_little,
+		   43 => verification_explicit_little,
 		   44 => verification_explicit_little},
 
     ?assertEqual(supported(Contexts), {ok, Correct, CorrectMap}).

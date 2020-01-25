@@ -5,15 +5,25 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_pn).
--export([encode/1,
-	 decode/1]).
+-export([encode/2,
+	 decode/2]).
 -import(wolfpacs_vr_utils, [pad_binary/1,
 			    limit_binary/2,
 			    trim_binary/1]).
 
--type ui() :: list() | binary().
+-type pn() :: list() | binary().
 
--spec encode(ui()) -> binary().
+encode(_Strategy, PN) ->
+    encode(PN).
+
+decode(_Strategy, PN) ->
+    decode(PN).
+
+%%==============================================================================
+%% Private
+%%==============================================================================
+
+-spec encode(pn()) -> binary().
 encode(PN) when is_list(PN) ->
     encode(list_to_binary(PN));
 encode(PN) ->
@@ -22,10 +32,6 @@ encode(PN) ->
 -spec decode(binary()) -> binary().
 decode(Data) ->
     trim_binary(Data).
-
-%%==============================================================================
-%% Private
-%%==============================================================================
 
 %%==============================================================================
 %% Test
