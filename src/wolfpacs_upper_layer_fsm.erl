@@ -148,8 +148,45 @@ handle_release_rq({ok, R, _}, Data) ->
 handle_pdv_item(verification_explicit_little, PrCID, IsLast, IsCommand, Raw, Data) ->
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
 
-    EchoRQ = wolfpacs_dimse_protocol:decode(Raw),
-    EchoResp = wolfpacs_c_echo_scp:react(EchoRQ),
+    {ok, EchoRQ, _Rest} = wolfpacs_data_elements:decode({explicit, little}, Raw),
+    #{{0, 16#0002} := UID, {0, 16#0110} := RQID} = EchoRQ,
+    EchoResp = wolfpacs_c_echo_scp:encode({explicit, little}, UID, RQID),
+
+    PDVItem = #pdv_item{pr_cid=1,
+			is_last=true,
+			is_command=true,
+			pdv_data=EchoResp},
+
+    EchoRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+
+    UpperLayer ! {send_response, EchoRespPDataTF},
+
+    {keep_state, Data, []};
+
+handle_pdv_item(verification_implicit_little, PrCID, IsLast, IsCommand, Raw, Data) ->
+    #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
+
+    {ok, EchoRQ, _Rest} = wolfpacs_data_elements:decode({implicit, little}, Raw),
+    #{{0, 16#0002} := UID, {0, 16#0110} := RQID} = EchoRQ,
+    EchoResp = wolfpacs_c_echo_scp:encode({implicit, little}, UID, RQID),
+
+    PDVItem = #pdv_item{pr_cid=1,
+			is_last=true,
+			is_command=true,
+			pdv_data=EchoResp},
+
+    EchoRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+
+    UpperLayer ! {send_response, EchoRespPDataTF},
+
+    {keep_state, Data, []};
+
+handle_pdv_item(verification_explicit_big, PrCID, IsLast, IsCommand, Raw, Data) ->
+    #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
+
+    {ok, EchoRQ, _Rest} = wolfpacs_data_elements:decode({explicit, big}, Raw),
+    #{{0, 16#0002} := UID, {0, 16#0110} := RQID} = EchoRQ,
+    EchoResp = wolfpacs_c_echo_scp:encode({explicit, big}, UID, RQID),
 
     PDVItem = #pdv_item{pr_cid=1,
 			is_last=true,

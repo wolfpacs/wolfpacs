@@ -15,10 +15,10 @@
 %%-------------------------------------------------------------------
 -spec encode(map()) -> binary().
 encode(Info) ->
-    Data = wolfpacs_data_elements_explicit:encode_map(Info),
+    Data = wolfpacs_data_elements:encode({explicit, little}, Info),
 
     NbBytes = byte_size(Data),
-    GroupLength = wolfpacs_data_element_explicit:encode(2, 0, "UL", NbBytes),
+    GroupLength = wolfpacs_data_element:encode({explicit, little}, 2, 0, "UL", NbBytes),
 
     <<0:1024,
       "DICM",
@@ -32,7 +32,7 @@ encode(Info) ->
 %%-------------------------------------------------------------------
 -spec decode(binary()) -> {ok, map(), binary()} | {error, binary()}.
 decode(OrgData = <<_:1024, "DICM", Data/binary>>) ->
-    case wolfpacs_data_element_explicit:decode(Data) of
+    case wolfpacs_data_element:decode({explicit, little}, Data) of
 	{error, _} ->
 	    {error, OrgData};
 	{ok,{{2, 0}, GroupLength}, Rest} ->
@@ -41,7 +41,7 @@ decode(OrgData = <<_:1024, "DICM", Data/binary>>) ->
 		{error, _} ->
 		    {error, OrgData};
 		{ok, Meta, Content} ->
-		    case wolfpacs_data_elements_explicit:decode(Meta) of
+		    case wolfpacs_data_elements:decode({explicit, little}, Meta) of
 			{ok, MetaMap, <<>>} ->
 			    {ok, MetaMap, Content};
 			_ ->

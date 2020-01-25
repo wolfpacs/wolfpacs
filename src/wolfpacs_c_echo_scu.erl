@@ -96,8 +96,9 @@ send_associate_rq(State=#{sock := Sock, calledae := CalledAE_}) ->
     AbstractSyntax = wolfpacs_sop:verification(),
     TransferSyntax = [ImplicitLittleEndian],
     MaxPDUSize = 16384,
-    CallingAE = wolfpacs_vr_ae:encode(<<"WolfPACS">>),
-    CalledAE = wolfpacs_vr_ae:encode(CalledAE_),
+    %% TODO, little or big here ?
+    CallingAE = wolfpacs_vr_ae:encode({implicit, little}, <<"WolfPACS">>),
+    CalledAE = wolfpacs_vr_ae:encode({implicit, little}, CalledAE_),
     Class = <<"1.2.276.0.7230010.3.0.3.6.4">>, %% TODO Change
     VersionName = <<"WolfPACS_000">>,
 

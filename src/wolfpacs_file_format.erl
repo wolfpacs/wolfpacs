@@ -30,7 +30,7 @@ decode(Data) ->
 	    lager:warning("[file_format] Failed to decode file meta information"),
 	    {error, Data};
 	{ok, Meta, Rest} ->
-	    case wolfpacs_data_elements_explicit:decode(Rest) of
+	    case wolfpacs_data_elements:decode({explicit, little}, Rest) of
 		{error, _} ->
 		    {error, Data};
 		{ok, Content, Rest2} ->
@@ -61,7 +61,7 @@ meta_info() ->
 encode_decode_test_() ->
     Content = #{{16#7fe0, 16#10, "OB"} => [255, 254, 255, 254]},
     Content2 = #{{16#7fe0, 16#10} => [255, 254, 255, 254]},
-    Data = wolfpacs_data_elements_explicit:encode_map(Content),
+    Data = wolfpacs_data_elements:encode({explicit, little}, Content),
 
     Encoded0 = encode(Data),
     Encoded1 = <<Encoded0/binary, 42>>,
