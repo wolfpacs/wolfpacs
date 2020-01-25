@@ -1,3 +1,7 @@
+arch:
+  - amd64
+  - ppc64le
+
 language: erlang
 
 otp_release:
@@ -7,15 +11,16 @@ otp_release:
   - 19.3
 
 install:
-    pip install --user --disable-pip-version-check codecov
+  - pip install --user --disable-pip-version-check codecov
+  - wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
 
 script:
-  - rebar3 compile
-  - rebar3 eunit --cover
-  - rebar3 proper --cover
-  - rebar3 ct --cover --readable=false
-  - rebar3 cover
-  - rebar3 codecov analyze
+  - ./rebar3 compile
+  - ./rebar3 eunit --cover
+  - ./rebar3 proper --cover
+  - ./rebar3 ct --cover --readable=false
+  - ./rebar3 cover
+  - ./rebar3 codecov analyze
 
 after_success:
     codecov
