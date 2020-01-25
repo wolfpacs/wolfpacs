@@ -5,26 +5,21 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_ul).
--export([encode_little/1,
-	 decode_little/1,
-	 encode_big/1,
-	 decode_big/1]).
+-export([encode/2,
+	 decode/2]).
+-include("wolfpacs_types.hrl").
 
--spec encode_little(integer()) -> binary().
-encode_little(US) ->
-    <<US:32/little>>.
+-spec encode(strategy(), integer()) -> binary().
+encode({_, little}, UL) ->
+    <<UL:32/little>>;
+encode({_, big}, UL) ->
+    <<UL:32/big>>.
 
--spec decode_little(binary()) -> integer().
-decode_little(<<US:32/little>>) ->
-    US.
-
--spec encode_big(integer()) -> binary().
-encode_big(US) ->
-    <<US:32/big>>.
-
--spec decode_big(binary()) -> integer().
-decode_big(<<US:32/big>>) ->
-    US.
+-spec decode(strategy(), binary()) -> integer().
+decode({_, little}, <<UL:32/little>>) ->
+    UL;
+decode({_, big}, <<UL:32/big>>) ->
+    UL.
 
 %%==============================================================================
 %% Test
@@ -33,7 +28,9 @@ decode_big(<<US:32/big>>) ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_decode_little_test() ->
-    ?assertEqual(decode_little(encode_little(1024)), 1024).
+    S = {explicit, little},
+    ?assertEqual(decode(S, encode(S, 1024)), 1024).
 
 encode_decode_big_test() ->
-    ?assertEqual(decode_big(encode_big(1024)), 1024).
+    S = {explicit, big},
+    ?assertEqual(decode(S, encode(S, 1024)), 1024).

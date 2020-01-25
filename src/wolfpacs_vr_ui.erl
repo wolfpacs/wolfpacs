@@ -5,13 +5,22 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_ui).
--export([encode/1,
-	 decode/1]).
+-export([encode/2,  decode/2]).
 -import(wolfpacs_vr_utils, [pad_binary/1,
 			    limit_binary/2,
 			    trim_binary/1]).
 
 -type ui() :: list() | binary().
+
+encode(_Strategy, UI) ->
+    encode(UI).
+
+decode(_Strategy, UI) ->
+    decode(UI).
+
+%%==============================================================================
+%% Private
+%%==============================================================================
 
 -spec encode(ui()) -> binary().
 encode(UI) when is_list(UI) ->
@@ -22,11 +31,6 @@ encode(UI) ->
 -spec decode(binary()) -> binary().
 decode(Data) ->
     trim_binary(Data).
-
-%%==============================================================================
-%% Private
-%%==============================================================================
-
 
 %%==============================================================================
 %% Test
