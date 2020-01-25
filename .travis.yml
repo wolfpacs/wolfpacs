@@ -1,3 +1,7 @@
+arch:
+  - amd64
+  - ppc64le
+
 language: erlang
 
 otp_release:
@@ -7,15 +11,25 @@ otp_release:
   - 19.3
 
 install:
-    pip install --user --disable-pip-version-check codecov
+  - pip install --user --disable-pip-version-check codecov
+  - wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
+
+jobs:
+  include:
+    - otp_release: 19.3
+      arch: s390x
+  exclude:
+    - otp_release: 19.3
+      arch: ppc64le
 
 script:
-  - rebar3 compile
-  - rebar3 eunit --cover
-  - rebar3 proper --cover
-  - rebar3 ct --cover --readable=false
-  - rebar3 cover
-  - rebar3 codecov analyze
+  - lscpu | grep Endian
+  - ./rebar3 compile
+  - ./rebar3 eunit --cover
+  - ./rebar3 proper --cover
+  - ./rebar3 ct --cover --readable=false
+  - ./rebar3 cover
+  - ./rebar3 codecov analyze
 
 after_success:
     codecov
