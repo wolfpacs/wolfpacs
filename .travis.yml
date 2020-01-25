@@ -15,6 +15,9 @@ install:
   - wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
 
 jobs:
+  include:
+    - otp_release: 19.3
+      arch: s390x
   exclude:
     - otp_release: 19.3
       arch: ppc64le
