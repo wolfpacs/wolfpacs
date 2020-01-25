@@ -33,7 +33,3 @@ script:
 
 after_success:
     codecov
-
-cache:
-  directories:
-     - "$HOME/.cache/rebar3"
