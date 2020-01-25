@@ -6,9 +6,10 @@
 
 -module(wolfpacs_c_echo_scu).
 -behaviour(gen_server).
+-include("transfer_syntax.hrl").
 
 -export([start_link/0,
-	 echo/4]).
+	 echo/5]).
 -export([init/1,
 	 handle_call/3,
 	 handle_cast/2,
@@ -19,18 +20,21 @@
 start_link() ->
     gen_server:start_link(?MODULE, [], []).
 
-echo(CEchoSCU, Host, Port, CalledAE) ->
-    gen_server:call(CEchoSCU, {echo, Host, Port, CalledAE}).
+echo(CEchoSCU, Host, Port, CalledAE, Strategy) ->
+    gen_server:call(CEchoSCU, {echo, Host, Port, CalledAE, Strategy}).
 
 %% @hidden
 init(_) ->
-    {ok, #{sock => none, from => none, data => <<>>}}.
+    {ok, #{sock => none,
+	   from => none, data => <<>>,
+	   strategy => {none, none}}}.
 
 %% @hidden
-handle_call({echo, Host, Port, CalledAE}, From, State=#{sock := none}) ->
+handle_call({echo, Host, Port, CalledAE, Strategy}, From, State=#{sock := none}) ->
     {ok, Sock} = gen_tcp:connect(Host, Port, [binary, {active, true}]),
     {noreply, send_associate_rq(State#{calledae => CalledAE,
-				       from => From, sock => Sock})};
+				       from => From, sock => Sock,
+				       strategy => Strategy})};
 
 %% @hidden
 handle_call({echo, _, _, _}, _From, State) ->
@@ -90,15 +94,21 @@ handle_data(Data, State) ->
     lager:warning("[c_echo_scu] unable to handle data ~p", [Data]),
     {noreply, State}.
 
-send_associate_rq(State=#{sock := Sock, calledae := CalledAE_}) ->
-    ImplicitLittleEndian = wolfpacs_transfer_syntax:implicit_vr_little_endian(),
+transfer_syntax({implicit, little}) ->
+    ?IMPLICIT_LITTLE_ENDIAN;
+transfer_syntax({explicit, little}) ->
+    ?EXPLICIT_LITTLE_ENDIAN;
+transfer_syntax({explicit, big}) ->
+    ?EXPLICIT_BIG_ENDIAN.
+
+send_associate_rq(State=#{sock := Sock, calledae := CalledAE_, strategy := Strategy}) ->
     PrCID = 1,
     AbstractSyntax = wolfpacs_sop:verification(),
-    TransferSyntax = [ImplicitLittleEndian],
+    TransferSyntax = [transfer_syntax(Strategy)],
     MaxPDUSize = 16384,
     %% TODO, little or big here ?
-    CallingAE = wolfpacs_vr_ae:encode({implicit, little}, <<"WolfPACS">>),
-    CalledAE = wolfpacs_vr_ae:encode({implicit, little}, CalledAE_),
+    CallingAE = wolfpacs_vr_ae:encode(Strategy, <<"WolfPACS">>),
+    CalledAE = wolfpacs_vr_ae:encode(Strategy, CalledAE_),
     Class = <<"1.2.276.0.7230010.3.0.3.6.4">>, %% TODO Change
     VersionName = <<"WolfPACS_000">>,
 
