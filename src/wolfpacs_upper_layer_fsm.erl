@@ -44,7 +44,6 @@ pdu(FSM, PDUType, PDU) ->
 					blob :: binary()}).
 
 init(UpperLayer) ->
-    lager:warning("************** FSM ***************"),
     State = idle,
     Data = #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer,
 					  context_map=#{},

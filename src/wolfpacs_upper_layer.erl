@@ -109,7 +109,7 @@ protocol_data_unit_complete(Data) ->
     {error, Data}.
 
 send_response(Payload, #state{socket=Socket, transport=Transport}) ->
-    lager:warning("send response of size ~p", [byte_size(Payload)]),
+    lager:debug("send response of size ~p", [byte_size(Payload)]),
     Transport:send(Socket, Payload).
 
 %%------------------------------------------------------------------------------

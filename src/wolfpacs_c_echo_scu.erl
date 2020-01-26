@@ -9,6 +9,7 @@
 -include("transfer_syntax.hrl").
 
 -export([start_link/0,
+	 stop/1,
 	 echo/5]).
 -export([init/1,
 	 handle_call/3,
@@ -19,6 +20,9 @@
 
 start_link() ->
     gen_server:start_link(?MODULE, [], []).
+
+stop(CEchoSCU) ->
+    gen_server:stop(CEchoSCU).
 
 echo(CEchoSCU, Host, Port, CalledAE, Strategy) ->
     gen_server:call(CEchoSCU, {echo, Host, Port, CalledAE, Strategy}).
