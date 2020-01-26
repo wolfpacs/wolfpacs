@@ -34,6 +34,8 @@ encode(Strategy, [{{G, E, VR}, Data}|Rest], Acc) ->
     encode(Strategy, Rest, <<Acc/binary, Encoded/binary>>).
 
 -spec decode(strategy(), binary(), list()) -> {ok, map(), binary()} | {error, binary()}.
+decode(_, <<>>, []) ->
+    {error, <<>>};
 decode(_, <<>>, Acc) ->
     {ok, maps:from_list(Acc), <<>>};
 decode(Strategy, Data, []) ->
@@ -93,8 +95,8 @@ encode_decode_implicit_big_test_() ->
     Strategy = {implicit, big},
     encode_decode_common(Strategy).
 
-encode_decode_empty_map_test() ->
+encode_decode_empty_test() ->
     Strategy = {explicit, little},
     Items = #{},
     Encoded0 = encode(Strategy, Items),
-    ?assertEqual(decode(Strategy, Encoded0), {ok, Items, <<>>}).
+    ?assertEqual(decode(Strategy, Encoded0), {error, <<>>}).
