@@ -39,6 +39,8 @@ encode(Strategy, G, E, "UL", UL) ->
     encode_common(Strategy, G, E, "UL", wolfpacs_vr_ul:encode(Strategy, UL));
 encode(Strategy, G, E, "PN", Name) ->
     encode_common(Strategy, G, E, "PN", wolfpacs_vr_pn:encode(Strategy, Name));
+encode(Strategy, G, E, "LO", Name) ->
+    encode_common(Strategy, G, E, "LO", wolfpacs_vr_lo:encode(Strategy, Name));
 encode(_Strategy, G, E, "ox", _) ->
     lager:warning("[data_element_explicit] unable to encode ox (OB or OW)", [G, E]),
     <<>>;
@@ -180,6 +182,9 @@ decode_common(Strategy, OrgData, G, E, "OF", Len, Data) ->
 decode_common(Strategy, OrgData, G, E, "PN", Len, Data) ->
     decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, wolfpacs_vr_pn);
 
+decode_common(Strategy, OrgData, G, E, "LO", Len, Data) ->
+    decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, wolfpacs_vr_lo);
+
 decode_common(Strategy, OrgData, G, E, "AE", Len, Data) ->
     decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, wolfpacs_vr_ae);
 
@@ -192,7 +197,7 @@ decode_common(Strategy, OrgData, G, E, "US", Len, Data) ->
 decode_common(Strategy, OrgData, G, E, "UL", Len, Data) ->
     decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, wolfpacs_vr_ul);
 
-decode_common(_, OrgData, _G, _E, _PN, _Len, _Data) ->
+decode_common(_, OrgData, _G, _E, _VR, _Len, _Data) ->
     lager:warning("[data_element] No match in decode_common"),
     {error, OrgData}.
 
@@ -294,6 +299,9 @@ encode_decode_of_test_() ->
 encode_decode_pn_test_() ->
     encode_decode_common("PN", <<"Smith^Joe">>).
 
+encode_decode_lo_test_() ->
+    encode_decode_common("LO", <<"This is a long description">>).
+
 encode_decode_ae_test_() ->
     encode_decode_common("AE", <<"AE1">>).
 
@@ -311,7 +319,7 @@ encode_decode_common(VR, Data) ->
       [ encode_decode_common({explicit, little}, VR, Data)
       , encode_decode_common({explicit, big}, VR, Data)
       , encode_decode_common({implicit, little}, VR, Data)
-      %% , encode_decode_common({implicit, big}, VR, Data)
+      , encode_decode_common({implicit, big}, VR, Data)
       ]).
 
 encode_decode_common(Strategy, VR, Data) ->

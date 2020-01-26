@@ -209,8 +209,16 @@ handle_pdv_item(ct_image_storage_explicit_little, _, true, false, Fragment, Data
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
     FileData = wolfpacs_file_format:encode(NewBlob),
     file:write_file("abc.dcm", FileData),
+    lager:warning("saved abc.dcm"),
     NewData = Data#wolfpacs_upper_layer_fsm_data{blob = <<>>},
     {keep_state, NewData, []};
+
+handle_pdv_item(ct_image_storage_explicit_little, _, true, true, Fragment, Data) ->
+    #wolfpacs_upper_layer_fsm_data{blob=OldBlob} = Data,
+    NewBlob = <<OldBlob/binary, Fragment/binary>>,
+    {ok, Info, _Rest} = wolfpacs_data_elements:decode({explicit, little}, NewBlob),
+    lager:warning("ct_image_storage true true ~p", [Info]),
+    {keep_state, Data, []};
 
 handle_pdv_item(Tag, PrCID, A, B, _, Data) ->
     lager:warning("unhandle pdv item ~p, ~p, ~p, ~p", [Tag, PrCID, A, B]),
