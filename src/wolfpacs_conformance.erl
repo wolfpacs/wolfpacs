@@ -42,22 +42,26 @@ supported_abstract_syntax(AbstractSyntax, [TransferSyntax|TransferSyntaxes]) ->
 	    {yes, TransferSyntax, ConformanceTag}
     end.
 
-supported_transfer_syntax(?VERIFICATION, ?EXPLICIT_LITTLE_ENDIAN) ->
-    verification_explicit_little;
 supported_transfer_syntax(?VERIFICATION, ?IMPLICIT_LITTLE_ENDIAN) ->
-    verification_implicit_little;
+    {verification, {implicit, little}};
+supported_transfer_syntax(?VERIFICATION, ?EXPLICIT_LITTLE_ENDIAN) ->
+    {verification, {explicit, little}};
 supported_transfer_syntax(?VERIFICATION, ?EXPLICIT_BIG_ENDIAN) ->
-    verification_explicit_big;
+    {verification, {explicit, big}};
 
-supported_transfer_syntax(?SECONDARY_CAPTURE, ?EXPLICIT_LITTLE_ENDIAN) ->
-    secondary_capture_explicit_little;
 supported_transfer_syntax(?SECONDARY_CAPTURE, ?IMPLICIT_LITTLE_ENDIAN) ->
-    secondary_capture_implicit_little;
+    {secondary_capture, {implicit, little}};
+supported_transfer_syntax(?SECONDARY_CAPTURE, ?EXPLICIT_LITTLE_ENDIAN) ->
+    {secondary_capture, {explicit, little}};
+supported_transfer_syntax(?SECONDARY_CAPTURE, ?EXPLICIT_BIG_ENDIAN) ->
+    {secondary_capture, {explicit, big}};
 
-supported_transfer_syntax(?CT_IMAGE_STORAGE, ?EXPLICIT_LITTLE_ENDIAN) ->
-    ct_image_storage_explicit_little;
 supported_transfer_syntax(?CT_IMAGE_STORAGE, ?IMPLICIT_LITTLE_ENDIAN) ->
-    ct_image_storage_implicit_little;
+    {ct_image_storage, {implicit, little}};
+supported_transfer_syntax(?CT_IMAGE_STORAGE, ?EXPLICIT_LITTLE_ENDIAN) ->
+    {ct_image_storage, {explicit, little}};
+supported_transfer_syntax(?CT_IMAGE_STORAGE, ?EXPLICIT_BIG_ENDIAN) ->
+    {ct_image_storage, {explicit, big}};
 
 supported_transfer_syntax(_, _) ->
     no.
@@ -81,8 +85,8 @@ supported_test() ->
 	       {43, ?EXPLICIT_LITTLE_ENDIAN},
 	       {44, ?EXPLICIT_LITTLE_ENDIAN}],
 
-    CorrectMap = #{42 => verification_implicit_little,
-		   43 => verification_explicit_little,
-		   44 => verification_explicit_little},
+    CorrectMap = #{42 => {verification, {implicit, little}},
+		   43 => {verification, {explicit, little}},
+		   44 => {verification, {explicit, little}}},
 
     ?assertEqual(supported(Contexts), {ok, Correct, CorrectMap}).

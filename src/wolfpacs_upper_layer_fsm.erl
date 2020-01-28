@@ -41,12 +41,18 @@ pdu(FSM, PDUType, PDU) ->
 
 -record(wolfpacs_upper_layer_fsm_data, {upper_layer :: pid(),
 					context_map :: map(),
+					request_uid :: binary(),
+					request_id :: integer(),
+					affected_uid :: binary(),
 					blob :: binary()}).
 
 init(UpperLayer) ->
     State = idle,
-    Data = #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer,
-					  context_map=#{},
+    Data = #wolfpacs_upper_layer_fsm_data{upper_layer = UpperLayer,
+					  context_map = #{},
+					  request_uid = <<>>,
+					  request_id = 0,
+					  affected_uid = <<>>,
 					  blob = <<>>},
     {ok, State, Data}.
 
@@ -144,14 +150,14 @@ handle_release_rq({ok, R, _}, Data) ->
     UpperLayer ! {send_response, ReleaseRP},
     {keep_state, Data, []}.
 
-handle_pdv_item(verification_explicit_little, PrCID, IsLast, IsCommand, Raw, Data) ->
+handle_pdv_item({verification, Strategy}, PrCID, IsLast, IsCommand, Raw, Data) ->
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
 
-    {ok, EchoRQ, _Rest} = wolfpacs_data_elements:decode({explicit, little}, Raw),
+    {ok, EchoRQ, _Rest} = wolfpacs_data_elements:decode(Strategy, Raw),
     #{{0, 16#0002} := UID, {0, 16#0110} := RQID} = EchoRQ,
-    EchoResp = wolfpacs_c_echo_scp:encode({explicit, little}, UID, RQID),
+    EchoResp = wolfpacs_c_echo_scp:encode(Strategy, UID, RQID),
 
-    PDVItem = #pdv_item{pr_cid=1,
+    PDVItem = #pdv_item{pr_cid=PrCID,
 			is_last=true,
 			is_command=true,
 			pdv_data=EchoResp},
@@ -162,54 +168,54 @@ handle_pdv_item(verification_explicit_little, PrCID, IsLast, IsCommand, Raw, Dat
 
     {keep_state, Data, []};
 
-handle_pdv_item(verification_implicit_little, PrCID, IsLast, IsCommand, Raw, Data) ->
-    #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
-
-    {ok, EchoRQ, _Rest} = wolfpacs_data_elements:decode({implicit, little}, Raw),
-    #{{0, 16#0002} := UID, {0, 16#0110} := RQID} = EchoRQ,
-    EchoResp = wolfpacs_c_echo_scp:encode({implicit, little}, UID, RQID),
-
-    PDVItem = #pdv_item{pr_cid=1,
-			is_last=true,
-			is_command=true,
-			pdv_data=EchoResp},
-
-    EchoRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
-
-    UpperLayer ! {send_response, EchoRespPDataTF},
-
-    {keep_state, Data, []};
-
-handle_pdv_item(verification_explicit_big, PrCID, IsLast, IsCommand, Raw, Data) ->
-    #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
-
-    {ok, EchoRQ, _Rest} = wolfpacs_data_elements:decode({explicit, big}, Raw),
-    #{{0, 16#0002} := UID, {0, 16#0110} := RQID} = EchoRQ,
-    EchoResp = wolfpacs_c_echo_scp:encode({explicit, big}, UID, RQID),
-
-    PDVItem = #pdv_item{pr_cid=1,
-			is_last=true,
-			is_command=true,
-			pdv_data=EchoResp},
-
-    EchoRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
-
-    UpperLayer ! {send_response, EchoRespPDataTF},
-
-    {keep_state, Data, []};
-
-handle_pdv_item(ct_image_storage_explicit_little, _, false, false, Fragment, Data) ->
+handle_pdv_item({ct_image_storage, Strategy}, _, false, false, Fragment, Data) ->
     #wolfpacs_upper_layer_fsm_data{blob=OldBlob} = Data,
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
     NewData = Data#wolfpacs_upper_layer_fsm_data{blob=NewBlob},
     {keep_state, NewData, []};
 
-handle_pdv_item(ct_image_storage_explicit_little, _, true, false, Fragment, Data) ->
-    #wolfpacs_upper_layer_fsm_data{blob=OldBlob} = Data,
+handle_pdv_item({ct_image_storage, Strategy}, PrCID, true, false, Fragment, Data) ->
+    #wolfpacs_upper_layer_fsm_data{blob=OldBlob,
+				   request_uid=UID,
+				   request_id=RQID,
+				   affected_uid=AffectedUID} = Data,
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
     FileData = wolfpacs_file_format:encode(NewBlob),
     file:write_file("abc.dcm", FileData),
+    lager:warning("saved abc.dcm"),
+
+
+    %%
+    StoreResp = wolfpacs_c_store_scp:encode(Strategy, UID, RQID, AffectedUID),
+
+    PDVItem = #pdv_item{pr_cid=PrCID,
+			is_last=true,
+			is_command=true,
+			pdv_data=StoreResp},
+
+    StoreRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+
+    %%
+
+
+    #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
+    UpperLayer ! {send_response, StoreRespPDataTF},
+
     NewData = Data#wolfpacs_upper_layer_fsm_data{blob = <<>>},
+    {keep_state, NewData, []};
+
+handle_pdv_item({ct_image_storage, Strategy}, _, true, true, Fragment, Data) ->
+    #wolfpacs_upper_layer_fsm_data{blob=OldBlob} = Data,
+    NewBlob = <<OldBlob/binary, Fragment/binary>>,
+    {ok, Info, _Rest} = wolfpacs_data_elements:decode(Strategy, NewBlob),
+    lager:warning("ct_image_storage true true ~p", [Info]),
+    #{{0, 16#0002} := UID,
+      {0, 16#0110} := RQID,
+      {0, 16#1000} := AffectedUID} = Info,
+    NewData = Data#wolfpacs_upper_layer_fsm_data{blob = <<>>,
+						 request_uid = UID,
+						 request_id = RQID,
+						 affected_uid = AffectedUID},
     {keep_state, NewData, []};
 
 handle_pdv_item(Tag, PrCID, A, B, _, Data) ->

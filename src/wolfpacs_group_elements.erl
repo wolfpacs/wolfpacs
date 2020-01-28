@@ -23,6 +23,9 @@ vr_lookup(_, _, VR) ->
 %% @doc Return an example {Group, Element} for a VR.
 %% Useful when writing implicit test cases.
 %%
+%% WARNING, Don't pick example in group 0000 because they
+%% are always treated as little endian implicit.
+%%
 %% @end
 %%-------------------------------------------------------------------
 vr_to_example_group_element("OB") -> {16#0002, 16#0001};
@@ -33,6 +36,7 @@ vr_to_example_group_element("AE") -> {16#0040, 16#0001};
 vr_to_example_group_element("UI") -> {16#0040, 16#0554};
 vr_to_example_group_element("US") -> {16#0040, 16#A0B0};
 vr_to_example_group_element("UL") -> {16#0040, 16#A132};
+vr_to_example_group_element("LO") -> {16#0008, 16#0070};
 vr_to_example_group_element(VR) -> {error, VR, "No example found"}.
 
 %%==============================================================================

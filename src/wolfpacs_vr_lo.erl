@@ -1,30 +1,33 @@
 %%%-------------------------------------------------------------------
-%% @doc Value Representation Application Entity.
+%% @doc Value Representation Patient name.
 %%
 %% @end
 %%%-------------------------------------------------------------------
 
--module(wolfpacs_vr_ae).
--export([encode/2,  decode/2]).
+-module(wolfpacs_vr_lo).
+-export([encode/2,
+	 decode/2]).
 -import(wolfpacs_vr_utils, [pad_binary/1,
 			    limit_binary/2,
 			    trim_binary/1]).
 
-encode(_Strategy, AE) ->
-    encode(AE).
+-type lo() :: list() | binary().
 
-decode(_Strategy, AE) ->
-    decode(AE).
+encode(_Strategy, LO) ->
+    encode(LO).
+
+decode(_Strategy, LO) ->
+    decode(LO).
 
 %%==============================================================================
 %% Private
 %%==============================================================================
 
--spec encode(list() | binary()) -> binary().
-encode(UI) when is_list(UI) ->
-    encode(list_to_binary(UI));
-encode(UI) ->
-    limit_binary(pad_binary(UI), 16).
+-spec encode(lo()) -> binary().
+encode(LO) when is_list(LO) ->
+    encode(list_to_binary(LO));
+encode(LO) ->
+    limit_binary(pad_binary(LO), 64).
 
 -spec decode(binary()) -> binary().
 decode(Data) ->
@@ -37,14 +40,15 @@ decode(Data) ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_test_() ->
-    [?_assertEqual(encode(""),     <<"">>),
-     ?_assertEqual(encode("A"),    <<"A", 0>>),
-     ?_assertEqual(encode("AB"),   <<"AB">>),
-     ?_assertEqual(encode("12345678901234567890"),   <<"1234567890123456">>) ].
+    [?_assertEqual(encode(""), <<"">>),
+     ?_assertEqual(encode("A"), <<"A", 0>>),
+     ?_assertEqual(encode("AB"), <<"AB">>),
+     ?_assertEqual(encode("ABC"), <<"ABC", 0>>),
+     ?_assertEqual(encode("ABCD"), <<"ABCD">>) ].
 
 encode_decode_test_() ->
-    Long = [$A || _ <- lists:seq(1, 32)],
-    Trimmed = list_to_binary([$A || _ <- lists:seq(1, 16)]),
+    Long = [$A || _ <- lists:seq(1, 128)],
+    Trimmed = list_to_binary([$A || _ <- lists:seq(1, 64)]),
     [?_assertEqual(decode(encode("")), <<"">>),
      ?_assertEqual(decode(encode("A")), <<"A">>),
      ?_assertEqual(decode(encode("AB")), <<"AB">>),
