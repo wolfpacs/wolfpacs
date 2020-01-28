@@ -1,9 +1,10 @@
 -module(wolfpacs_binary_distance).
 -export([binary_distance/2]).
 
-binary_distance(<<>>, <<>>) ->
-    0;
-
+binary_distance(<<>>, YS) ->
+    byte_size(YS);
+binary_distance(XS, <<>>) ->
+    byte_size(XS);
 binary_distance(XS, YS) ->
     AS = binary_to_indexed_list(XS),
     BS = binary_to_indexed_list(YS),
@@ -19,7 +20,7 @@ binary_distance(XS, YS) ->
 
 binary_to_indexed_list(Data) ->
     Chars = binary_to_list(Data),
-    IS = lists:seq(0, length(Chars) - 1),
+    IS = lists:seq(1, length(Chars) - 1),
     lists:zip(IS, Chars).
 
 populate(M, N) ->
