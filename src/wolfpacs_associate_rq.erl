@@ -15,10 +15,13 @@ encode(CalledAE, CallingAE, PrCID, AbstractSyntax, TransferSyntax, MaxPDUSize, C
 							   MaxPDUSize,
 							   Class,
 							   VersionName),
+    CalledAE16 = wolfpacs_vr_utils:exact_binary(CalledAE, 16),
+    CallingAE16 = wolfpacs_vr_utils:exact_binary(CallingAE, 16),
+
     Data = <<1:16,  %% Protocol Version
 	     0:16,  %% Reserved
-	     CalledAE/binary,
-	     CallingAE/binary,
+	     CalledAE16/binary,
+	     CallingAE16/binary,
 	     0:256,
 	     VariableItems/binary>>,
 
