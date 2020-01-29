@@ -7,24 +7,14 @@
 -module(wolfpacs_c_echo_scp).
 -export([encode/3]).
 
--define(CMD, 16#0000).
--define(UID, 16#0002).
--define(FLD, 16#0100).
-
--define(RQID, 16#0110).
--define(RPID, 16#0120).
--define(SET, 16#0800).
--define(STU, 16#0900).
-
 encode(Strategy, UID, RQID) ->
-    Info = #{{?CMD, ?UID, "UI"} => UID,
-	     {?CMD, ?FLD, "US"} => 16#8030,
-	     {?CMD, ?RPID, "US"} => RQID,
-	     {?CMD, ?SET, "US"} => 16#0101,
-	     {?CMD, ?STU, "US"} => 16#0000},
+    Info = #{{16#0000, 16#0002, "UI"} => UID,
+	     {16#0000, 16#0100, "US"} => 16#8030,
+	     {16#0000, 16#0120, "US"} => RQID,
+	     {16#0000, 16#0800, "US"} => 16#0101,
+	     {16#0000, 16#0900, "US"} => 16#0000},
     Data = wolfpacs_data_elements:encode(Strategy, Info),
     NbBytes = byte_size(Data),
-    lager:warning("[c_echo_scp] encode length ~p", [NbBytes]),
     Header = wolfpacs_data_element:encode(Strategy, 0, 0, "UL", NbBytes),
     <<Header/binary, Data/binary>>.
 
