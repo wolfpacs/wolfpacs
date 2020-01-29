@@ -25,6 +25,7 @@ jobs:
 script:
   - lscpu | grep Endian
   - ./rebar3 compile
+  - ./rebar3 xref
   - ./rebar3 eunit --cover
   - ./rebar3 proper --cover
   - ./rebar3 ct --cover --readable=false
