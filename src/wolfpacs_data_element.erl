@@ -1,7 +1,7 @@
 %%%-------------------------------------------------------------------
 %% @doc Data Elements (Explicit Little).
 %%
-%% @ref http://dicom.nema.org/medical/dicom/2014c/output/chtml/part05/chapter_7.html#sect_7.1.1
+%% http://dicom.nema.org/medical/dicom/2014c/output/chtml/part05/chapter_7.html#sect_7.1.1
 %% Command Dictionary is always implicit
 %% http://dicom.nema.org/dicom/2013/output/chtml/part07/sect_6.3.html
 %%
