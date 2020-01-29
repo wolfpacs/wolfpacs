@@ -63,16 +63,10 @@ binary_to_indexed_list_test() ->
     ?assertEqual(binary_to_indexed_list(<<"ABCD">>),
 		 [{1, $A}, {2, $B}, {3, $C}, {4, $D}]).
 
-%% binary_to_indexed_list_test_() ->
-%%     [ ?_assertEqual(binary_to_indexed_list(<<20, 30, 40>>),
-%% 		    [{0, 20}, {1, 30}, {2, 40}])
-%%     ].
-%%
-%% binary_distance_base_cases_test_() ->
-%%     [ ?_assertEqual(binary_distance(<<>>, <<>>), 0)
-%%     , ?_assertEqual(binary_distance(<<"cat">>, <<>>), 3)
-%%     , ?_assertEqual(binary_distance(<<>>, <<"dog">>), 3)
-%%     , ?_assertEqual(binary_distance(<<"a">>, <<"aaa">>), 2)
-%%     , ?_assertEqual(binary_distance(<<"foo">>, <<"foo">>), 0)
-%%     ].
-%%
+binary_distance_base_cases_test_() ->
+    [ ?_assertEqual(binary_distance(<<>>, <<>>), 0)
+    , ?_assertEqual(binary_distance(<<"cat">>, <<>>), 3)
+    , ?_assertEqual(binary_distance(<<>>, <<"dog">>), 3)
+    , ?_assertEqual(binary_distance(<<"a">>, <<"aaa">>), 2)
+    , ?_assertEqual(binary_distance(<<"foo">>, <<"foo">>), 0)
+    ].
