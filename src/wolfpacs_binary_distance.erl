@@ -20,7 +20,7 @@ binary_distance(XS, YS) ->
 
 binary_to_indexed_list(Data) ->
     Chars = binary_to_list(Data),
-    IS = lists:seq(1, length(Chars) - 1),
+    IS = lists:seq(1, length(Chars)),
     lists:zip(IS, Chars).
 
 populate(M, N) ->
@@ -52,15 +52,27 @@ priv_binary_distance([{{I, _}, {J, _}}|Rest], Map) ->
 
 -include_lib("eunit/include/eunit.hrl").
 
-binary_to_indexed_list_test_() ->
-    [ ?_assertEqual(binary_to_indexed_list(<<20, 30, 40>>),
-		    [{0, 20}, {1, 30}, {2, 40}])
-    ].
+populate_test() ->
+    ?assertEqual(populate(3, 2),
+		 #{{0, 0} => 0,
+		   {1, 0} => 1,
+		   {2, 0} => 2,
+		   {0, 1} => 1}).
 
-binary_distance_base_cases_test_() ->
-    [ ?_assertEqual(binary_distance(<<>>, <<>>), 0)
-    , ?_assertEqual(binary_distance(<<"cat">>, <<>>), 3)
-    , ?_assertEqual(binary_distance(<<>>, <<"dog">>), 3)
-    , ?_assertEqual(binary_distance(<<"a">>, <<"aaa">>), 2)
-    , ?_assertEqual(binary_distance(<<"foo">>, <<"foo">>), 0)
-    ].
+binary_to_indexed_list_test() ->
+    ?assertEqual(binary_to_indexed_list(<<"ABCD">>),
+		 [{1, $A}, {2, $B}, {3, $C}, {4, $D}]).
+
+%% binary_to_indexed_list_test_() ->
+%%     [ ?_assertEqual(binary_to_indexed_list(<<20, 30, 40>>),
+%% 		    [{0, 20}, {1, 30}, {2, 40}])
+%%     ].
+%%
+%% binary_distance_base_cases_test_() ->
+%%     [ ?_assertEqual(binary_distance(<<>>, <<>>), 0)
+%%     , ?_assertEqual(binary_distance(<<"cat">>, <<>>), 3)
+%%     , ?_assertEqual(binary_distance(<<>>, <<"dog">>), 3)
+%%     , ?_assertEqual(binary_distance(<<"a">>, <<"aaa">>), 2)
+%%     , ?_assertEqual(binary_distance(<<"foo">>, <<"foo">>), 0)
+%%     ].
+%%
