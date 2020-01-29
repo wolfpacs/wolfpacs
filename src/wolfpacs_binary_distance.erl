@@ -12,7 +12,7 @@ binary_distance(XS, YS) ->
 		 A <- AS,
 		 B <- BS],
     Map = populate(byte_size(XS), byte_size(YS)),
-    priv_binary_distance(Matrix, Map).
+    priv_binary_distance(Matrix, Map, 0).
 
 %%==============================================================================
 %% Private
@@ -24,27 +24,26 @@ binary_to_indexed_list(Data) ->
     lists:zip(IS, Chars).
 
 populate(M, N) ->
-    Map1 = maps:from_list([{{I, 0}, I} || I <- lists:seq(0, M-1)]),
-    Map2 = maps:from_list([{{0, J}, J} || J <- lists:seq(0, N-1)]),
+    Map1 = maps:from_list([{{I, 0}, I} || I <- lists:seq(0, M)]),
+    Map2 = maps:from_list([{{0, J}, J} || J <- lists:seq(0, N)]),
     maps:merge(Map1, Map2).
 
 best_option(X, Y, Z) ->
     min(min(X, Y), Z).
 
-priv_binary_distance([], Map) ->
-    Map;
-priv_binary_distance([{{I, X}, {J, X}}|Rest], Map) ->
+priv_binary_distance([], _, Best) ->
+    Best;
+priv_binary_distance([{{I, X}, {J, X}}|Rest], Map, _) ->
     Best = best_option(maps:get({I-1, J}, Map) + 1,
 		       maps:get({I, J-1}, Map) + 1,
 		       maps:get({I-1, J-1}, Map) + 0),
-    lager:warning("[~p, ~p]: ~p", [I, J, Best]),
-    priv_binary_distance(Rest, Map#{{I, J} => Best});
-priv_binary_distance([{{I, _}, {J, _}}|Rest], Map) ->
+    priv_binary_distance(Rest, Map#{{I, J} => Best}, Best);
+
+priv_binary_distance([{{I, _}, {J, _}}|Rest], Map, _) ->
     Best = best_option(maps:get({I-1, J}, Map) + 1,
 		       maps:get({I, J-1}, Map) + 1,
 		       maps:get({I-1, J-1}, Map) + 1),
-    lager:warning("[~p, ~p]: ~p", [I, J, Best]),
-    priv_binary_distance(Rest, Map#{{I, J} => Best}).
+    priv_binary_distance(Rest, Map#{{I, J} => Best}, Best).
 
 %%==============================================================================
 %% Test
@@ -57,7 +56,10 @@ populate_test() ->
 		 #{{0, 0} => 0,
 		   {1, 0} => 1,
 		   {2, 0} => 2,
-		   {0, 1} => 1}).
+		   {3, 0} => 3,
+		   {0, 1} => 1,
+		   {0, 2} => 2
+		  }).
 
 binary_to_indexed_list_test() ->
     ?assertEqual(binary_to_indexed_list(<<"ABCD">>),
