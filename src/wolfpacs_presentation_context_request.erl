@@ -14,6 +14,8 @@
 -export([encode/3,
 	 decode/1]).
 -import(wolfpacs_utils, [drop_last_byte/1]).
+-include("abstract_syntax.hrl").
+-include("transfer_syntax.hrl").
 
 %%-------------------------------------------------------------------
 %% @doc Encodes a presentation contex during Associate-RQ.
@@ -93,10 +95,10 @@ decode_with_transfer_syntax(_, _, _) ->
 
 encode_decode_test_() ->
     PrCID = 42,
-    AbstractSyntax = wolfpacs_sop:verification(),
-    TransferSyntax = [wolfpacs_transfer_syntax:implicit_vr_little_endian(),
-		      wolfpacs_transfer_syntax:explicit_vr_little_endian(),
-		      wolfpacs_transfer_syntax:explicit_vr_big_endian()],
+    AbstractSyntax = ?VERIFICATION,
+    TransferSyntax = [?IMPLICIT_LITTLE_ENDIAN,
+		      ?EXPLICIT_LITTLE_ENDIAN,
+		      ?EXPLICIT_BIG_ENDIAN],
     Encoded0 = encode(PrCID, AbstractSyntax, TransferSyntax),
     Encoded1 = <<Encoded0/binary, 42>>,
     Incorrect0 = drop_last_byte(Encoded0),

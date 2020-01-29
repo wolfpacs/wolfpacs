@@ -7,6 +7,8 @@
 -module(wolfpacs_associate_rq).
 -export([encode/8,
 	 decode/1]).
+-include("abstract_syntax.hrl").
+-include("transfer_syntax.hrl").
 
 encode(CalledAE, CallingAE, PrCID, AbstractSyntax, TransferSyntax, MaxPDUSize, Class, VersionName) ->
     VariableItems = wolfpacs_variable_items_request:encode(PrCID,
@@ -63,8 +65,8 @@ decode_variable_items(OrgData, _, _, _, _) ->
 
 encode_echoscu_test() ->
     PrCID = 1,
-    AbstractSyntax = wolfpacs_sop:verification(),
-    TransferSyntax = [wolfpacs_transfer_syntax:implicit_vr_little_endian()],
+    AbstractSyntax = ?VERIFICATION,
+    TransferSyntax = [?IMPLICIT_LITTLE_ENDIAN],
     CalledAE  = <<"ANY-SCP         ">>,
     CallingAE = <<"bbbbbb          ">>,
     R = <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>,
@@ -117,8 +119,8 @@ encode_echoscu_test() ->
 
 encode_decode_test_() ->
     PrCID = 1,
-    AbstractSyntax = wolfpacs_sop:verification(),
-    TransferSyntax = [wolfpacs_transfer_syntax:implicit_vr_little_endian()],
+    AbstractSyntax = ?VERIFICATION,
+    TransferSyntax = [?IMPLICIT_LITTLE_ENDIAN],
     CalledAE  = <<"ANY-SCP         ">>,
     CallingAE = <<"bbbbbb          ">>,
     R = <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>,

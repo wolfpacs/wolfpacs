@@ -50,7 +50,7 @@ decode(Data) ->
 -include_lib("eunit/include/eunit.hrl").
 
 test_encode_test_() ->
-    V0 = wolfpacs_sop:verification(),
+    V0 = <<"1.2.840.10008.1.1">>,
     E0 = encode(V0),
     E1 = <<E0/binary, 42>>,
     I0 = drop_last_byte(E0),

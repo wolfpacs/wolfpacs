@@ -6,6 +6,7 @@
 
 -module(wolfpacs_c_echo_scu).
 -behaviour(gen_server).
+-include("abstract_syntax.hrl").
 -include("transfer_syntax.hrl").
 
 -export([start_link/0,
@@ -107,7 +108,7 @@ transfer_syntax({explicit, big}) ->
 
 send_associate_rq(State=#{sock := Sock, calledae := CalledAE_, strategy := Strategy}) ->
     PrCID = 1,
-    AbstractSyntax = wolfpacs_sop:verification(),
+    AbstractSyntax = ?VERIFICATION,
     TransferSyntax = [transfer_syntax(Strategy)],
     MaxPDUSize = 16384,
     %% TODO, little or big here ?

@@ -7,6 +7,7 @@
 -module(wolfpacs_presentation_contexts_accept).
 -export([encode/1,
 	 decode/1]).
+-include("transfer_syntax.hrl").
 
 encode(Contexts) ->
     encode(Contexts, <<>>).
@@ -58,9 +59,9 @@ encode_decode_test_() ->
     PrCID1 = 1,
     PrCID2 = 2,
 
-    TransferSyntax0 = wolfpacs_transfer_syntax:implicit_vr_little_endian(),
-    TransferSyntax1 = wolfpacs_transfer_syntax:explicit_vr_little_endian(),
-    TransferSyntax2 = wolfpacs_transfer_syntax:explicit_vr_big_endian(),
+    TransferSyntax0 = ?IMPLICIT_LITTLE_ENDIAN,
+    TransferSyntax1 = ?EXPLICIT_LITTLE_ENDIAN,
+    TransferSyntax2 = ?EXPLICIT_BIG_ENDIAN,
 
     Contexts = [{PrCID0, TransferSyntax0},
 		{PrCID1, TransferSyntax1},

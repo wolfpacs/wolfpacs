@@ -5,24 +5,13 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_transfer_syntax).
--export([implicit_vr_little_endian/0,
-	 explicit_vr_little_endian/0,
-	 explicit_vr_big_endian/0,
-	 encode/1,
+-export([encode/1,
 	 decode/1,
 	 encode_list/1,
 	 decode_list/1]).
 -import(wolfpacs_utils, [drop_last_byte/1]).
 -include("wolfpacs_types.hrl").
-
-implicit_vr_little_endian() ->
-    <<"1.2.840.10008.1.2">>.
-
-explicit_vr_little_endian() ->
-    <<"1.2.840.10008.1.2.1">>.
-
-explicit_vr_big_endian() ->
-    <<"1.2.840.10008.1.2.2">>.
+-include("transfer_syntax.hrl").
 
 -spec encode(binary()) -> binary().
 encode(TransferSyntaxString) ->
@@ -81,7 +70,7 @@ decode_list({ok, Decoded, Rest}, Acc) ->
 -include_lib("eunit/include/eunit.hrl").
 
 test_encode_test_() ->
-    V0 = implicit_vr_little_endian(),
+    V0 = ?IMPLICIT_LITTLE_ENDIAN,
     E0 = encode(V0),
     E1 = <<E0/binary, 42>>,
     I0 = drop_last_byte(E0),
@@ -92,9 +81,9 @@ test_encode_test_() ->
       ?_assertEqual(decode(I1), {error, I1})].
 
 test_encode_list_test_() ->
-    Offer = [implicit_vr_little_endian(),
-	     explicit_vr_little_endian(),
-	     explicit_vr_big_endian()],
+    Offer = [?IMPLICIT_LITTLE_ENDIAN,
+	     ?EXPLICIT_LITTLE_ENDIAN,
+	     ?EXPLICIT_BIG_ENDIAN],
     Encoded0 = encode_list(Offer),
     Encoded1 = <<Encoded0/binary, 42>>,
     Incorrect = <<1,2,3,4>>,
