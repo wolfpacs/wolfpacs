@@ -31,7 +31,7 @@ start_link() ->
 %% Before OTP 18 tuples must be used to specify a child. e.g.
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    ListenerSpec = ranch:child_spec(wolfpack, 100,
+    ListenerSpec = ranch:child_spec(wolfpack,
 				    ranch_tcp, [{port, 11112}],
 				    wolfpacs_upper_layer, []),
 

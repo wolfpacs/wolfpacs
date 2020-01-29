@@ -33,12 +33,12 @@ start_link(_Ref, Socket, Transport, Opts) ->
 %% Behaviour callbacks
 %%------------------------------------------------------------------------------
 
--record(state, {socket,
-		transport,
-		fsm,
-		maxPDU = 65536,
-		data = <<>>,
-		associated = false
+-record(state, {socket :: ranch_transport:socket(),
+		transport :: module(),
+		fsm :: pid(),
+		maxPDU = 65536 :: pos_integer(),
+		data = <<>> :: binary(),
+		associated = false :: boolean()
 	       }).
 
 %% @hidden

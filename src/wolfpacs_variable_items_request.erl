@@ -8,6 +8,8 @@
 -export([encode/6,
 	 decode/1]).
 -import(wolfpacs_utils, [drop_last_byte/1]).
+-include("abstract_syntax.hrl").
+-include("transfer_syntax.hrl").
 
 encode(PrCID, AbstractSyntax, TransferSyntax, MaxPDUSize, Class, VersionName) ->
     PresentationContext = wolfpacs_presentation_context_request:encode(PrCID, AbstractSyntax, TransferSyntax),
@@ -54,10 +56,10 @@ decode_user_information(OrgData, _,  _) ->
 
 encode_decode_test_() ->
     PrCID = 42,
-    AbstractSyntax = wolfpacs_sop:verification(),
-    TransferSyntax = [wolfpacs_transfer_syntax:implicit_vr_little_endian(),
-		      wolfpacs_transfer_syntax:explicit_vr_little_endian(),
-		      wolfpacs_transfer_syntax:explicit_vr_big_endian()],
+    AbstractSyntax = ?VERIFICATION,
+    TransferSyntax = [?IMPLICIT_LITTLE_ENDIAN,
+		      ?EXPLICIT_LITTLE_ENDIAN,
+		      ?EXPLICIT_BIG_ENDIAN],
     MaxPDUSize = 65536,
     Class = <<"1.2.276.0.7230010.3.0.3.6.4">>,
     VersionName = <<"OFFIS_DCMTK_364">>,

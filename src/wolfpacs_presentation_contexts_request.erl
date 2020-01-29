@@ -7,6 +7,8 @@
 -module(wolfpacs_presentation_contexts_request).
 -export([encode/1,
 	 decode/1]).
+-include("abstract_syntax.hrl").
+-include("transfer_syntax.hrl").
 
 %% TODO: Turn {PrCID, AbstractSyntax, TransferSyntaxes} into a record
 
@@ -60,11 +62,11 @@ encode_decode_test_() ->
     PrCID1 = 1,
     PrCID2 = 2,
 
-    AbstractSyntax = wolfpacs_sop:verification(),
+    AbstractSyntax = ?VERIFICATION,
 
-    TransferSyntax0 = [wolfpacs_transfer_syntax:implicit_vr_little_endian()],
-    TransferSyntax1 = [wolfpacs_transfer_syntax:explicit_vr_little_endian()],
-    TransferSyntax2 = [wolfpacs_transfer_syntax:explicit_vr_big_endian()],
+    TransferSyntax0 = [?IMPLICIT_LITTLE_ENDIAN],
+    TransferSyntax1 = [?EXPLICIT_LITTLE_ENDIAN],
+    TransferSyntax2 = [?EXPLICIT_BIG_ENDIAN],
 
     Contexts = [{PrCID0, AbstractSyntax, TransferSyntax0},
 		{PrCID1, AbstractSyntax, TransferSyntax1},

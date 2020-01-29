@@ -128,7 +128,7 @@ handle_associate_rq(AssociateRQ, Data) ->
 
 handle_abort({error, _}, Data) ->
     {keep_state, Data, []};
-handle_abort({ok, Source, Reason, _}, Data) ->
+handle_abort({ok, _Source, _Reason, _}, Data) ->
     lager:debug("[upper_layer_fsm] received abort"),
     {keep_state, Data, []}.
 
@@ -150,7 +150,7 @@ handle_release_rq({ok, R, _}, Data) ->
     UpperLayer ! {send_response, ReleaseRP},
     {keep_state, Data, []}.
 
-handle_pdv_item({verification, Strategy}, PrCID, IsLast, IsCommand, Raw, Data) ->
+handle_pdv_item({verification, Strategy}, PrCID, _IsLast, _IsCommand, Raw, Data) ->
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
 
     {ok, EchoRQ, _Rest} = wolfpacs_data_elements:decode(Strategy, Raw),
@@ -168,7 +168,7 @@ handle_pdv_item({verification, Strategy}, PrCID, IsLast, IsCommand, Raw, Data) -
 
     {keep_state, Data, []};
 
-handle_pdv_item({ct_image_storage, Strategy}, _, false, false, Fragment, Data) ->
+handle_pdv_item({ct_image_storage, _Strategy}, _, false, false, Fragment, Data) ->
     #wolfpacs_upper_layer_fsm_data{blob=OldBlob} = Data,
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
     NewData = Data#wolfpacs_upper_layer_fsm_data{blob=NewBlob},
