@@ -75,6 +75,7 @@ encode_decode_test_() ->
     Incorrect1 = wolfpacs_utils:drop_last_byte(Encoded0),
     Incorrect2 = <<1, 2, 3, 4>>,
     Incorrect3 = <<0:1024, "DICM", 1, 2>>,
+    Incorrect4 = binary:replace(Encoded0, <<"UL">>, <<"zz">>, [global]),
 
     [ ?_assertEqual(decode(Strategy, Encoded0), {ok, Info, <<>>})
     , ?_assertEqual(decode(Strategy, Encoded1), {ok, Info, <<42>>})
@@ -82,4 +83,5 @@ encode_decode_test_() ->
     , ?_assertEqual(decode(Strategy, Incorrect1), {error, Incorrect1})
     , ?_assertEqual(decode(Strategy, Incorrect2), {error, Incorrect2})
     , ?_assertEqual(decode(Strategy, Incorrect3), {error, Incorrect3})
-    ].
+    , ?_assertEqual(decode(Strategy, Incorrect4), {error, Incorrect4})
+   ].
