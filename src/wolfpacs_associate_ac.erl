@@ -129,6 +129,7 @@ encode_decode_test_() ->
     Incorrect1 = wolfpacs_utils:drop_first_byte(Encoded0),
     Incorrect2 = <<1, 2, 3, 4, 5>>,
     Incorrect3 = binary:replace(Encoded0, <<"1.2.840">>, <<>>),
+    Incorrect4 = binary:replace(Encoded0, <<"3.1.1.1">>, <<>>, [global]),
 
     Correct0 = {ok, CalledAE, CallingAE, R, [{PrCID, TransferSyntax}], MaxPDUSize, Class, VersionName, <<>>},
     Correct1 = {ok, CalledAE, CallingAE, R, [{PrCID, TransferSyntax}], MaxPDUSize, Class, VersionName, <<42>>},
@@ -139,4 +140,5 @@ encode_decode_test_() ->
     , ?_assertEqual(decode(Incorrect1), {error, Incorrect1})
     , ?_assertEqual(decode(Incorrect2), {error, Incorrect2})
     , ?_assertEqual(decode(Incorrect3), {error, Incorrect3})
+    , ?_assertEqual(decode(Incorrect4), {error, Incorrect4})
     ].

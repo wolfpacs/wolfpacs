@@ -180,7 +180,7 @@ handle_pdv_item({ct_image_storage, Strategy}, PrCID, true, false, Fragment, Data
 				   request_id=RQID,
 				   affected_uid=AffectedUID} = Data,
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
-    FileData = wolfpacs_file_format:encode(NewBlob),
+    FileData = wolfpacs_file_format:encode({explicit, little}, NewBlob),
     file:write_file("abc.dcm", FileData),
     lager:warning("saved abc.dcm"),
 
