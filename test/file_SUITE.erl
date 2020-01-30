@@ -18,9 +18,10 @@ end_per_suite(Cfg) ->
     Cfg.
 
 test_file_meta_information(Config) ->
+    Strategy = {explicit, little},
     Filename = filename:join([?config(data_dir, Config), "testdata1.bin"]),
     {ok, Content} = file:read_file(Filename),
-    {ok, Info, <<>>} = wolfpacs_file_meta_information:decode(Content),
+    {ok, Info, <<>>} = wolfpacs_file_meta_information:decode(Strategy, Content),
 
     Get = fun(Group, Element) -> maps:get({Group, Element}, Info, missing) end,
 
@@ -49,14 +50,16 @@ test_file_meta_information(Config) ->
     ok.
 
 test_file_format(_Config) ->
+    Strategy = {explicit, little},
+
     Group = 16#7fe0,
     Element = 16#10,
     RawData = [255, 254, 255, 254],
 
     Content = #{{Group, Element, "OB"} => RawData},
-    EncodedContent = wolfpacs_data_elements:encode({explicit, little}, Content),
-    BinData = wolfpacs_file_format:encode(EncodedContent),
+    EncodedContent = wolfpacs_data_elements:encode(Strategy, Content),
+    BinData = wolfpacs_file_format:encode(Strategy, EncodedContent),
 
-    {ok, {_Meta, Content2}, _Rest} = wolfpacs_file_format:decode(BinData),
+    {ok, {_Meta, Content2}, _Rest} = wolfpacs_file_format:decode(Strategy, BinData),
 
     RawData = maps:get({Group, Element}, Content2).
