@@ -26,24 +26,21 @@ decode(Data) ->
 %% Private
 %%==============================================================================
 
-decode_with_name(OrgData, {error, _}) ->
-    lager:warning("unable to decode_with_name"),
-    {error, OrgData};
 decode_with_name(OrgData, {ok, Name, Rest}) ->
-    decode_with_accept(OrgData, Name, wolfpacs_presentation_contexts_accept:decode(Rest)).
+    decode_with_accept(OrgData, Name, wolfpacs_presentation_contexts_accept:decode(Rest));
+decode_with_name(OrgData, _) ->
+    {error, OrgData, ["unable to decode context name"]}.
 
-decode_with_accept(OrgData, _, {error, _}) ->
-    lager:warning("unable to decode_with_accept"),
-    {error, OrgData};
 decode_with_accept(OrgData, Name, {ok, Contexts, Rest}) ->
     MaybeUserInformation = wolfpacs_user_information:decode(Rest),
-    decode_with_user_information(OrgData, Name, Contexts, MaybeUserInformation).
+    decode_with_user_information(OrgData, Name, Contexts, MaybeUserInformation);
+decode_with_accept(OrgData, _, _) ->
+    {error, OrgData, ["unable to decode accept"]}.
 
-decode_with_user_information(OrgData, _Name, _Contexts, {error, _}) ->
-    lager:warning("unable to decode_with_user_information"),
-    {error, OrgData};
 decode_with_user_information(_OrgData, Name, Contexts, {ok, MaxSize, ImplementationClass, VersionName, Rest}) ->
-    {ok, Name, Contexts, MaxSize, ImplementationClass, VersionName, Rest}.
+    {ok, Name, Contexts, MaxSize, ImplementationClass, VersionName, Rest};
+decode_with_user_information(OrgData, _Name, _Contexts, _) ->
+    {error, OrgData, ["unable to decode user information"]}.
 
 %%==============================================================================
 %% Test
@@ -80,12 +77,14 @@ encode_decode_test_() ->
     Encoded0 = encode([{PrCID, TransferSyntax}], MaxPDUSize, Class, VersionName),
     Encoded1 = <<Encoded0/binary, 42>>,
     Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
-    Incorrect1 = <<1, 2, 3, 4, 5>>,
+    Incorrect1 = wolfpacs_utils:drop_first_byte(Encoded0),
+    Incorrect2 = <<1, 2, 3, 4, 5>>,
 
     Correct0 = {ok, Fixed, [{PrCID, TransferSyntax}], MaxPDUSize, Class, VersionName, <<>>},
     Correct1 = {ok, Fixed, [{PrCID, TransferSyntax}], MaxPDUSize, Class, VersionName, <<42>>},
 
     [?_assertEqual(decode(Encoded0), Correct0),
      ?_assertEqual(decode(Encoded1), Correct1),
-     ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
-     ?_assertEqual(decode(Incorrect1), {error, Incorrect1})].
+     ?_assertEqual(decode(Incorrect0), {error, Incorrect0, ["unable to decode user information"]}),
+     ?_assertEqual(decode(Incorrect1), {error, Incorrect1, ["unable to decode context name"]}),
+     ?_assertEqual(decode(Incorrect2), {error, Incorrect2, ["unable to decode context name"]})].

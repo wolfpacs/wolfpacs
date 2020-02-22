@@ -36,10 +36,14 @@ init(_) ->
 
 %% @hidden
 handle_call({echo, Host, Port, CalledAE, Strategy}, From, State=#{sock := none}) ->
-    {ok, Sock} = gen_tcp:connect(Host, Port, [binary, {active, true}]),
-    {noreply, send_associate_rq(State#{calledae => CalledAE,
-				       from => From, sock => Sock,
-				       strategy => Strategy})};
+    case gen_tcp:connect(Host, Port, [binary, {active, true}]) of
+	{ok, Sock} ->
+	    {noreply, send_associate_rq(State#{calledae => CalledAE,
+					       from => From, sock => Sock,
+					       strategy => Strategy})};
+	{error, Error} ->
+	    {reply, {error, Error}, State}
+    end;
 
 %% @hidden
 handle_call({echo, _, _, _}, _From, State) ->
@@ -81,8 +85,8 @@ handle_data(Data = <<16#2, _/binary>>, State) ->
     case wolfpacs_associate_ac:decode(Data) of
 	{ok, _CalledAE, _CallingAE, _R, _Contexts, _, _Class, _VersionName, Rest} ->
 	    {noreply, send_release_rq(State#{data => Rest})};
-	{error, Data}  ->
-	    lager:warning("[c_echo_scu] associate_ac decode error"),
+	{error, Data, Error}  ->
+	    lager:warning("[c_echo_scu] associate_ac decode error ~p", [Error]),
 	    {stop, normal, State}
     end;
 handle_data(Data = <<16#6, _/binary>>, State=#{from := From, sock := Sock}) ->
@@ -104,7 +108,10 @@ transfer_syntax({implicit, little}) ->
 transfer_syntax({explicit, little}) ->
     ?EXPLICIT_LITTLE_ENDIAN;
 transfer_syntax({explicit, big}) ->
-    ?EXPLICIT_BIG_ENDIAN.
+    ?EXPLICIT_BIG_ENDIAN;
+transfer_syntax(TransferSyntax) ->
+    lager:warning("[c_echo_scu] Unknown transfer syntax ~p", [TransferSyntax]),
+    ?EXPLICIT_LITTLE_ENDIAN.
 
 send_associate_rq(State=#{sock := Sock, calledae := CalledAE_, strategy := Strategy}) ->
     PrCID = 1,

@@ -41,15 +41,13 @@ decode(AllData = <<16#2, _, Length:32, Data/binary>>) ->
 		{ok, CalledAE, CallingAE, R, Contexts, MaxPDUSize, Class, VersionName, _} ->
 		    {ok, CalledAE, CallingAE, R, Contexts, MaxPDUSize, Class, VersionName, Rest};
 		_ ->
-		    lager:warning("[associate_ac] unable to decode"),
-		    {error, AllData}
+		    {error, AllData, ["unable to decode info"]}
 	    end;
 	_ ->
-	    lager:warning("[associate_ac] unable to decode - not enough data"),
-	    {error, AllData}
+	    {error, AllData, ["not enough data"]}
     end;
 decode(AllData) ->
-    {error, AllData}.
+    {error, AllData, ["incorrect header"]}.
 
 %%==============================================================================
 %% Private
@@ -59,8 +57,8 @@ decode_info(AllData = <<_:16, _:16, CalledAE:128/bitstring, CallingAE:128/bitstr
     case wolfpacs_variable_items_accept:decode(Data) of
 	{ok, _, Contexts, MaxPDUSize, Class, VersionName, _} ->
 	    {ok, CalledAE, CallingAE, R, Contexts, MaxPDUSize, Class, VersionName, <<>>};
-	_ ->
-	    {error, AllData}
+	{error, _, Error} ->
+	    {error, AllData, ["unable to decode items accept"|Error]}
     end.
 
 %%==============================================================================
@@ -136,9 +134,9 @@ encode_decode_test_() ->
 
     [ ?_assertEqual(decode(Encoded0), Correct0)
     , ?_assertEqual(decode(Encoded1), Correct1)
-    , ?_assertEqual(decode(Incorrect0), {error, Incorrect0})
-    , ?_assertEqual(decode(Incorrect1), {error, Incorrect1})
-    , ?_assertEqual(decode(Incorrect2), {error, Incorrect2})
-    , ?_assertEqual(decode(Incorrect3), {error, Incorrect3})
-    , ?_assertEqual(decode(Incorrect4), {error, Incorrect4})
+    , ?_assertEqual(decode(Incorrect0), {error, Incorrect0, ["not enough data"]})
+    , ?_assertEqual(decode(Incorrect1), {error, Incorrect1, ["incorrect header"]})
+    , ?_assertEqual(decode(Incorrect2), {error, Incorrect2, ["incorrect header"]})
+    , ?_assertEqual(decode(Incorrect3), {error, Incorrect3, ["not enough data"]})
+    , ?_assertEqual(decode(Incorrect4), {error, Incorrect4, ["not enough data"]})
     ].
