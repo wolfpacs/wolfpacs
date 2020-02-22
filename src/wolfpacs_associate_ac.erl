@@ -40,8 +40,8 @@ decode(AllData = <<16#2, _, Length:32, Data/binary>>) ->
 	    case decode_info(Part) of
 		{ok, CalledAE, CallingAE, R, Contexts, MaxPDUSize, Class, VersionName, _} ->
 		    {ok, CalledAE, CallingAE, R, Contexts, MaxPDUSize, Class, VersionName, Rest};
-		_ ->
-		    {error, AllData, ["unable to decode info"]}
+		{error, _, Error} ->
+		    {error, AllData, ["unable to decode info"|Error]}
 	    end;
 	_ ->
 	    {error, AllData, ["not enough data"]}
@@ -59,7 +59,10 @@ decode_info(AllData = <<_:16, _:16, CalledAE:128/bitstring, CallingAE:128/bitstr
 	    {ok, CalledAE, CallingAE, R, Contexts, MaxPDUSize, Class, VersionName, <<>>};
 	{error, _, Error} ->
 	    {error, AllData, ["unable to decode items accept"|Error]}
-    end.
+    end;
+decode_info(OrgData) ->
+    {error, OrgData, ["not enough data for decode_info"]}.
+
 
 %%==============================================================================
 %% Test
@@ -128,6 +131,9 @@ encode_decode_test_() ->
     Incorrect2 = <<1, 2, 3, 4, 5>>,
     Incorrect3 = binary:replace(Encoded0, <<"1.2.840">>, <<>>),
     Incorrect4 = binary:replace(Encoded0, <<"3.1.1.1">>, <<>>, [global]),
+    Incorrect5 = wolfpacs_utils:clear_even(Encoded0),
+    Incorrect6 = wolfpacs_utils:clear_odd(Encoded0),
+    Incorrect7 = binary:replace(Encoded0, <<16#21>>, <<0>>, [global]),
 
     Correct0 = {ok, CalledAE, CallingAE, R, [{PrCID, TransferSyntax}], MaxPDUSize, Class, VersionName, <<>>},
     Correct1 = {ok, CalledAE, CallingAE, R, [{PrCID, TransferSyntax}], MaxPDUSize, Class, VersionName, <<42>>},
@@ -139,4 +145,10 @@ encode_decode_test_() ->
     , ?_assertEqual(decode(Incorrect2), {error, Incorrect2, ["incorrect header"]})
     , ?_assertEqual(decode(Incorrect3), {error, Incorrect3, ["not enough data"]})
     , ?_assertEqual(decode(Incorrect4), {error, Incorrect4, ["not enough data"]})
+    , ?_assertEqual(decode(Incorrect5), {error, Incorrect5, ["incorrect header"]})
+    , ?_assertEqual(decode(Incorrect6), {error, Incorrect6, ["unable to decode info",
+							     "not enough data for decode_info"]})
+    , ?_assertEqual(decode(Incorrect7), {error, Incorrect7, ["unable to decode info",
+							     "unable to decode items accept",
+							     "unable to decode accept"]})
     ].
