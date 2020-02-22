@@ -11,7 +11,9 @@
 	 log_hex_to_int/1,
 	 log_to_binary/1,
 	 clear_byte/2,
-	 remove_keys/2]).
+	 remove_keys/2,
+	 clear_even/1,
+	 clear_odd/1]).
 
 -spec drop_first_byte(binary()) -> binary().
 drop_first_byte(<<_, Data/binary>>) ->
@@ -61,6 +63,12 @@ remove_keys([], Map) ->
 remove_keys([Key|Keys], Map) ->
     remove_keys(Keys, maps:remove(Key, Map)).
 
+clear_even(Data) ->
+    clear_data(binary_to_list(Data), [], now).
+
+clear_odd(Data) ->
+    clear_data(binary_to_list(Data), [], next).
+
 %%==============================================================================
 %% Private
 %%==============================================================================
@@ -87,6 +95,13 @@ hv($c) -> 12;
 hv($d) -> 13;
 hv($e) -> 14;
 hv($f) -> 15.
+
+clear_data([], Acc, _) ->
+    list_to_binary(lists:reverse(Acc));
+clear_data([_|T], Acc, now)->
+    clear_data(T, [0|Acc], next);
+clear_data([H|T], Acc, next) ->
+    clear_data(T, [H|Acc], now).
 
 %%==============================================================================
 %% Test
@@ -136,3 +151,19 @@ remove_keys_test_() ->
       ?_assertEqual(remove_keys([1, 3, 5], Map), #{}),
       ?_assertEqual(remove_keys([1], Map), #{3 => 4, 5 => 6}),
       ?_assertEqual(remove_keys([1, 5], Map), #{3 => 4}) ].
+
+clear_even_test_() ->
+    [ ?_assertEqual(clear_even(<<>>), <<>>)
+    , ?_assertEqual(clear_even(<<1>>), <<0>>)
+    , ?_assertEqual(clear_even(<<1 ,2>>), <<0, 2>>)
+    , ?_assertEqual(clear_even(<<1 ,2, 3>>), <<0, 2, 0>>)
+    , ?_assertEqual(clear_even(<<1 ,2, 3, 4>>), <<0, 2, 0, 4>>)
+    ].
+
+clear_odd_test_() ->
+    [ ?_assertEqual(clear_odd(<<>>), <<>>)
+    , ?_assertEqual(clear_odd(<<1>>), <<1>>)
+    , ?_assertEqual(clear_odd(<<1 ,2>>), <<1, 0>>)
+    , ?_assertEqual(clear_odd(<<1 ,2, 3>>), <<1, 0, 3>>)
+    , ?_assertEqual(clear_odd(<<1 ,2, 3, 4>>), <<1, 0, 3, 0>>)
+    ].
