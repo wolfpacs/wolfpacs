@@ -20,12 +20,12 @@ A PACS is classified as a medical device and needs to be painstakingly tested.
 
 We use four different test in WolfPACS and we aim to test the software thoroughly.
 
-| Test                   | Target                | Method                   |
-|------------------------|-----------------------|--------------------------|
-| Unit tests             | One Module            | Erlang Eunit             |
-| Integration tests      | Many Modules          | Erlang Common Tests (ct) |
-| Validation testing     | User requirements     | Python Robot Framework   |
-| Property based testing | Hidden bugs / Fussing | Erlang proper            |
+| Test                   | Target                | Method                                                                            |
+|------------------------|-----------------------|-----------------------------------------------------------------------------------|
+| Unit tests             | One Module            | [Erlang Eunit](http://erlang.org/doc/apps/eunit/chapter.html)                     |
+| Integration tests      | Many Modules          | [Erlang Common Tests](https://erlang.org/doc/apps/common_test/introduction.html)  |
+| Validation testing     | User requirements     | [Python Robot Framework](https://robotframework.org/)                             |
+| Property based testing | Hidden bugs / Fussing | [Erlang proper](https://propertesting.com/)                                       |
 
 Quick Start
 -----------
@@ -42,8 +42,8 @@ The following transfer syntax are are supported:
 | Transfer Syntax           | UID                 | Supported |
 |---------------------------|---------------------|-----------|
 | Implicit VR Little Endian | 1.2.840.10008.1.2   | Yes       |
-| Explicit VR Little Endian | 1.2.840.10008.1.2.1 | No        |
-| Explicit VR Big Endian    | 1.2.840.10008.1.2.2 | No        |
+| Explicit VR Little Endian | 1.2.840.10008.1.2.1 | Yes       |
+| Explicit VR Big Endian    | 1.2.840.10008.1.2.2 | Yes       |
 
 The following services are supported:
 
