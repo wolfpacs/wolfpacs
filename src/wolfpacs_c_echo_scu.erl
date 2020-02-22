@@ -139,3 +139,19 @@ send_release_rq(State=#{sock := Sock}) ->
 %%==============================================================================
 %% Test
 %%==============================================================================
+
+-include_lib("eunit/include/eunit.hrl").
+
+bad_echo_test_() ->
+    {ok, Echo} = start_link(),
+    [ ?_assertEqual(echo(Echo, "localhost1234", 11112, "foo", {explicit, little}), {error, nxdomain})
+    , ?_assertEqual(echo(Echo, "localhost", 21, "foo", {explicit, little}), {error, econnrefused})
+    , ?_assertEqual(echo(Echo, "localhost", 21, "foo", {foo, bar}), {error, econnrefused})
+    ].
+
+gen_server_test_() ->
+    {ok, Echo} = start_link(),
+    Echo ! some_info, %% should not crash the server
+    [ ?_assertEqual(gen_server:cast(Echo, foobar), ok),
+      ?_assertEqual(gen_server:call(Echo, foobar), {error, foobar})
+    ].
