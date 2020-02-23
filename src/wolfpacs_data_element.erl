@@ -42,10 +42,10 @@ encode(Strategy, G, E, "PN", Name) ->
 encode(Strategy, G, E, "LO", Name) ->
     encode_common(Strategy, G, E, "LO", wolfpacs_vr_lo:encode(Strategy, Name));
 encode(_Strategy, G, E, "ox", _) ->
-    lager:warning("[data_element_explicit] unable to encode ox (OB or OW)", [G, E]),
+    ok = lager:warning("[data_element_explicit] unable to encode ox (OB or OW)", [G, E]),
     <<>>;
 encode(_Strategy, G, E, VRTag, _) ->
-    lager:warning("[data_element_explicit] unable to encode ~p ~p ~p", [G, E, VRTag]),
+    ok = lager:warning("[data_element_explicit] unable to encode ~p ~p ~p", [G, E, VRTag]),
     VR = list_to_binary(VRTag),
     <<"error", VR/binary>>.
 

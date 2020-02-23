@@ -34,8 +34,8 @@ encode(CalledAE, CallingAE, PrCID, AbstractSyntax, TransferSyntax, MaxPDUSize, C
 decode(OrgData = <<16#1, _, _Length:32, Data/binary>>) ->
     decode_called_and_calling(OrgData, Data);
 decode(OrgData) ->
-    lager:warning("error: decode"),
-    lager:warning("~p", [OrgData]),
+    ok = lager:warning("error: decode"),
+    ok = lager:warning("~p", [OrgData]),
     {error, OrgData}.
 
 %%==============================================================================
@@ -46,7 +46,7 @@ decode_called_and_calling(OrgData, <<_:16, _:16, CalledAE:128/bitstring, Calling
     MaybeVariableItems = wolfpacs_variable_items_request:decode(Data),
     decode_variable_items(OrgData, CalledAE, CallingAE, R, MaybeVariableItems);
 decode_called_and_calling(OrgData, _) ->
-    lager:warning("error: decode_called_and_calling"),
+    ok = lager:warning("error: decode_called_and_calling"),
     {error, OrgData}.
 
 decode_variable_items(_OrgData, CalledAE, CallingAE, R, {ok,
@@ -54,7 +54,7 @@ decode_variable_items(_OrgData, CalledAE, CallingAE, R, {ok,
 							 MaxSize, Class, VersionName, Rest}) ->
     {ok, CalledAE, CallingAE, R, Contexts, MaxSize, Class, VersionName, Rest};
 decode_variable_items(OrgData, _, _, _, _) ->
-    lager:warning("[associate_rq] error: decode variable items"),
+    ok = lager:warning("[associate_rq] error: decode variable items"),
     {error, OrgData}.
 
 %%==============================================================================

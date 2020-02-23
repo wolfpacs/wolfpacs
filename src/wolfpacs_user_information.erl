@@ -25,7 +25,7 @@ decode(Data = <<16#50, _, _Length:16, UserInformation/binary>>) ->
 	    Succes
     end;
 decode(Data = <<H, _/binary>>) ->
-    lager:warning("[user_information] not user information ~p", [H]),
+    ok = lager:warning("[user_information] not user information ~p", [H]),
     {error, Data}.
 
 %%==============================================================================
@@ -43,20 +43,20 @@ decode_with_max_length({ok, MaxSize, Rest}) ->
     MaybeImplementationClass = wolfpacs_implementation_class:decode(Rest),
     decode_with_implementation_class(MaxSize, MaybeImplementationClass);
 decode_with_max_length(_) ->
-    lager:warning("[user_information] error with_max_length"),
+    ok = lager:warning("[user_information] error with_max_length"),
     error.
 
 decode_with_implementation_class(MaxSize, {ok, ImplementationClass, Rest}) ->
     MaybeVersionName = wolfpacs_version_name:decode(Rest),
     decode_with_version_name(MaxSize, ImplementationClass, MaybeVersionName);
 decode_with_implementation_class(_, _) ->
-    lager:warning("[user_information] error with_implimentation_class"),
+    ok = lager:warning("[user_information] error with_implimentation_class"),
     error.
 
 decode_with_version_name(MaxSize, ImplementationClass, {ok, VersionName, Rest}) ->
     {ok, MaxSize, ImplementationClass, VersionName, Rest};
 decode_with_version_name(_, _, _) ->
-    lager:warning("[user_information] error with_version_name"),
+    ok = lager:warning("[user_information] error with_version_name"),
     error.
 
 %%==============================================================================

@@ -56,7 +56,7 @@ decode(AllData = <<16#20, _, Length:16, Payload/binary>>) ->
 	true ->
 	    case try_decode(PrCID, WhatHow) of
 		{error, Type} ->
-		    lager:warning("unable to decode ~p", [Type]),
+		    ok = lager:warning("unable to decode ~p", [Type]),
 		    {error, AllData};
 		Success ->
 		    Success

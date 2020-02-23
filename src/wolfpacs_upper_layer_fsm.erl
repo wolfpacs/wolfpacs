@@ -88,15 +88,15 @@ idle(cast, {pdu, 7, PDU}, Data) ->
 idle(cast, {pdu, N, _PDU}, Data) ->
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
     UpperLayer ! {unknown_pdu, N},
-    lager:warning("unknown pdu type ~p", [N]),
+    ok = lager:warning("unknown pdu type ~p", [N]),
     {keep_state, Data, []};
 
 idle(cast, What, Data) ->
-    lager:warning("cast what ~p", [What]),
+    ok = lager:warning("cast what ~p", [What]),
     {keep_state, Data, []};
 
 idle(Type, What, Data) ->
-    lager:warning("unhandle ~p ~p", [Type, What]),
+    ok = lager:warning("unhandle ~p ~p", [Type, What]),
     {keep_state, Data, []}.
 
 %%=============================================================================
@@ -104,7 +104,7 @@ idle(Type, What, Data) ->
 %%==============================================================================
 
 handle_associate_rq({error, _}, Data) ->
-    lager:warning("associate rq decode error"),
+    ok = lager:warning("associate rq decode error"),
     {keep_state, Data, []};
 
 handle_associate_rq(AssociateRQ, Data) ->
@@ -129,7 +129,7 @@ handle_associate_rq(AssociateRQ, Data) ->
 handle_abort({error, _}, Data) ->
     {keep_state, Data, []};
 handle_abort({ok, _Source, _Reason, _}, Data) ->
-    lager:debug("[upper_layer_fsm] received abort"),
+    ok = lager:debug("[upper_layer_fsm] received abort"),
     {keep_state, Data, []}.
 
 handle_p_data_tf({error, _}, Data) ->
@@ -181,8 +181,8 @@ handle_pdv_item({ct_image_storage, Strategy}, PrCID, true, false, Fragment, Data
 				   affected_uid=AffectedUID} = Data,
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
     FileData = wolfpacs_file_format:encode({explicit, little}, NewBlob),
-    file:write_file("abc.dcm", FileData),
-    lager:warning("saved abc.dcm"),
+    ok = file:write_file("abc.dcm", FileData),
+    ok = lager:warning("saved abc.dcm"),
 
 
     %%
@@ -208,7 +208,7 @@ handle_pdv_item({ct_image_storage, Strategy}, _, true, true, Fragment, Data) ->
     #wolfpacs_upper_layer_fsm_data{blob=OldBlob} = Data,
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
     {ok, Info, _Rest} = wolfpacs_data_elements:decode(Strategy, NewBlob),
-    lager:warning("ct_image_storage true true ~p", [Info]),
+    ok = lager:warning("ct_image_storage true true ~p", [Info]),
     #{{0, 16#0002} := UID,
       {0, 16#0110} := RQID,
       {0, 16#1000} := AffectedUID} = Info,
@@ -219,7 +219,7 @@ handle_pdv_item({ct_image_storage, Strategy}, _, true, true, Fragment, Data) ->
     {keep_state, NewData, []};
 
 handle_pdv_item(Tag, PrCID, A, B, _, Data) ->
-    lager:warning("unhandle pdv item ~p, ~p, ~p, ~p", [Tag, PrCID, A, B]),
+    ok = lager:warning("unhandle pdv item ~p, ~p, ~p, ~p", [Tag, PrCID, A, B]),
     {keep_state, Data, []}.
 
 %%==============================================================================

@@ -14,7 +14,7 @@ vr(Group, Element) ->
     vr_lookup(Group, Element, maps:get({Group, Element}, DB, missing)).
 
 vr_lookup(Group, Element, missing) ->
-    lager:warning("[group_elements] Unknown (~p, ~p)", [Group, Element]),
+    ok = lager:warning("[group_elements] Unknown (~p, ~p)", [Group, Element]),
     "UN";
 vr_lookup(_, _, VR) ->
     VR.
