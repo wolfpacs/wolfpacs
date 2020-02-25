@@ -9,6 +9,9 @@
 	 decode/2]).
 -include("wolfpacs_types.hrl").
 
+-define(ERROR_DECODE, "unable to decode data element").
+-define(ERROR_META, "unable to decode meta file information").
+
 %%-------------------------------------------------------------------
 %% @doc Encodes a File Format.
 %%
@@ -24,16 +27,15 @@ encode(Strategy, Data) ->
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec decode(strategy(), binary()) -> {ok, {map(), map()}, binary()} | {error, binary()}.
+-spec decode(strategy(), binary()) -> {ok, {map(), map()}, binary()} | {error, binary(), list(string())}.
 decode(Strategy, Data) ->
     case wolfpacs_file_meta_information:decode(Strategy, Data) of
-	{error, _} ->
-	    lager:warning("[file_format] Failed to decode file meta information"),
-	    {error, Data};
+	{error, _, Msg} ->
+	    {error, Data, [?ERROR_META|Msg]};
 	{ok, Meta, Rest} ->
 	    case wolfpacs_data_elements:decode(Strategy, Rest) of
-		{error, _} ->
-		    {error, Data};
+		{error, _, Msg} ->
+		    {error, Data, [?ERROR_DECODE|Msg]};
 		{ok, Content, Rest2} ->
 		    {ok, {Meta, Content}, Rest2}
 	    end
@@ -68,9 +70,20 @@ encode_decode_test_() ->
     Encoded0 = encode(Strategy, Data),
     Encoded1 = <<Encoded0/binary, 42>>,
     Incorrect0 = wolfpacs_utils:drop_first_byte(Encoded0),
-    Incorrect1 = <<1, 2, 3, 4, 5>>,
+    Incorrect1 = wolfpacs_utils:drop_last_byte(Encoded0),
+    Incorrect2 = <<1, 2, 3, 4, 5>>,
 
-    [ ?_assertEqual(decode(Strategy, Encoded0), {ok, {meta_info(), Content2}, <<>>}),
-      ?_assertEqual(decode(Strategy, Encoded1), {ok, {meta_info(), Content2}, <<42>>}),
-      ?_assertEqual(decode(Strategy, Incorrect0), {error, Incorrect0}),
-      ?_assertEqual(decode(Strategy, Incorrect1), {error, Incorrect1}) ].
+    ErrorMsg0 = ["unable to decode meta file information",
+		 "failed to pattern match"],
+    ErrorMsg1 = [?ERROR_DECODE,
+		 ?ERROR_DECODE,
+		 "unable to split"],
+    ErrorMsg2 = ["unable to decode meta file information",
+		 "failed to pattern match"],
+
+    [ ?_assertEqual(decode(Strategy, Encoded0), {ok, {meta_info(), Content2}, <<>>})
+    , ?_assertEqual(decode(Strategy, Encoded1), {ok, {meta_info(), Content2}, <<42>>})
+    , ?_assertEqual(decode(Strategy, Incorrect0), {error, Incorrect0, ErrorMsg0})
+    , ?_assertEqual(decode(Strategy, Incorrect1), {error, Incorrect1, ErrorMsg1})
+    , ?_assertEqual(decode(Strategy, Incorrect2), {error, Incorrect2, ErrorMsg2})
+    ].

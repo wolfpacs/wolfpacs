@@ -13,7 +13,6 @@
 	 decode/2]).
 -include("wolfpacs_types.hrl").
 
-
 %%-------------------------------------------------------------------
 %% @doc Encodes a Data Element
 %%
@@ -41,11 +40,17 @@ encode(Strategy, G, E, "PN", Name) ->
     encode_common(Strategy, G, E, "PN", wolfpacs_vr_pn:encode(Strategy, Name));
 encode(Strategy, G, E, "LO", Name) ->
     encode_common(Strategy, G, E, "LO", wolfpacs_vr_lo:encode(Strategy, Name));
+encode(Strategy, G, E, "UN", Name) ->
+    encode_common(Strategy, G, E, "UN", wolfpacs_vr_un:encode(Strategy, Name));
+encode(Strategy, G, E, "CS", Name) ->
+    encode_common(Strategy, G, E, "CS", wolfpacs_vr_cs:encode(Strategy, Name));
+encode(Strategy, G, E, "DA", Name) ->
+    encode_common(Strategy, G, E, "DA", wolfpacs_vr_da:encode(Strategy, Name));
 encode(_Strategy, G, E, "ox", _) ->
-    lager:warning("[data_element_explicit] unable to encode ox (OB or OW)", [G, E]),
+    _ = lager:warning("[data_element_explicit] unable to encode ox (OB or OW)", [G, E]),
     <<>>;
 encode(_Strategy, G, E, VRTag, _) ->
-    lager:warning("[data_element_explicit] unable to encode ~p ~p ~p", [G, E, VRTag]),
+    _ = lager:warning("[data_element_explicit] unable to encode ~p ~p ~p", [G, E, VRTag]),
     VR = list_to_binary(VRTag),
     <<"error", VR/binary>>.
 
@@ -54,7 +59,7 @@ encode(_Strategy, G, E, VRTag, _) ->
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec decode(strategy(), binary()) -> {ok, {{integer(), integer()}, any()}, binary()} | {error, binary()}.
+-spec decode(strategy(), binary()) -> {ok, {{integer(), integer()}, any()}, binary()} | {error, binary(), list(string())}.
 decode({explicit, _Endian}, OrgData = <<0:16, _/binary>>) ->
     %% Command group is always implicit
     wolfpacs_data_element:decode({implicit, little}, OrgData);
@@ -66,8 +71,7 @@ decode({Type, big}, OrgData = <<G:16/big, E:16/big, Data/binary>>) ->
     decode_correct_vr_and_length({Type, big}, OrgData, G, E, Data);
 
 decode(_, OrgData) ->
-    lager:warning("[data_element] Failed to decode data element"),
-    {error, OrgData}.
+    {error, OrgData, ["unable to handle strategy"]}.
 
 %%==============================================================================
 %% Private Encoders
@@ -149,8 +153,8 @@ decode_correct_vr_and_length({explicit, big}, OrgData, G, E, <<VRTag:16/bitstrin
     VR = binary_to_list(VRTag),
     decode_common({explicit, big}, OrgData, G, E, VR, Len, Data);
 
-decode_correct_vr_and_length(_Strategy, OrgData, _G, _E, _Data) ->
-    {error, OrgData}.
+decode_correct_vr_and_length(_Strategy, OrgData, G, E, _Data) ->
+    {error, OrgData, ["unsupported vr", G, E]}.
 
 %%-------------------------------------------------------------------
 %% @doc Decode Common With Decoder
@@ -159,8 +163,8 @@ decode_correct_vr_and_length(_Strategy, OrgData, _G, _E, _Data) ->
 %%-------------------------------------------------------------------
 decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, Decoder) ->
     case wolfpacs_utils:split(Data, Len) of
-	{error, _ } ->
-	    {error, OrgData};
+	{error, _, _} ->
+	    {error, OrgData, ["unable to split"]};
 	{ok, Bytes, Rest} ->
 	    {ok, {{G, E}, Decoder:decode(Strategy, Bytes)}, Rest}
     end.
@@ -197,9 +201,14 @@ decode_common(Strategy, OrgData, G, E, "US", Len, Data) ->
 decode_common(Strategy, OrgData, G, E, "UL", Len, Data) ->
     decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, wolfpacs_vr_ul);
 
-decode_common(_, OrgData, _G, _E, _VR, _Len, _Data) ->
-    lager:warning("[data_element] No match in decode_common"),
-    {error, OrgData}.
+decode_common(Strategy, OrgData, G, E, "CS", Len, Data) ->
+    decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, wolfpacs_vr_cs);
+
+decode_common(Strategy, OrgData, G, E, "UN", Len, Data) ->
+    decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, wolfpacs_vr_un);
+
+decode_common(_, OrgData, _G, _E, VR, _Len, _Data) ->
+    {error, OrgData, ["unsupported vr", VR]}.
 
 %%==============================================================================
 %% Test
@@ -305,6 +314,12 @@ encode_decode_lo_test_() ->
 encode_decode_ae_test_() ->
     encode_decode_common("AE", <<"AE1">>).
 
+encode_decode_un_test_() ->
+    encode_decode_common("UN", <<"UN1">>).
+
+encode_decode_cs_test_() ->
+    encode_decode_common("CS", <<"CS1">>).
+
 encode_decode_ui_test_() ->
     encode_decode_common("UI", <<"1.2.3">>).
 
@@ -328,7 +343,11 @@ encode_decode_common(Strategy, VR, Data) ->
     Encoded1 = <<Encoded0/binary, 42>>,
     Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
     Incorrect1 = <<1>>,
+
+    ErrorMsg0 = ["unable to split"],
+    ErrorMsg1 = ["unable to handle strategy"],
+
     [?_assertEqual(decode(Strategy, Encoded0), {ok, {{G, E}, Data}, <<>>}),
      ?_assertEqual(decode(Strategy, Encoded1), {ok, {{G, E}, Data}, <<42>>}),
-     ?_assertEqual(decode(Strategy, Incorrect0), {error, Incorrect0}),
-     ?_assertEqual(decode(Strategy, Incorrect1), {error, Incorrect1})].
+     ?_assertEqual(decode(Strategy, Incorrect0), {error, Incorrect0, ErrorMsg0}),
+     ?_assertEqual(decode(Strategy, Incorrect1), {error, Incorrect1, ErrorMsg1})].

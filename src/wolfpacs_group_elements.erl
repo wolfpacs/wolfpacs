@@ -14,7 +14,7 @@ vr(Group, Element) ->
     vr_lookup(Group, Element, maps:get({Group, Element}, DB, missing)).
 
 vr_lookup(Group, Element, missing) ->
-    lager:warning("[group_elements] Unknown (~p, ~p)", [Group, Element]),
+    _ = lager:warning("[group_elements] Unknown (~p, ~p)", [Group, Element]),
     "UN";
 vr_lookup(_, _, VR) ->
     VR.
@@ -37,6 +37,9 @@ vr_to_example_group_element("UI") -> {16#0040, 16#0554};
 vr_to_example_group_element("US") -> {16#0040, 16#A0B0};
 vr_to_example_group_element("UL") -> {16#0040, 16#A132};
 vr_to_example_group_element("LO") -> {16#0008, 16#0070};
+vr_to_example_group_element("UN") -> {16#0072, 16#006D};
+vr_to_example_group_element("CS") -> {16#0072, 16#0208};
+vr_to_example_group_element("DA") -> {16#0008, 16#0012};
 vr_to_example_group_element(VR) -> {error, VR, "No example found"}.
 
 %%==============================================================================

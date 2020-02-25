@@ -13,7 +13,6 @@
 -module(wolfpacs_presentation_context_request).
 -export([encode/3,
 	 decode/1]).
--import(wolfpacs_utils, [drop_last_byte/1]).
 -include("abstract_syntax.hrl").
 -include("transfer_syntax.hrl").
 
@@ -55,17 +54,16 @@ decode(AllData = <<16#20, _, Length:16, Payload/binary>>) ->
     case Length =< NbBytes of
 	true ->
 	    case try_decode(PrCID, WhatHow) of
-		{error, Type} ->
-		    lager:warning("unable to decode ~p", [Type]),
-		    {error, AllData};
+		{error, Error} ->
+		    {error, AllData, Error};
 		Success ->
 		    Success
 	    end;
 	false ->
-	    {error, AllData}
+	    {error, AllData, ["not enough data in payload"]}
     end;
 decode(Payload) ->
-    {error, Payload}.
+    {error, Payload, ["incorrect header"]}.
 
 %%==============================================================================
 %% Private
@@ -80,12 +78,12 @@ decode_with_abstract_syntax(PrCID, {ok, AbstractSyntax, Data}) ->
     MaybeTransferSyntax = wolfpacs_transfer_syntax:decode_list(Data),
     decode_with_transfer_syntax(PrCID, AbstractSyntax, MaybeTransferSyntax);
 decode_with_abstract_syntax(_, _) ->
-    {error, abstract_syntax}.
+    {error, ["unable to decode abstract syntax"]}.
 
 decode_with_transfer_syntax(PrCID, AbstractSyntax, {ok, TransferSyntax, Rest}) ->
     {ok, PrCID, AbstractSyntax, TransferSyntax, Rest};
 decode_with_transfer_syntax(_, _, _) ->
-    {error, transfer_syntax}.
+    {error, ["unable to decode transfer syntax"]}.
 
 %%==============================================================================
 %% Test
@@ -101,9 +99,9 @@ encode_decode_test_() ->
 		      ?EXPLICIT_BIG_ENDIAN],
     Encoded0 = encode(PrCID, AbstractSyntax, TransferSyntax),
     Encoded1 = <<Encoded0/binary, 42>>,
-    Incorrect0 = drop_last_byte(Encoded0),
+    Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
     Incorrect1 = <<1,2,3,4>>,
     [ ?_assertEqual(decode(Encoded0), {ok, PrCID, AbstractSyntax, TransferSyntax, <<>>}),
       ?_assertEqual(decode(Encoded1), {ok, PrCID, AbstractSyntax, TransferSyntax, <<42>>}),
-      ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
-      ?_assertEqual(decode(Incorrect1), {error, Incorrect1}) ].
+      ?_assertEqual(decode(Incorrect0), {error, Incorrect0, ["not enough data in payload"]}),
+      ?_assertEqual(decode(Incorrect1), {error, Incorrect1, ["incorrect header"]}) ].

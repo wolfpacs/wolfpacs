@@ -8,7 +8,10 @@
 prop_decode_test() ->
     ?FORALL({Blob, Strategy}, {binary(), strategy()},
 	    begin
-		{error, Blob} =:= wolfpacs_data_elements:decode(Strategy, Blob)
+		case wolfpacs_data_elements:decode(Strategy, Blob) of
+		    {error, Blob, _} -> true;
+		    _ -> false
+		end
 	    end).
 
 %%%%%%%%%%%%%%%

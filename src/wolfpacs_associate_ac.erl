@@ -15,7 +15,6 @@
 %%-------------------------------------------------------------------
 -spec encode(binary(), binary(), binary(), list({byte(), binary()}), non_neg_integer(), binary(), binary()) -> binary().
 encode(CalledAE, CallingAE, R, SupportedContexts, MaxPDUSize, Class, VersionName) ->
-    lager:debug("[associate_ac] SupportedContexts ~p", [SupportedContexts]),
     VariableItems = wolfpacs_variable_items_accept:encode(SupportedContexts, MaxPDUSize, Class, VersionName),
     Payload = <<1:16,  %% Protocol Version
 		0:16,  %% Reserved

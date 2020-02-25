@@ -23,7 +23,7 @@ drop_first_byte(<<_, Data/binary>>) ->
 drop_last_byte(Data) ->
     list_to_binary(lists:droplast(binary_to_list(Data))).
 
--spec split(binary(), non_neg_integer()) -> {ok, binary(), binary()} | {error, binary()}.
+-spec split(binary(), non_neg_integer()) -> {ok, binary(), binary()} | {error, binary(), list(string())}.
 split(Data, At) when At >= 0 ->
     Size = byte_size(Data),
     case At =< Size of
@@ -32,10 +32,10 @@ split(Data, At) when At >= 0 ->
 	    R = binary:part(Data, At, Size - At),
 	    {ok, L, R};
 	false ->
-	    {error, Data}
+	    {error, Data, ["not enough data to split"]}
     end;
 split(Data, _) ->
-    {error, Data}.
+    {error, Data, ["incorrect header"]}.
 
 log_hex_to_int([L]) ->
     hv(L);
@@ -110,18 +110,19 @@ clear_data([H|T], Acc, next) ->
 -include_lib("eunit/include/eunit.hrl").
 
 drop_first_byte_test_() ->
-    [?_assert(drop_first_byte(<<1, 2, 3>>) =:= <<2 ,3>>) ].
+    [?_assertEqual(drop_first_byte(<<1, 2, 3>>), <<2 ,3>>) ].
 
 drop_last_byte_test_() ->
-    [?_assert(drop_last_byte(<<1, 2, 3>>) =:= <<1 ,2>>) ].
+    [?_assertEqual(drop_last_byte(<<1, 2, 3>>), <<1 ,2>>) ].
 
 split_test_() ->
     [
-     ?_assert(split(<<1, 2, 3, 4>>, 4) =:= {ok, <<1 ,2, 3 ,4>>, <<>>}),
-     ?_assert(split(<<1, 2, 3, 4>>, 3) =:= {ok, <<1 ,2, 3>>, << 4>>}),
-     ?_assert(split(<<1, 2, 3, 4>>, 2) =:= {ok, <<1 ,2>>, <<3, 4>>}),
-     ?_assert(split(<<1, 2, 3, 4>>, 1) =:= {ok, <<1>>, <<2, 3, 4>>}),
-     ?_assert(split(<<1, 2, 3, 4>>, 5) =:= {error, <<1, 2, 3, 4>>})
+     ?_assertEqual(split(<<1, 2, 3, 4>>, 4), {ok, <<1 ,2, 3 ,4>>, <<>>}),
+     ?_assertEqual(split(<<1, 2, 3, 4>>, 3), {ok, <<1 ,2, 3>>, << 4>>}),
+     ?_assertEqual(split(<<1, 2, 3, 4>>, 2), {ok, <<1 ,2>>, <<3, 4>>}),
+     ?_assertEqual(split(<<1, 2, 3, 4>>, 1), {ok, <<1>>, <<2, 3, 4>>}),
+     ?_assertEqual(split(<<1, 2, 3, 4>>, 5), {error, <<1, 2, 3, 4>>, ["not enough data to split"]}),
+     ?_assertEqual(split(<<1, 2, 3, 4>>, -1), {error, <<1, 2, 3, 4>>, ["incorrect header"]})
     ].
 
 log_to_binary_test_() ->

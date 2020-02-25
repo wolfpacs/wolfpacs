@@ -9,6 +9,11 @@
 	 decode/2]).
 -include("wolfpacs_types.hrl").
 
+-define(ERROR_DECODE, "failed to decode data element").
+-define(ERROR_SPLIT, "failed to split").
+-define(ERROR_META, "failed to decode meta data element").
+-define(ERROR_MATCH, "failed to pattern match").
+
 %%-------------------------------------------------------------------
 %% @doc Encod File Meta Information.
 %%
@@ -31,29 +36,28 @@ encode(Strategy, Info) ->
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec decode(strategy(), binary()) -> {ok, map(), binary()} | {error, binary()}.
+-spec decode(strategy(), binary()) -> {ok, map(), binary()} | {error, binary(), list(string())}.
 decode(Strategy, OrgData = <<_:1024, "DICM", Data/binary>>) ->
     case wolfpacs_data_element:decode(Strategy, Data) of
-	{error, _} ->
-	    {error, OrgData};
+	{error, _, Msg} ->
+	    {error, OrgData, [?ERROR_DECODE|Msg]};
 	{ok,{{2, 0}, GroupLength}, Rest} ->
-	    lager:warning("Group length ~p", [GroupLength]),
 	    case wolfpacs_utils:split(Rest, GroupLength) of
-		{error, _} ->
-		    {error, OrgData};
+		{error, _, _} ->
+		    {error, OrgData, [?ERROR_SPLIT]};
 		{ok, Meta, Content} ->
 		    case wolfpacs_data_elements:decode(Strategy, Meta) of
 			{ok, MetaMap, <<>>} ->
 			    {ok, MetaMap, Content};
-			_ ->
-			    {ok, OrgData}
+			{ok, MetaMap, _LostData} ->
+			    {ok, MetaMap, Content};
+			{error, _, Msg} ->
+			    {error, OrgData, [?ERROR_META|Msg]}
 		    end
-	    end;
-	_ ->
-	    {error, OrgData}
+	    end
     end;
 decode(_Strategy, Data) ->
-    {error, Data}.
+    {error, Data, [?ERROR_MATCH]}.
 
 %%==============================================================================
 %% Private
@@ -79,9 +83,9 @@ encode_decode_test_() ->
 
     [ ?_assertEqual(decode(Strategy, Encoded0), {ok, Info, <<>>})
     , ?_assertEqual(decode(Strategy, Encoded1), {ok, Info, <<42>>})
-    , ?_assertEqual(decode(Strategy, Incorrect0), {error, Incorrect0})
-    , ?_assertEqual(decode(Strategy, Incorrect1), {error, Incorrect1})
-    , ?_assertEqual(decode(Strategy, Incorrect2), {error, Incorrect2})
-    , ?_assertEqual(decode(Strategy, Incorrect3), {error, Incorrect3})
-    , ?_assertEqual(decode(Strategy, Incorrect4), {error, Incorrect4})
+    , ?_assertEqual(decode(Strategy, Incorrect0), {error, Incorrect0, [?ERROR_MATCH]})
+    , ?_assertEqual(decode(Strategy, Incorrect1), {error, Incorrect1, [?ERROR_SPLIT]})
+    , ?_assertEqual(decode(Strategy, Incorrect2), {error, Incorrect2, [?ERROR_MATCH]})
+    , ?_assertEqual(decode(Strategy, Incorrect3), {error, Incorrect3, [?ERROR_DECODE, "unable to handle strategy"]})
+    , ?_assertEqual(decode(Strategy, Incorrect4), {error, Incorrect4, [?ERROR_DECODE, "unsupported vr", "zz"]})
    ].
