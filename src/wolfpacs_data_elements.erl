@@ -15,7 +15,7 @@ encode(Strategy, Info) when is_map(Info) ->
 encode(Strategy, Elements) ->
     encode(Strategy, lists:sort(Elements), <<>>).
 
--spec decode(strategy(), binary()) -> {ok, map(), binary()} | {error, binary()}.
+-spec decode(strategy(), binary()) -> {ok, map(), binary()} | {error, binary(), list(string())}.
 decode(Strategy, Data) ->
     decode(Strategy, Data, []).
 
@@ -33,21 +33,21 @@ encode(Strategy, [{{G, E, VR}, Data}|Rest], Acc) ->
     Encoded = wolfpacs_data_element:encode(Strategy, G, E, VR, Data),
     encode(Strategy, Rest, <<Acc/binary, Encoded/binary>>).
 
--spec decode(strategy(), binary(), list()) -> {ok, map(), binary()} | {error, binary()}.
+-spec decode(strategy(), binary(), list()) -> {ok, map(), binary()} | {error, binary(), list(string())}.
 decode(_, <<>>, []) ->
-    {error, <<>>};
+    {error, <<>>, ["no data to decode"]};
 decode(_, <<>>, Acc) ->
     {ok, maps:from_list(Acc), <<>>};
 decode(Strategy, Data, []) ->
     case wolfpacs_data_element:decode(Strategy, Data) of
-	{error, _} ->
-	    {error, Data};
+	{error, _, Msg} ->
+	    {error, Data, ["unable to decode data element"|Msg]};
 	{ok, Res, Rest} ->
 	    decode(Strategy, Rest, [Res])
     end;
 decode(Strategy, Data, Acc) ->
     case wolfpacs_data_element:decode(Strategy, Data) of
-	{error, _} ->
+	{error, _, __} ->
 	    {ok, maps:from_list(Acc), Data};
 	{ok, Res, Rest} ->
 	    decode(Strategy, Rest, [Res|Acc])
@@ -99,4 +99,4 @@ encode_decode_empty_test() ->
     Strategy = {explicit, little},
     Items = #{},
     Encoded0 = encode(Strategy, Items),
-    ?assertEqual(decode(Strategy, Encoded0), {error, <<>>}).
+    ?assertEqual(decode(Strategy, Encoded0), {error, <<>>, ["no data to decode"]}).
