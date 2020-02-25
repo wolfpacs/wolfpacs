@@ -19,14 +19,13 @@ encode(MaxPDUSize, Class, VersionName) ->
 decode(Data = <<16#50, _, _Length:16, UserInformation/binary>>) ->
     MaybeMaxLength = wolfpacs_max_length:decode(UserInformation),
     case decode_with_max_length(MaybeMaxLength) of
-	error ->
-	    {error, Data};
+	{error, Error} ->
+	    {error, Data, Error};
 	Succes ->
 	    Succes
     end;
 decode(Data = <<H, _/binary>>) ->
-    ok = lager:warning("[user_information] not user information ~p", [H]),
-    {error, Data}.
+    {error, Data, ["incorrect header", H]}.
 
 %%==============================================================================
 %% Private
@@ -43,21 +42,18 @@ decode_with_max_length({ok, MaxSize, Rest}) ->
     MaybeImplementationClass = wolfpacs_implementation_class:decode(Rest),
     decode_with_implementation_class(MaxSize, MaybeImplementationClass);
 decode_with_max_length(_) ->
-    ok = lager:warning("[user_information] error with_max_length"),
-    error.
+    {error, ["error with_max length"]}.
 
 decode_with_implementation_class(MaxSize, {ok, ImplementationClass, Rest}) ->
     MaybeVersionName = wolfpacs_version_name:decode(Rest),
     decode_with_version_name(MaxSize, ImplementationClass, MaybeVersionName);
 decode_with_implementation_class(_, _) ->
-    ok = lager:warning("[user_information] error with_implimentation_class"),
-    error.
+    {error, ["error with implimentation class"]}.
 
 decode_with_version_name(MaxSize, ImplementationClass, {ok, VersionName, Rest}) ->
     {ok, MaxSize, ImplementationClass, VersionName, Rest};
 decode_with_version_name(_, _, _) ->
-    ok = lager:warning("[user_information] error with_version_name"),
-    error.
+    {error, ["error with version name"]}.
 
 %%==============================================================================
 %% Test
@@ -96,8 +92,8 @@ encode_decode_test_() ->
 
     [ ?_assertEqual(decode(Encoded0), {ok, MaxSize, Class, VersionName, <<>>}),
       ?_assertEqual(decode(Encoded1), {ok, MaxSize, Class, VersionName, <<42>>}),
-      ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
-      ?_assertEqual(decode(Incorrect1), {error, Incorrect1}),
-      ?_assertEqual(decode(Incorrect2), {error, Incorrect2}),
-      ?_assertEqual(decode(Incorrect3), {error, Incorrect3}),
-      ?_assertEqual(decode(Incorrect4), {error, Incorrect4}) ].
+      ?_assertEqual(decode(Incorrect0), {error, Incorrect0, ["error with version name"]}),
+      ?_assertEqual(decode(Incorrect1), {error, Incorrect1, ["incorrect header", 1]}),
+      ?_assertEqual(decode(Incorrect2), {error, Incorrect2, ["error with_max length"]}),
+      ?_assertEqual(decode(Incorrect3), {error, Incorrect3, ["error with implimentation class"]}),
+      ?_assertEqual(decode(Incorrect4), {error, Incorrect4, ["error with version name"]}) ].
