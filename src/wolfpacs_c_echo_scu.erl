@@ -51,12 +51,12 @@ handle_call({echo, _, _, _}, _From, State) ->
 
 %% @hidden
 handle_call(What, _From, State) ->
-    ok = lager:warning("[c_echo_scu] unhandle call ~p", [What]),
+    _ = lager:warning("[c_echo_scu] unhandle call ~p", [What]),
     {reply, {error, What}, State}.
 
 %% @hidden
 handle_cast(What, State) ->
-    ok = lager:warning("[c_echo_scu] unhandle cast ~p", [What]),
+    _ = lager:warning("[c_echo_scu] unhandle cast ~p", [What]),
     {noreply, State}.
 
 %% @hidden
@@ -66,7 +66,7 @@ handle_info({tcp, _Port, DataNew}, State=#{data := DataOld}) ->
 
 %% @hidden
 handle_info(What, State) ->
-    ok = lager:warning("[c_echo_scu] unhandle info ~p", [What]),
+    _ = lager:warning("[c_echo_scu] unhandle info ~p", [What]),
     {noreply, State}.
 
 %% @hidden
@@ -86,7 +86,7 @@ handle_data(Data = <<16#2, _/binary>>, State) ->
 	{ok, _CalledAE, _CallingAE, _R, _Contexts, _, _Class, _VersionName, Rest} ->
 	    {noreply, send_release_rq(State#{data => Rest})};
 	{error, Data, Error}  ->
-	    ok = lager:warning("[c_echo_scu] associate_ac decode error ~p", [Error]),
+	    _ = lager:warning("[c_echo_scu] associate_ac decode error ~p", [Error]),
 	    {stop, normal, State}
     end;
 handle_data(Data = <<16#6, _/binary>>, State=#{from := From, sock := Sock}) ->
@@ -96,11 +96,11 @@ handle_data(Data = <<16#6, _/binary>>, State=#{from := From, sock := Sock}) ->
 	    gen_tcp:close(Sock),
 	    {noreply, State#{sock => none, from => none, data => Rest}};
 	{error, Data} ->
-	    ok = lager:warning("[c_echo_scu] release_rp decode error"),
+	    _ = lager:warning("[c_echo_scu] release_rp decode error"),
 	    {stop, normal, State}
     end;
 handle_data(Data, State) ->
-    ok = lager:warning("[c_echo_scu] unable to handle data ~p", [Data]),
+    _ = lager:warning("[c_echo_scu] unable to handle data ~p", [Data]),
     {noreply, State}.
 
 transfer_syntax({implicit, little}) ->
@@ -110,7 +110,7 @@ transfer_syntax({explicit, little}) ->
 transfer_syntax({explicit, big}) ->
     ?EXPLICIT_BIG_ENDIAN;
 transfer_syntax(TransferSyntax) ->
-    ok = lager:warning("[c_echo_scu] Unknown transfer syntax ~p", [TransferSyntax]),
+    _ = lager:warning("[c_echo_scu] Unknown transfer syntax ~p", [TransferSyntax]),
     ?EXPLICIT_LITTLE_ENDIAN.
 
 send_associate_rq(State=#{sock := Sock, calledae := CalledAE_, strategy := Strategy}) ->
