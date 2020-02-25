@@ -10,10 +10,9 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_da).
--export([encode/4, decode/2]).
--import(wolfpacs_vr_utils, [trim_binary/1]).
+-export([encode/2, decode/2]).
 
-encode(_Strategy, Year, Month, Day) ->
+encode(_Strategy, {Year, Month, Day}) ->
     encode(Year, Month, Day).
 
 decode(_Strategy, DA) ->
@@ -29,8 +28,8 @@ encode(Year, Month, Day) ->
     list_to_binary(DateString).
 
 -spec decode(binary()) -> binary().
-decode(Data) ->
-    trim_binary(Data).
+decode(<<Year:32/bitstring, Month:16/bitstring, Day:16/bitstring>>) ->
+    {binary_to_integer(Year), binary_to_integer(Month), binary_to_integer(Day)}.
 
 %%==============================================================================
 %% Test
@@ -39,5 +38,6 @@ decode(Data) ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_test_() ->
-    [?_assertEqual(encode(2007, 1, 1), <<"20070101">>)
+    [ ?_assertEqual(encode(not_important, {2007, 1, 2}), <<"20070102">>)
+    , ?_assertEqual(decode(not_important, <<"20070102">>), {2007, 1, 2})
     ].
