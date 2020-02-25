@@ -33,10 +33,10 @@ encode(CalledAE, CallingAE, PrCID, AbstractSyntax, TransferSyntax, MaxPDUSize, C
 
 decode(OrgData = <<16#1, _, _Length:32, Data/binary>>) ->
     decode_called_and_calling(OrgData, Data);
+decode(OrgData = <<PV, _/binary>>) ->
+    {error, OrgData, ["incorrect header", PV]};
 decode(OrgData) ->
-    ok = lager:warning("error: decode"),
-    ok = lager:warning("~p", [OrgData]),
-    {error, OrgData}.
+    {error, OrgData, ["no data"]}.
 
 %%==============================================================================
 %% Private
@@ -46,16 +46,14 @@ decode_called_and_calling(OrgData, <<_:16, _:16, CalledAE:128/bitstring, Calling
     MaybeVariableItems = wolfpacs_variable_items_request:decode(Data),
     decode_variable_items(OrgData, CalledAE, CallingAE, R, MaybeVariableItems);
 decode_called_and_calling(OrgData, _) ->
-    ok = lager:warning("error: decode_called_and_calling"),
-    {error, OrgData}.
+    {error, OrgData, ["unable to decode called and calling"]}.
 
 decode_variable_items(_OrgData, CalledAE, CallingAE, R, {ok,
 							 Contexts,
 							 MaxSize, Class, VersionName, Rest}) ->
     {ok, CalledAE, CallingAE, R, Contexts, MaxSize, Class, VersionName, Rest};
 decode_variable_items(OrgData, _, _, _, _) ->
-    ok = lager:warning("[associate_rq] error: decode variable items"),
-    {error, OrgData}.
+    {error, OrgData, ["unable to decode variable items"]}.
 
 %%==============================================================================
 %% Test
@@ -144,9 +142,9 @@ encode_decode_test_() ->
 				      [{PrCID, AbstractSyntax, TransferSyntax}],
 				      MaxPDUSize, Class, VersionName,
 				      <<42>>}),
-     ?_assertEqual(decode(Incorrect0), {error,  Incorrect0}),
-     ?_assertEqual(decode(Incorrect1), {error,  Incorrect1}),
-     ?_assertEqual(decode(Incorrect2), {error,  Incorrect2}),
-     ?_assertEqual(decode(Incorrect3), {error,  Incorrect3}),
-     ?_assertEqual(decode(Incorrect4), {error,  Incorrect4})
+     ?_assertEqual(decode(Incorrect0), {error,  Incorrect0, ["unable to decode variable items"]}),
+     ?_assertEqual(decode(Incorrect1), {error,  Incorrect1, ["incorrect header", 0]}),
+     ?_assertEqual(decode(Incorrect2), {error,  Incorrect2, ["incorrect header", 1]}),
+     ?_assertEqual(decode(Incorrect3), {error,  Incorrect3, ["unable to decode variable items"]}),
+     ?_assertEqual(decode(Incorrect4), {error,  Incorrect4, ["unable to decode called and calling"]})
     ].
