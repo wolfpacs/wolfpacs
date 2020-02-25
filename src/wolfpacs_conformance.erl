@@ -28,7 +28,6 @@ supported([{PrCID, AbstractSyntax, TransferSyntexes}|Contexts], Acc, Map) ->
 	no ->
 	    supported(Contexts, Acc, Map);
 	{yes, TransferSyntax, ConformanceTag} ->
-	    ok = lager:debug("[conformance] Picked ~p", [TransferSyntax]),
 	    supported(Contexts, [{PrCID, TransferSyntax}|Acc], Map#{PrCID => ConformanceTag})
     end.
 
