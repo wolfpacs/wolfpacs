@@ -22,7 +22,6 @@ decode(OrgData = <<16#10, 0, _Size:16, "1.2.840.10008.3.1.1.1", Data/binary>>) -
     MaybePresentationContext = wolfpacs_presentation_contexts_request:decode(Data),
     decode_presentation_context(OrgData, MaybePresentationContext);
 decode(Data) ->
-    ok = lager:warning("[variable_items_request] decode failed"),
     {error, Data, ["wrong header"]}.
 
 %%==============================================================================
