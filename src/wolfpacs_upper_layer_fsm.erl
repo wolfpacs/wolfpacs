@@ -168,13 +168,13 @@ handle_pdv_item({verification, Strategy}, PrCID, _IsLast, _IsCommand, Raw, Data)
 
     {keep_state, Data, []};
 
-handle_pdv_item({ct_image_storage, _Strategy}, _, false, false, Fragment, Data) ->
+handle_pdv_item({image_storage, _Strategy}, _, false, false, Fragment, Data) ->
     #wolfpacs_upper_layer_fsm_data{blob=OldBlob} = Data,
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
     NewData = Data#wolfpacs_upper_layer_fsm_data{blob=NewBlob},
     {keep_state, NewData, []};
 
-handle_pdv_item({ct_image_storage, Strategy}, PrCID, true, false, Fragment, Data) ->
+handle_pdv_item({image_storage, Strategy}, PrCID, true, false, Fragment, Data) ->
     #wolfpacs_upper_layer_fsm_data{blob=OldBlob,
 				   request_uid=UID,
 				   request_id=RQID,
@@ -204,11 +204,11 @@ handle_pdv_item({ct_image_storage, Strategy}, PrCID, true, false, Fragment, Data
     NewData = Data#wolfpacs_upper_layer_fsm_data{blob = <<>>},
     {keep_state, NewData, []};
 
-handle_pdv_item({ct_image_storage, Strategy}, _, true, true, Fragment, Data) ->
+handle_pdv_item({image_storage, Strategy}, _, true, true, Fragment, Data) ->
     #wolfpacs_upper_layer_fsm_data{blob=OldBlob} = Data,
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
     {ok, Info, _Rest} = wolfpacs_data_elements:decode(Strategy, NewBlob),
-    _ = lager:warning("ct_image_storage true true ~p", [Info]),
+    _ = lager:warning("image_storage true true ~p", [Info]),
     #{{0, 16#0002} := UID,
       {0, 16#0110} := RQID,
       {0, 16#1000} := AffectedUID} = Info,

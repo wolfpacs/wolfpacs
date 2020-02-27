@@ -56,11 +56,18 @@ supported_transfer_syntax(?SECONDARY_CAPTURE, ?EXPLICIT_BIG_ENDIAN) ->
     {secondary_capture, {explicit, big}};
 
 supported_transfer_syntax(?CT_IMAGE_STORAGE, ?IMPLICIT_LITTLE_ENDIAN) ->
-    {ct_image_storage, {implicit, little}};
+    {image_storage, {implicit, little}};
 supported_transfer_syntax(?CT_IMAGE_STORAGE, ?EXPLICIT_LITTLE_ENDIAN) ->
-    {ct_image_storage, {explicit, little}};
+    {image_storage, {explicit, little}};
 supported_transfer_syntax(?CT_IMAGE_STORAGE, ?EXPLICIT_BIG_ENDIAN) ->
-    {ct_image_storage, {explicit, big}};
+    {image_storage, {explicit, big}};
+
+supported_transfer_syntax(?MR_IMAGE_STORAGE, ?IMPLICIT_LITTLE_ENDIAN) ->
+    {image_storage, {implicit, little}};
+supported_transfer_syntax(?MR_IMAGE_STORAGE, ?EXPLICIT_LITTLE_ENDIAN) ->
+    {image_storage, {explicit, little}};
+supported_transfer_syntax(?MR_IMAGE_STORAGE, ?EXPLICIT_BIG_ENDIAN) ->
+    {image_storage, {explicit, big}};
 
 supported_transfer_syntax(_, _) ->
     no.
