@@ -133,6 +133,7 @@ encode_decode_test_() ->
     Incorrect2 = <<1, 2, 3, 4>>,
     Incorrect3 = binary:replace(Encoded0, <<"1.2.840">>, <<>>),
     Incorrect4 = <<1, 0, 0:32, 1>>,
+    Incorrect5 = <<>>,
 
     [?_assertEqual(decode(Encoded0), {ok, CalledAE, CallingAE, R,
 				      [{PrCID, AbstractSyntax, TransferSyntax}],
@@ -146,5 +147,6 @@ encode_decode_test_() ->
      ?_assertEqual(decode(Incorrect1), {error,  Incorrect1, ["incorrect header", 0]}),
      ?_assertEqual(decode(Incorrect2), {error,  Incorrect2, ["incorrect header", 1]}),
      ?_assertEqual(decode(Incorrect3), {error,  Incorrect3, ["unable to decode variable items"]}),
-     ?_assertEqual(decode(Incorrect4), {error,  Incorrect4, ["unable to decode called and calling"]})
+     ?_assertEqual(decode(Incorrect4), {error,  Incorrect4, ["unable to decode called and calling"]}),
+     ?_assertEqual(decode(Incorrect5), {error,  Incorrect5, ["no data"]})
     ].
