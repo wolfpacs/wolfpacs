@@ -5,7 +5,8 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_conformance).
--export([supported/1]).
+-export([supported/1,
+	 transfer_syntax_to_strategy/1]).
 -include("transfer_syntax.hrl").
 -include("abstract_syntax.hrl").
 
@@ -16,6 +17,15 @@
 %%-------------------------------------------------------------------
 supported(PresentationContexts) ->
     supported(PresentationContexts, [], #{}).
+
+transfer_syntax_to_strategy(?IMPLICIT_LITTLE_ENDIAN) ->
+    {implicit, little};
+transfer_syntax_to_strategy(?EXPLICIT_LITTLE_ENDIAN) ->
+    {explicit, little};
+transfer_syntax_to_strategy(?EXPLICIT_BIG_ENDIAN) ->
+    {explicit, big};
+transfer_syntax_to_strategy(_) ->
+    no_strategy_for_transfer_syntax.
 
 %%==============================================================================
 %% Private
