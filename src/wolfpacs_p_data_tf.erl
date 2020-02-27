@@ -22,13 +22,13 @@ decode(AllData = <<16#4, _, Length:32, Data/binary>>) ->
 		{ok, PDVItems} ->
 		    {ok, PDVItems, Rest};
 		_ ->
-		    {error, AllData}
+		    {error, AllData, ["unable to decode items"]}
 		end;
 	_ ->
-	    {error, AllData}
+	    {error, AllData, ["unable to split"]}
     end;
 decode(AllData) ->
-    {error, AllData}.
+    {error, AllData, ["incorrect header"]}.
 
 %%============================================================================
 %% Private
@@ -87,8 +87,17 @@ encode_decode_test_() ->
     Encoded0 = encode(PDVItems),
     Encoded1 = <<Encoded0/binary, 42>>,
 
-    Incorrect0 = <<12, 13, 14, 15>>,
+    Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
+    Incorrect1 = wolfpacs_utils:drop_first_byte(Encoded0),
+    Incorrect2 = wolfpacs_utils:clear_even(Encoded0),
+    Incorrect3 = <<12, 13, 14, 15>>,
+    Incorrect4 = <<>>,
 
-    [?_assertEqual(decode(Encoded0), {ok, PDVItems, <<>>}),
-     ?_assertEqual(decode(Encoded1), {ok, PDVItems, <<42>>}),
-     ?_assertEqual(decode(Incorrect0), {error, Incorrect0})].
+    [ ?_assertEqual(decode(Encoded0), {ok, PDVItems, <<>>})
+    , ?_assertEqual(decode(Encoded1), {ok, PDVItems, <<42>>})
+    , ?_assertEqual(decode(Incorrect0), {error, Incorrect0, ["unable to split"]})
+    , ?_assertEqual(decode(Incorrect1), {error, Incorrect1, ["incorrect header"]})
+    , ?_assertEqual(decode(Incorrect2), {error, Incorrect2, ["incorrect header"]})
+    , ?_assertEqual(decode(Incorrect3), {error, Incorrect3, ["incorrect header"]})
+    , ?_assertEqual(decode(Incorrect4), {error, Incorrect4, ["incorrect header"]})
+    ].
