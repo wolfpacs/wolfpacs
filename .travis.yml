@@ -10,6 +10,9 @@ otp_release:
   - 20.3
   - 19.3
 
+before_install:
+  - sudo apt-get -y install dcmtk
+
 install:
   - pip install --user --disable-pip-version-check codecov
   - wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3

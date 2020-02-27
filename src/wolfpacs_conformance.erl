@@ -5,7 +5,8 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_conformance).
--export([supported/1]).
+-export([supported/1,
+	 transfer_syntax_to_strategy/1]).
 -include("transfer_syntax.hrl").
 -include("abstract_syntax.hrl").
 
@@ -16,6 +17,15 @@
 %%-------------------------------------------------------------------
 supported(PresentationContexts) ->
     supported(PresentationContexts, [], #{}).
+
+transfer_syntax_to_strategy(?IMPLICIT_LITTLE_ENDIAN) ->
+    {implicit, little};
+transfer_syntax_to_strategy(?EXPLICIT_LITTLE_ENDIAN) ->
+    {explicit, little};
+transfer_syntax_to_strategy(?EXPLICIT_BIG_ENDIAN) ->
+    {explicit, big};
+transfer_syntax_to_strategy(_) ->
+    no_strategy_for_transfer_syntax.
 
 %%==============================================================================
 %% Private
@@ -56,11 +66,18 @@ supported_transfer_syntax(?SECONDARY_CAPTURE, ?EXPLICIT_BIG_ENDIAN) ->
     {secondary_capture, {explicit, big}};
 
 supported_transfer_syntax(?CT_IMAGE_STORAGE, ?IMPLICIT_LITTLE_ENDIAN) ->
-    {ct_image_storage, {implicit, little}};
+    {image_storage, {implicit, little}};
 supported_transfer_syntax(?CT_IMAGE_STORAGE, ?EXPLICIT_LITTLE_ENDIAN) ->
-    {ct_image_storage, {explicit, little}};
+    {image_storage, {explicit, little}};
 supported_transfer_syntax(?CT_IMAGE_STORAGE, ?EXPLICIT_BIG_ENDIAN) ->
-    {ct_image_storage, {explicit, big}};
+    {image_storage, {explicit, big}};
+
+supported_transfer_syntax(?MR_IMAGE_STORAGE, ?IMPLICIT_LITTLE_ENDIAN) ->
+    {image_storage, {implicit, little}};
+supported_transfer_syntax(?MR_IMAGE_STORAGE, ?EXPLICIT_LITTLE_ENDIAN) ->
+    {image_storage, {explicit, little}};
+supported_transfer_syntax(?MR_IMAGE_STORAGE, ?EXPLICIT_BIG_ENDIAN) ->
+    {image_storage, {explicit, big}};
 
 supported_transfer_syntax(_, _) ->
     no.
@@ -89,3 +106,7 @@ supported_test() ->
 		   44 => {verification, {explicit, little}}},
 
     ?assertEqual(supported(Contexts), {ok, Correct, CorrectMap}).
+
+transfer_syntax_to_strategy_test() ->
+    Correct = no_strategy_for_transfer_syntax,
+    ?assertEqual(transfer_syntax_to_strategy(<<"1.2.3.4">>), Correct).
