@@ -9,7 +9,7 @@
 	 decode/1]).
 -import(wolfpacs_utils, [split/2]).
 
--spec encode(binary()) -> binary() | {error, too_short} | {error, too_long}.
+-spec encode(binary()) -> binary().
 encode(VersionName) ->
     Length = byte_size(VersionName),
     encode_with_length(VersionName, Length).
@@ -26,16 +26,12 @@ decode(Data) ->
 %% Private
 %%==============================================================================
 
-encode_with_length(_VersionName, Length) when Length < 1 ->
-    {error, too_short};
-encode_with_length(_VersionName, Length) when Length > 16 ->
-    {error, too_long};
-encode_with_length(VersionName, Length) ->
+encode_with_length(VersionName_, Length) ->
+    VersionName = wolfpacs_vr_utils:trim_binary(VersionName_),
     <<16#55,
       0,
       Length:16,
       VersionName/binary>>.
-
 
 %%==============================================================================
 %% Test
