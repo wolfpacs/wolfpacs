@@ -106,3 +106,7 @@ supported_test() ->
 		   44 => {verification, {explicit, little}}},
 
     ?assertEqual(supported(Contexts), {ok, Correct, CorrectMap}).
+
+transfer_syntax_to_strategy_test() ->
+    Correct = no_strategy_for_transfer_syntax,
+    ?assertEqual(transfer_syntax_to_strategy(<<"1.2.3.4">>), Correct).
