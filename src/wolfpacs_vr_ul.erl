@@ -17,9 +17,11 @@ encode({_, big}, UL) ->
 
 -spec decode(strategy(), binary()) -> integer().
 decode({_, little}, <<UL:32/little>>) ->
-    UL;
+    {ok, UL, <<>>};
 decode({_, big}, <<UL:32/big>>) ->
-    UL.
+    {ok, UL, <<>>};
+decode(_, Data) ->
+    {error,  Data, ["unable to decode UL"]}.
 
 %%==============================================================================
 %% Test
@@ -29,8 +31,15 @@ decode({_, big}, <<UL:32/big>>) ->
 
 encode_decode_little_test() ->
     S = {explicit, little},
-    ?assertEqual(decode(S, encode(S, 1024)), 1024).
+    ?assertEqual(decode(S, encode(S, 1024)), {ok, 1024, <<>>}).
 
 encode_decode_big_test() ->
     S = {explicit, big},
-    ?assertEqual(decode(S, encode(S, 1024)), 1024).
+    ?assertEqual(decode(S, encode(S, 1024)), {ok, 1024, <<>>}).
+
+bad_decode_test_() ->
+    S = {explicit, big},
+    [ ?_assertEqual(decode(S, <<>>), {error, <<>>, ["unable to decode UL"]})
+    , ?_assertEqual(decode(S, <<1>>), {error, <<1>>, ["unable to decode UL"]})
+    , ?_assertEqual(decode(S, <<1, 2, 3, 4, 5>>), {error, <<1, 2, 3, 4, 5>>, ["unable to decode UL"]})
+    ].
