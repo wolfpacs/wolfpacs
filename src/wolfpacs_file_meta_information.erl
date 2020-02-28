@@ -54,7 +54,9 @@ decode(Strategy, OrgData = <<_:1024, "DICM", Data/binary>>) ->
 			{error, _, Msg} ->
 			    {error, OrgData, [?ERROR_META|Msg]}
 		    end
-	    end
+	    end;
+	{ok, _, _} ->
+	    {error, OrgData, ["corrupt group length"]}
     end;
 decode(_Strategy, Data) ->
     {error, Data, [?ERROR_MATCH]}.
