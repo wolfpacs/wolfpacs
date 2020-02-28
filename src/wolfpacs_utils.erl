@@ -13,7 +13,8 @@
 	 clear_byte/2,
 	 remove_keys/2,
 	 clear_even/1,
-	 clear_odd/1]).
+	 clear_odd/1,
+	 random_clear/2]).
 
 -spec drop_first_byte(binary()) -> binary().
 drop_first_byte(<<_, Data/binary>>) ->
@@ -69,6 +70,9 @@ clear_even(Data) ->
 clear_odd(Data) ->
     clear_data(binary_to_list(Data), [], next).
 
+random_clear(Data, FlipPropability) ->
+    random_clear(Data, FlipPropability, []).
+
 %%==============================================================================
 %% Private
 %%==============================================================================
@@ -102,6 +106,18 @@ clear_data([_|T], Acc, now)->
     clear_data(T, [0|Acc], next);
 clear_data([H|T], Acc, next) ->
     clear_data(T, [H|Acc], now).
+
+random_clear(<<>>, _, Acc) ->
+    list_to_binary(lists:reverse(Acc));
+random_clear(<<Head, Tail/binary>>, FlipPropability, Acc) ->
+    Flip = rand:uniform(),
+    case Flip < FlipPropability of
+	true ->
+	    Byte = rand:uniform(256) - 1,
+	    random_clear(Tail, FlipPropability, [Byte|Acc]);
+	false  ->
+	    random_clear(Tail, FlipPropability, [Head|Acc])
+    end.
 
 %%==============================================================================
 %% Test
@@ -168,3 +184,14 @@ clear_odd_test_() ->
     , ?_assertEqual(clear_odd(<<1 ,2, 3>>), <<1, 0, 3>>)
     , ?_assertEqual(clear_odd(<<1 ,2, 3, 4>>), <<1, 0, 3, 0>>)
     ].
+
+random_clear_no_flip_test() ->
+    Data = <<1, 2, 3, 4, 5, 6, 7, 8,
+	     1, 2, 3, 4, 5, 6, 7, 8,
+	     1, 2, 3, 4, 5, 6, 7, 8,
+	     1, 2, 3, 4, 5, 6, 7, 8>>,
+    ?assertEqual(random_clear(Data, 0.0), Data).
+
+random_clear_flip_test() ->
+    Data = <<0:64>>,
+    ?assertNotEqual(random_clear(Data, 1.0), Data).
