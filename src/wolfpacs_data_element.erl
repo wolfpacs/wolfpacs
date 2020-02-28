@@ -166,7 +166,14 @@ decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, Decoder) ->
 	{error, _, _} ->
 	    {error, OrgData, ["unable to split"]};
 	{ok, Bytes, Rest} ->
-	    {ok, {{G, E}, Decoder:decode(Strategy, Bytes)}, Rest}
+	    case Decoder:decode(Strategy, Bytes) of
+		{ok, Value, <<>>} ->
+		    {ok, {{G, E}, Value}, Rest};
+		{error, _ , Error} ->
+		    {error, OrgData, Error};
+		Value ->
+		    {ok, {{G, E}, Value}, Rest}
+	    end
     end.
 
 %%-------------------------------------------------------------------
