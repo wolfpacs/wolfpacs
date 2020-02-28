@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%% @doc Data Elements (Explicit Little).
+%% @doc Data Element
 %%
 %% http://dicom.nema.org/medical/dicom/2014c/output/chtml/part05/chapter_7.html#sect_7.1.1
 %% Command Dictionary is always implicit
@@ -18,7 +18,7 @@
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec encode(strategy(), integer(), integer(), list(), any()) -> binary().
+-spec encode(strategy(), integer(), integer(), string(), any()) -> binary().
 encode({explicit, _Endian}, 0, E, VR, Bytes) ->
     %% Command group is always implicit
     wolfpacs_data_element:encode({implicit, little}, 0, E, VR, Bytes);
@@ -207,6 +207,9 @@ decode_common(Strategy, OrgData, G, E, "CS", Len, Data) ->
 decode_common(Strategy, OrgData, G, E, "UN", Len, Data) ->
     decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, wolfpacs_vr_un);
 
+decode_common(Strategy, OrgData, G, E, "DA", Len, Data) ->
+    decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, wolfpacs_vr_da);
+
 decode_common(_, OrgData, _G, _E, VR, _Len, _Data) ->
     {error, OrgData, ["unsupported vr", VR]}.
 
@@ -328,6 +331,9 @@ encode_decode_us_test_() ->
 
 encode_decode_ul_test_() ->
     encode_decode_common("UL", 1024).
+
+encode_decode_da_test_() ->
+    encode_decode_common("DA", <<"20201011">>).
 
 encode_decode_common(VR, Data) ->
     lists:flatten(
