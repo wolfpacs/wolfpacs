@@ -40,7 +40,7 @@ vr_to_example_group_element("LO") -> {16#0008, 16#0070};
 vr_to_example_group_element("UN") -> {16#0072, 16#006D};
 vr_to_example_group_element("CS") -> {16#0072, 16#0208};
 vr_to_example_group_element("DA") -> {16#0008, 16#0012};
-vr_to_example_group_element(VR) -> {error, VR, "No example found"}.
+vr_to_example_group_element(VR) -> {error, VR, ["No example found"]}.
 
 %%==============================================================================
 %% Test
@@ -59,6 +59,9 @@ vr_to_example_group_element(VR) -> {error, VR, "No example found"}.
 
 vr_missing_test() ->
     ?assertEqual(vr(16#FFFF, 16#EEEE), "UN").
+
+vr_example_missing_test() ->
+    ?assertEqual(vr_to_example_group_element("QQ"), {error, "QQ", ["No example found"]}).
 
 vr_found_test_() ->
     [ ?_assertEqual(vr(?CMD, ?UID), "UI"),
