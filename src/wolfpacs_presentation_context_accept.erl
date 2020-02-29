@@ -32,7 +32,7 @@ encode(PrCID, TransferSyntax) ->
       Length:16,
       Payload/binary>>.
 
--spec decode(binary()) -> {ok, byte(), binary(), binary()} | {error, binary()}.
+-spec decode(binary()) -> {ok, byte(), binary(), binary()} | {error, binary(), list(string())}.
 decode(AllData = <<16#21, _, Length:16, Payload/binary>>) ->
     NbBytes = byte_size(Payload),
     <<PrCID,
@@ -46,13 +46,13 @@ decode(AllData = <<16#21, _, Length:16, Payload/binary>>) ->
 		{ok, TransferSyntax, Rest} ->
 		    {ok, PrCID, TransferSyntax, Rest};
 		_ ->
-		    {error, AllData}
+		    {error, AllData, ["unable to decode transfer syntax"]}
 	    end;
 	false ->
-	    {error, AllData}
+	    {error, AllData, ["not enough data to decode transfer syntax"]}
     end;
 decode(AllData) ->
-    {error, AllData}.
+    {error, AllData, ["incorrect header"]}.
 
 %%------------------------------------------------------------------------------
 %% Private
@@ -84,5 +84,5 @@ encode_decode_test_() ->
     Incorrect1 = <<1, 2, 3, 4>>,
     [ ?_assertEqual(decode(Encoded0), {ok, PrCID, TransferSyntax, <<>>}),
       ?_assertEqual(decode(Encoded1), {ok, PrCID, TransferSyntax, <<42>>}),
-      ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
-      ?_assertEqual(decode(Incorrect1), {error, Incorrect1}) ].
+      ?_assertEqual(decode(Incorrect0), {error, Incorrect0, ["not enough data to decode transfer syntax"]}),
+      ?_assertEqual(decode(Incorrect1), {error, Incorrect1, ["incorrect header"]}) ].
