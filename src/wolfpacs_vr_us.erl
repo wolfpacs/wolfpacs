@@ -17,9 +17,11 @@ encode({_, big}, US) ->
 
 -spec decode(strategy(), binary()) -> integer().
 decode({_, little}, <<US:16/little>>) ->
-    US;
+    {ok, US, <<>>};
 decode({_, big}, <<US:16/big>>) ->
-    US.
+    {ok, US, <<>>};
+decode(_, Data) ->
+    {error, Data, ["unable to decode US"]}.
 
 %%==============================================================================
 %% Test
@@ -29,8 +31,13 @@ decode({_, big}, <<US:16/big>>) ->
 
 encode_decode_little_test() ->
     S = {explicit, little},
-    ?assertEqual(decode(S, encode(S, 1024)), 1024).
+    ?assertEqual(decode(S, encode(S, 1024)), {ok, 1024, <<>>}).
 
 encode_decode_big_test() ->
     S = {explicit, big},
-    ?assertEqual(decode(S, encode(S, 1024)), 1024).
+    ?assertEqual(decode(S, encode(S, 1024)), {ok, 1024, <<>>}).
+
+decode_error_test_() ->
+    S = {explicit, little},
+    [ ?_assertEqual(decode(S, <<>>), {error, <<>>, ["unable to decode US"]})
+    ].

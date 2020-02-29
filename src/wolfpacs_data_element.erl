@@ -364,3 +364,6 @@ encode_decode_common(Strategy, VR, Data) ->
      ?_assertEqual(decode(Strategy, Encoded1), {ok, {{G, E}, Data}, <<42>>}),
      ?_assertEqual(decode(Strategy, Incorrect0), {error, Incorrect0, ErrorMsg0}),
      ?_assertEqual(decode(Strategy, Incorrect1), {error, Incorrect1, ErrorMsg1})].
+
+encode_ox_test() ->
+    ?assertEqual(encode({explicit, little}, 1, 2, "ox", <<1, 2, 3, 4>>), <<>>).
