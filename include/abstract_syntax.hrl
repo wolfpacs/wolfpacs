@@ -3,3 +3,8 @@
 -define(CT_IMAGE_STORAGE, <<"1.2.840.10008.5.1.4.1.1.2">>).
 -define(MR_IMAGE_STORAGE, <<"1.2.840.10008.5.1.4.1.1.4">>).
 -define(PRINT_JOB, <<"1.2.840.10008.5.1.1.14">>).
+
+%%
+-define(FINDStudyRootQueryRetrieveInformationModel, <<"1.2.840.10008.5.1.4.1.2.2.1">>).
+-define(MOVEStudyRootQueryRetrieveInformationModel, <<"1.2.840.10008.5.1.4.1.2.2.2">>).
+-define(GETStudyRootQueryRetrieveInformationModel, <<"1.2.840.10008.5.1.4.1.2.2.3">>).

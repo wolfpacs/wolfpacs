@@ -218,6 +218,13 @@ handle_pdv_item({image_storage, Strategy}, _, true, true, Fragment, Data) ->
 						 affected_uid = AffectedUID},
     {keep_state, NewData, []};
 
+handle_pdv_item({find_study_root_query, Strategy}, _, _A, _B, Fragment, Data) ->
+    #wolfpacs_upper_layer_fsm_data{blob=OldBlob} = Data,
+    NewBlob = <<OldBlob/binary, Fragment/binary>>,
+    {ok, Info, _Rest} = wolfpacs_data_elements:decode(Strategy, NewBlob),
+    _ = lager:warning("find_study_root_query ~p", [Info]),
+    {keep_state, Data, []};
+
 handle_pdv_item(Tag, PrCID, A, B, _, Data) ->
     _ = lager:warning("unhandle pdv item ~p, ~p, ~p, ~p", [Tag, PrCID, A, B]),
     {keep_state, Data, []}.

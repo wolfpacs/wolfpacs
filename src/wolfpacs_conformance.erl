@@ -79,6 +79,9 @@ supported_transfer_syntax(?MR_IMAGE_STORAGE, ?EXPLICIT_LITTLE_ENDIAN) ->
 supported_transfer_syntax(?MR_IMAGE_STORAGE, ?EXPLICIT_BIG_ENDIAN) ->
     {image_storage, {explicit, big}};
 
+supported_transfer_syntax(?FINDStudyRootQueryRetrieveInformationModel, ?IMPLICIT_LITTLE_ENDIAN) ->
+    {find_study_root_query, {implicit, little}};
+
 supported_transfer_syntax(_, _) ->
     no.
 
