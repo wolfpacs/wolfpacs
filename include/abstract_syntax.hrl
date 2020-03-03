@@ -8,3 +8,6 @@
 -define(FINDStudyRootQueryRetrieveInformationModel, <<"1.2.840.10008.5.1.4.1.2.2.1">>).
 -define(MOVEStudyRootQueryRetrieveInformationModel, <<"1.2.840.10008.5.1.4.1.2.2.2">>).
 -define(GETStudyRootQueryRetrieveInformationModel, <<"1.2.840.10008.5.1.4.1.2.2.3">>).
+
+%% findscu -W -k "(0040,0100)[0].Modality=CT" localhost 11112
+-define(FINDModalityWorklistInformationModel, <<"1.2.840.10008.5.1.4.31">>).

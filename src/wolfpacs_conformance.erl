@@ -82,7 +82,11 @@ supported_transfer_syntax(?MR_IMAGE_STORAGE, ?EXPLICIT_BIG_ENDIAN) ->
 supported_transfer_syntax(?FINDStudyRootQueryRetrieveInformationModel, ?IMPLICIT_LITTLE_ENDIAN) ->
     {find_study_root_query, {implicit, little}};
 
-supported_transfer_syntax(_, _) ->
+supported_transfer_syntax(?FINDModalityWorklistInformationModel, ?IMPLICIT_LITTLE_ENDIAN) ->
+    {find_modality_worklist_information_model, {implicit, little}};
+
+supported_transfer_syntax(AbstractSyntax, TransferSyntax) ->
+    _ = lager:warning("Wolfpacs does not yet support ~p ~p", [AbstractSyntax, TransferSyntax]),
     no.
 
 %%==============================================================================
