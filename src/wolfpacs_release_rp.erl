@@ -21,7 +21,7 @@ encode(R) ->
 decode(<<16#6, _, 4:32, R:32/bitstring, Rest/binary>>) ->
     {ok, R, Rest};
 decode(Data) ->
-    {error, Data}.
+    {error, Data, ["incorrect header"]}.
 
 %%==============================================================================
 %% Test
@@ -39,5 +39,5 @@ encode_decode_test_() ->
 
     [?_assertEqual(decode(Encoded0), {ok, R, <<>>}),
      ?_assertEqual(decode(Encoded1), {ok, R, <<42>>}),
-     ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
-     ?_assertEqual(decode(Incorrect1), {error, Incorrect1})].
+     ?_assertEqual(decode(Incorrect0), {error, Incorrect0, ["incorrect header"]}),
+     ?_assertEqual(decode(Incorrect1), {error, Incorrect1, ["incorrect header"]})].
