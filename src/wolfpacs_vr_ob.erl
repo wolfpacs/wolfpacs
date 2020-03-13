@@ -15,7 +15,7 @@ encode(_, List) ->
 
 -spec decode(strategy(), binary()) -> list().
 decode(_, Data) ->
-    binary_to_list(Data).
+    {ok, binary_to_list(Data), <<>>}.
 
 %%==============================================================================
 %% Private
@@ -30,7 +30,7 @@ decode(_, Data) ->
 
 encode_decode_common(Strategy, Data) ->
     Encoded = encode(Strategy, Data),
-    [ ?_assertEqual(decode(Strategy, Encoded), Data) ].
+    [ ?_assertEqual(decode(Strategy, Encoded), {ok, Data, <<>>}) ].
 
 encode_decode_little_test_() ->
     Data = [1, 2, 3, 4, 5],
