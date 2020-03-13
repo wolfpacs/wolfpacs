@@ -27,8 +27,11 @@ encode(DA) when is_list(DA)->
 encode(DA) ->
     DA.
 
-decode(<<DA:64/bitstring, _Rest/binary>>) ->
-    DA.
+decode(<<DA:64/bitstring, Rest/binary>>) ->
+    {ok, DA, Rest};
+decode(OrgData) ->
+    {error, OrgData, ["incorrect header"]}.
+
 
 %%==============================================================================
 %% Test
@@ -39,6 +42,6 @@ decode(<<DA:64/bitstring, _Rest/binary>>) ->
 encode_test_() ->
     DA0 = <<"20070102">>,
     DAL = "20070102",
-    [ ?_assertEqual(decode(encode(not_important, DA0)), DA0)
-    ,  ?_assertEqual(decode(encode(not_important, DAL)), DA0)
+    [ ?_assertEqual(decode(encode(not_important, DA0)), {ok, DA0, <<>>})
+    , ?_assertEqual(decode(encode(not_important, DAL)), {ok, DA0, <<>>})
     ].

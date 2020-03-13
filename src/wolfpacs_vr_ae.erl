@@ -27,8 +27,10 @@ encode(UI) ->
     limit_binary(pad_binary(UI), 16).
 
 -spec decode(binary()) -> binary().
+decode(<<>>) ->
+    {error, <<>>, ["empty AE"]};
 decode(Data) ->
-    trim_binary(Data).
+    {ok, trim_binary(Data), <<>>}.
 
 %%==============================================================================
 %% Test
@@ -45,9 +47,9 @@ encode_test_() ->
 encode_decode_test_() ->
     Long = [$A || _ <- lists:seq(1, 32)],
     Trimmed = list_to_binary([$A || _ <- lists:seq(1, 16)]),
-    [?_assertEqual(decode(encode("")), <<"">>),
-     ?_assertEqual(decode(encode("A")), <<"A">>),
-     ?_assertEqual(decode(encode("AB")), <<"AB">>),
-     ?_assertEqual(decode(encode("ABC")), <<"ABC">>),
-     ?_assertEqual(decode(encode("ABCD")), <<"ABCD">>),
-     ?_assertEqual(decode(encode(Long)), Trimmed) ].
+    [?_assertEqual(decode(encode("")), {error, <<>>, ["empty AE"]}),
+     ?_assertEqual(decode(encode("A")), {ok, <<"A">>, <<>>}),
+     ?_assertEqual(decode(encode("AB")), {ok, <<"AB">>, <<>>}),
+     ?_assertEqual(decode(encode("ABC")), {ok, <<"ABC">>, <<>>}),
+     ?_assertEqual(decode(encode("ABCD")), {ok, <<"ABCD">>, <<>>}),
+     ?_assertEqual(decode(encode(Long)), {ok, Trimmed, <<>>}) ].

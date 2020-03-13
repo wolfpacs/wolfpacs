@@ -170,9 +170,7 @@ decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, Decoder) ->
 		{ok, Value, <<>>} ->
 		    {ok, {{G, E}, Value}, Rest};
 		{error, _ , Error} ->
-		    {error, OrgData, Error};
-		Value ->
-		    {ok, {{G, E}, Value}, Rest}
+		    {error, OrgData, Error}
 	    end
     end.
 
