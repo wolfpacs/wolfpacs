@@ -47,8 +47,6 @@ decode(Strategy, OrgData = <<_:1024, "DICM", Data/binary>>) ->
 		    {error, OrgData, [?ERROR_SPLIT]};
 		{ok, Meta, Content} ->
 		    case wolfpacs_data_elements:decode(Strategy, Meta) of
-			{ok, MetaMap, <<>>} ->
-			    {ok, MetaMap, Content};
 			{ok, MetaMap, _LostData} ->
 			    {ok, MetaMap, Content};
 			{error, _, Msg} ->
