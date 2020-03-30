@@ -1,20 +1,27 @@
 %%%-------------------------------------------------------------------
 %% @doc Value Representation Application Entity.
 %%
+%% A string of characters that identifies an Application Entity with
+%% leading and trailing spaces (20H) being non-significant.
+%% A value consisting solely of spaces shall not be used.
+%%
 %% @end
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_ae).
--export([encode/2,  decode/2]).
+-export([encode/2, decode/2]).
+-include("wolfpacs_types.hrl").
 -import(wolfpacs_vr_utils, [pad_binary/1,
 			    limit_binary/2,
 			    trim_binary/1]).
 
+-spec encode(strategy(), binary()) -> binary().
 encode(_Strategy, AE) ->
     encode(AE).
 
-decode(_Strategy, AE) ->
-    decode(AE).
+-spec decode(strategy(), binary()) -> {ok, binary(), binary()} | {error, binary(), list(string())}.
+decode(_Strategy, Data) ->
+    decode(Data).
 
 %%==============================================================================
 %% Private
