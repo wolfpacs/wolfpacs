@@ -30,6 +30,8 @@ encode(Strategy, G, E, "OF", Bytes) ->
     encode_common(Strategy, G, E, "OF", wolfpacs_vr_of:encode(Strategy, Bytes));
 encode(Strategy, G, E, "AE", Title) ->
     encode_common(Strategy, G, E, "AE", wolfpacs_vr_ae:encode(Strategy, Title));
+encode(Strategy, G, E, "AT", AT) ->
+    encode_common(Strategy, G, E, "AT", wolfpacs_vr_at:encode(Strategy, AT));
 encode(Strategy, G, E, "UI", Title) ->
     encode_common(Strategy, G, E, "UI", wolfpacs_vr_ui:encode(Strategy, Title));
 encode(Strategy, G, E, "US", US) ->
@@ -197,6 +199,9 @@ decode_common(Strategy, OrgData, G, E, "LO", Len, Data) ->
 decode_common(Strategy, OrgData, G, E, "AE", Len, Data) ->
     decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, wolfpacs_vr_ae);
 
+decode_common(Strategy, OrgData, G, E, "AT", Len, Data) ->
+    decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, wolfpacs_vr_at);
+
 decode_common(Strategy, OrgData, G, E, "UI", Len, Data) ->
     decode_common_with_decoder(Strategy, OrgData, G, E, Len, Data, wolfpacs_vr_ui);
 
@@ -321,6 +326,9 @@ encode_decode_lo_test_() ->
 
 encode_decode_ae_test_() ->
     encode_decode_common("AE", <<"AE1">>).
+
+encode_decode_at_test_() ->
+    encode_decode_common("AT", {16#18, 16#ff}).
 
 encode_decode_un_test_() ->
     encode_decode_common("UN", <<"UN1">>).

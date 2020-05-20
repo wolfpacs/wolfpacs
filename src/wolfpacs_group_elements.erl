@@ -26,6 +26,8 @@ vr_lookup(_, _, VR) ->
 %% WARNING, Don't pick example in group 0000 because they
 %% are always treated as little endian implicit.
 %%
+%% Look in wolfpacs_group_elements_db for inspiration.
+%%
 %% @end
 %%-------------------------------------------------------------------
 vr_to_example_group_element("OB") -> {16#0002, 16#0001};
@@ -40,6 +42,7 @@ vr_to_example_group_element("LO") -> {16#0008, 16#0070};
 vr_to_example_group_element("UN") -> {16#0072, 16#006D};
 vr_to_example_group_element("CS") -> {16#0072, 16#0208};
 vr_to_example_group_element("DA") -> {16#0008, 16#0012};
+vr_to_example_group_element("AT") -> {16#3008, 16#0062};
 vr_to_example_group_element(VR) -> {error, VR, ["No example found"]}.
 
 %%==============================================================================
