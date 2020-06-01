@@ -8,12 +8,12 @@ prop_random_clear_test() ->
     ?FORALL(US, byte(),
 	    begin
  		Strategy = {explicit, little},
-		Encoded = wolfpacs_vr_us:encode(Strategy, US),
+		Encoded = wolfpacs_vr_us:encode(no_flow, Strategy, US),
 		Corrupt = wolfpacs_utils:random_clear(Encoded, 0.2),
-		case wolfpacs_vr_us:decode(Strategy, Corrupt) of
+		case wolfpacs_vr_us:decode(no_flow, Strategy, Corrupt) of
 		    {ok, _, _} ->
 			true;
-		    {error, Corrupt, _} ->
+		    error ->
 			true;
 		    _ ->
 			false
@@ -24,10 +24,10 @@ prop_decode_test() ->
     ?FORALL(Data, binary(),
 	    begin
  		Strategy = {explicit, little},
-		case wolfpacs_vr_us:decode(Strategy, Data) of
+		case wolfpacs_vr_us:decode(no_flow, Strategy, Data) of
 		    {ok, _, _} ->
 			true;
-		    {error, Data, _} ->
+		    error ->
 			true;
 		    _ ->
 			false
