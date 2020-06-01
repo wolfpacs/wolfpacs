@@ -9,9 +9,14 @@
 prop_decode_test() ->
     ?FORALL({Blob, Strategy}, {binary(), strategy()},
 	    begin
-		case wolfpacs_data_elements:decode(Strategy, Blob) of
-		    {error, Blob, _} -> true;
-		    _ -> false
+		{ok, Flow} = wolfpacs_flow:start_link(),
+		case wolfpacs_data_elements:decode(Flow, Strategy, Blob) of
+		    {ok, _, _} ->
+			true;
+		    error ->
+			true;
+		    _ ->
+			false
 		end
 	    end).
 
@@ -27,18 +32,19 @@ prop_decode_test() ->
 prop_fuzz_decode_test() ->
     ?FORALL(Strategy, valid_strategy(),
 	    begin
+		{ok, Flow} = wolfpacs_flow:start_link(),
 		UID = <<"1.2.3.4">>,
 		Items = #{{?CMD, ?UID} => UID,
 			  {?CMD, ?FLD} => 16#8030,
 			  {?CMD, ?RPID} => ?RQID,
 			  {?CMD, ?SET} => 16#0101,
 			  {?CMD, ?STU} => 16#0000},
-		Encoded = wolfpacs_data_elements:encode(Strategy, Items),
+		Encoded = wolfpacs_data_elements:encode(Flow, Strategy, Items),
 		Corrupt = wolfpacs_utils:random_clear(Encoded, 0.2),
-		case wolfpacs_data_elements:decode(Strategy, Corrupt) of
+		case wolfpacs_data_elements:decode(Flow, Strategy, Corrupt) of
 		    {ok, _Map, _Rest} ->
 			true;
-		    {error, _Corrupt, _Error} ->
+		    error ->
 			true;
 		    _ ->
 			false
