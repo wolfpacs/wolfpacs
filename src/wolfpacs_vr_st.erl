@@ -7,15 +7,15 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_st).
--export([encode/2,  decode/2]).
+-export([encode/3,  decode/3]).
 -import(wolfpacs_vr_utils, [pad_binary/1,
 			    limit_binary/2,
 			    trim_binary/1]).
 
-encode(_Strategy, AE) ->
+encode(_Flow, _Strategy, AE) ->
     encode(AE).
 
-decode(_Strategy, AE) ->
+decode(_Flow, _Strategy, AE) ->
     decode(AE).
 
 %%==============================================================================
