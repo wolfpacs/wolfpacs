@@ -5,8 +5,8 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_file_format).
--export([encode/2,
-	 decode/2]).
+-export([encode/3,
+	 decode/3]).
 -include("wolfpacs_types.hrl").
 
 -define(ERROR_DECODE, "unable to decode data element").
@@ -17,9 +17,9 @@
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec encode(strategy(), binary()) -> binary().
-encode(Strategy, Data) ->
-    MetaInformation = wolfpacs_file_meta_information:encode(Strategy, meta_info()),
+-spec encode(pid(), strategy(), binary()) -> binary().
+encode(Flow, Strategy, Data) ->
+    MetaInformation = wolfpacs_file_meta_information:encode(Flow, Strategy, meta_info()),
     <<MetaInformation/binary, Data/binary>>.
 
 %%-------------------------------------------------------------------
@@ -27,18 +27,20 @@ encode(Strategy, Data) ->
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec decode(strategy(), binary()) -> {ok, {map(), map()}, binary()} | {error, binary(), list(string())}.
-decode(Strategy, Data) ->
-    case wolfpacs_file_meta_information:decode(Strategy, Data) of
-	{error, _, Msg} ->
-	    {error, Data, [?ERROR_META|Msg]};
+-spec decode(pid(), strategy(), binary()) -> {ok, {map(), map()}, binary()} | {error, binary(), list(string())}.
+decode(Flow, Strategy, Data) ->
+    case wolfpacs_file_meta_information:decode(Flow, Strategy, Data) of
 	{ok, Meta, Rest} ->
-	    case wolfpacs_data_elements:decode(Strategy, Rest) of
-		{error, _, Msg} ->
-		    {error, Data, [?ERROR_DECODE|Msg]};
+	    case wolfpacs_data_elements:decode(Flow, Strategy, Rest) of
 		{ok, Content, Rest2} ->
-		    {ok, {Meta, Content}, Rest2}
-	    end
+		    {ok, {Meta, Content}, Rest2};
+		_ ->
+		    wolfpacs_flow:failed(Flow, ?MODULE, ?ERROR_DECODE),
+		    error
+	    end;
+	_ ->
+	    wolfpacs_flow:failed(Flow, ?MODULE, ?ERROR_META),
+	    error
     end.
 
 %%==============================================================================
@@ -62,28 +64,20 @@ meta_info() ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_decode_test_() ->
+    {ok, Flow} = wolfpacs_flow:start_link(),
+
     Strategy = {explicit, little},
     Content = #{{16#7fe0, 16#10, "OB"} => [255, 254, 255, 254]},
     Content2 = #{{16#7fe0, 16#10} => [255, 254, 255, 254]},
-    Data = wolfpacs_data_elements:encode({explicit, little}, Content),
+    Data = wolfpacs_data_elements:encode(Flow, {explicit, little}, Content),
 
-    Encoded0 = encode(Strategy, Data),
-    Encoded1 = <<Encoded0/binary, 42>>,
+    Encoded0 = encode(Flow, Strategy, Data),
     Incorrect0 = wolfpacs_utils:drop_first_byte(Encoded0),
     Incorrect1 = wolfpacs_utils:drop_last_byte(Encoded0),
     Incorrect2 = <<1, 2, 3, 4, 5>>,
 
-    ErrorMsg0 = ["unable to decode meta file information",
-		 "failed to pattern match"],
-    ErrorMsg1 = [?ERROR_DECODE,
-		 ?ERROR_DECODE,
-		 "unable to split"],
-    ErrorMsg2 = ["unable to decode meta file information",
-		 "failed to pattern match"],
-
-    [ ?_assertEqual(decode(Strategy, Encoded0), {ok, {meta_info(), Content2}, <<>>})
-    , ?_assertEqual(decode(Strategy, Encoded1), {ok, {meta_info(), Content2}, <<42>>})
-    , ?_assertEqual(decode(Strategy, Incorrect0), {error, Incorrect0, ErrorMsg0})
-    , ?_assertEqual(decode(Strategy, Incorrect1), {error, Incorrect1, ErrorMsg1})
-    , ?_assertEqual(decode(Strategy, Incorrect2), {error, Incorrect2, ErrorMsg2})
+    [ ?_assertEqual(decode(Flow, Strategy, Encoded0), {ok, {meta_info(), Content2}, <<>>})
+    , ?_assertEqual(decode(Flow, Strategy, Incorrect0), error)
+    , ?_assertEqual(decode(Flow, Strategy, Incorrect1), error)
+    , ?_assertEqual(decode(Flow, Strategy, Incorrect2), error)
     ].
