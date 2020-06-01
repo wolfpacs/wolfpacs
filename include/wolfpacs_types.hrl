@@ -7,3 +7,7 @@
 		    {explicit, big}    |
 		    {implicit, little} |
 		    {implicit, big}.
+
+-type flow() :: pid().
+
+-type ui() :: list() | binary().
