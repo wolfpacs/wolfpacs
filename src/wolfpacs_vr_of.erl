@@ -5,17 +5,17 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_of).
--export([encode/2,
-	 decode/2]).
+-export([encode/3,
+	 decode/3]).
 -include("wolfpacs_types.hrl").
 
--spec encode(strategy(), list()) -> binary().
-encode(Strategy, List) ->
-    encode(Strategy, List, <<>>).
+-spec encode(flow(), strategy(), list()) -> binary().
+encode(_Flow, Strategy, List) ->
+    priv_encode(Strategy, List, <<>>).
 
--spec decode(strategy(), binary()) -> list().
-decode(Strategy, Data) ->
-    case decode(Strategy, Data, []) of
+-spec decode(flow(), strategy(), binary()) -> list().
+decode(_Flow, Strategy, Data) ->
+    case priv_decode(Strategy, Data, []) of
 	error ->
 	    {error, Data, ["unable to decode"]};
 	Result ->
@@ -26,21 +26,20 @@ decode(Strategy, Data) ->
 %% Private
 %%==============================================================================
 
--spec encode(strategy(), list(), binary()) -> binary().
-encode(_, [], Acc) ->
+priv_encode(_, [], Acc) ->
     Acc;
-encode(Strategy = {_, little}, [Head|Tail], Acc) ->
-    encode(Strategy, Tail, <<Acc/binary, Head:32/little>>);
-encode(Strategy = {_, big}, [Head|Tail], Acc) ->
-    encode(Strategy, Tail, <<Acc/binary, Head:32/big>>).
+priv_encode(Strategy = {_, little}, [Head|Tail], Acc) ->
+    priv_encode(Strategy, Tail, <<Acc/binary, Head:32/little>>);
+priv_encode(Strategy = {_, big}, [Head|Tail], Acc) ->
+    priv_encode(Strategy, Tail, <<Acc/binary, Head:32/big>>).
 
-decode(_, <<>>, Acc) ->
+priv_decode(_, <<>>, Acc) ->
     lists:reverse(Acc);
-decode(Strategy = {_, little}, <<Val:32/little, Rest/bitstring>>, Acc) ->
-    decode(Strategy, Rest, [Val|Acc]);
-decode(Strategy = {_, big}, <<Val:32/big, Rest/bitstring>>, Acc) ->
-    decode(Strategy, Rest, [Val|Acc]);
-decode(_, _, _) ->
+priv_decode(Strategy = {_, little}, <<Val:32/little, Rest/bitstring>>, Acc) ->
+    priv_decode(Strategy, Rest, [Val|Acc]);
+priv_decode(Strategy = {_, big}, <<Val:32/big, Rest/bitstring>>, Acc) ->
+    priv_decode(Strategy, Rest, [Val|Acc]);
+priv_decode(_, _, _) ->
     error.
 
 
@@ -51,8 +50,9 @@ decode(_, _, _) ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_decode_common(Strategy, Data) ->
-    Encoded = encode(Strategy, Data),
-    [ ?_assertEqual(decode(Strategy, Encoded), {ok, Data, <<>>}) ].
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    Encoded = encode(Flow, Strategy, Data),
+    [ ?_assertEqual(decode(Flow, Strategy, Encoded), {ok, Data, <<>>}) ].
 
 encode_decode_little_test_() ->
     Data = [1, 2, 3, 4, 5],
