@@ -5,33 +5,30 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_tm).
--export([encode/2,
-	 decode/2]).
+-export([encode/3,
+	 decode/3]).
 -import(wolfpacs_vr_utils, [pad_binary/1,
 			    trim_binary/1]).
 
--type un() :: list() | binary().
+encode(Flow, _Strategy, UN) ->
+    priv_encode(Flow, UN).
 
-encode(_Strategy, UN) ->
-    encode(UN).
-
-decode(_Strategy, UN) ->
-    decode(UN).
+decode(Flow, _Strategy, UN) ->
+    priv_decode(Flow, UN).
 
 %%==============================================================================
 %% Private
 %%==============================================================================
 
--spec encode(un()) -> binary().
-encode(UN) when is_list(UN) ->
-    encode(list_to_binary(UN));
-encode(UN) ->
+priv_encode(Flow, UN) when is_list(UN) ->
+    priv_encode(Flow, list_to_binary(UN));
+priv_encode(_Flow, UN) ->
     pad_binary(UN).
 
--spec decode(binary()) -> binary().
-decode(<<>>) ->
-    {error, <<>>, ["empty TM"]};
-decode(Data) ->
+priv_decode(Flow, <<>>) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "empty TM"),
+    error;
+priv_decode(_Flow, Data) ->
     {ok, trim_binary(Data), <<>>}.
 
 %%==============================================================================
