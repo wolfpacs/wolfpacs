@@ -14,9 +14,9 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_c_store_scp).
--export([encode/4]).
+-export([encode/5]).
 
-encode(Strategy, UID, RQID, StoredUID) ->
+encode(Flow, Strategy, UID, RQID, StoredUID) ->
     _ = lager:warning("store rsp ~p ~p", [UID, RQID]),
     Info = #{{16#0000, 16#0002, "UI"} => UID,
 	     {16#0000, 16#0100, "US"} => 16#8001,
@@ -24,9 +24,9 @@ encode(Strategy, UID, RQID, StoredUID) ->
 	     {16#0000, 16#0800, "US"} => 16#0101,
 	     {16#0000, 16#0900, "US"} => 16#0000,
 	     {16#0000, 16#1000, "UI"} => StoredUID},
-    Data = wolfpacs_data_elements:encode(Strategy, Info),
+    Data = wolfpacs_data_elements:encode(Flow, Strategy, Info),
     NbBytes = byte_size(Data),
-    Header = wolfpacs_data_element:encode(Strategy, 0, 0, "UL", NbBytes),
+    Header = wolfpacs_data_element:encode(Flow, Strategy, 0, 0, "UL", NbBytes),
     <<Header/binary, Data/binary>>.
 
 %%==============================================================================
