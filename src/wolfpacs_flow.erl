@@ -22,8 +22,8 @@
 	 warning/3,
 	 good/3,
 	 bad/3,
- 	 expected_16/3,
- 	 expected_32/3,
+	 expected_16/3,
+	 expected_32/3,
 	 complete_flow/1]).
 
 %% Behaviour

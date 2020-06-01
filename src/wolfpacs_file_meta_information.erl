@@ -1,4 +1,4 @@
- %%%-------------------------------------------------------------------
+%%%-------------------------------------------------------------------
 %% @doc File Meta Information.
 %%
 %% @end
@@ -54,10 +54,10 @@ decode(Flow, Strategy, <<_:1024, "DICM", Data/binary>>) ->
 		    error
 	    end;
 	{ok, _, _} ->
- 	    wolfpacs_flow:failed(Flow, ?MODULE, "corrupt group length"),
+	    wolfpacs_flow:failed(Flow, ?MODULE, "corrupt group length"),
 	    error;
 	_ ->
- 	    wolfpacs_flow:failed(Flow, ?MODULE, "enable to decode data element"),
+	    wolfpacs_flow:failed(Flow, ?MODULE, "enable to decode data element"),
 	    error
     end;
 decode(Flow, _Strategy, _Data) ->

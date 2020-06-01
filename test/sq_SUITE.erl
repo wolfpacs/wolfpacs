@@ -23,11 +23,11 @@ test_sq(Config) ->
     {ok, {Meta, Info}, <<>>} = wolfpacs_file_format:decode(Flow, Strategy, Content),
 
     GetMeta = fun(Group, Element) ->
- 		      maps:get({Group, Element}, Meta, missing)
-  	      end,
+		      maps:get({Group, Element}, Meta, missing)
+	      end,
     GetInfo = fun(Group, Element) ->
- 		      maps:get({Group, Element}, Info, missing)
- 	      end,
+		      maps:get({Group, Element}, Info, missing)
+	      end,
 
     %% Extract correct information using
     %% $ dcmdump
