@@ -5,15 +5,15 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_sh).
--export([encode/2, decode/2]).
+-export([encode/3, decode/3]).
 -import(wolfpacs_vr_utils, [pad_binary/1,
 			    limit_binary/2,
 			    trim_binary/1]).
 
-encode(_Strategy, SH) ->
+encode(_Flow, _Strategy, SH) ->
     encode(SH).
 
-decode(_Strategy, SH) ->
+decode(_Flow, _Strategy, SH) ->
     decode(SH).
 
 %%==============================================================================
