@@ -43,6 +43,7 @@ vr_to_example_group_element("UN") -> {16#0072, 16#006D};
 vr_to_example_group_element("CS") -> {16#0072, 16#0208};
 vr_to_example_group_element("DA") -> {16#0008, 16#0012};
 vr_to_example_group_element("AT") -> {16#3008, 16#0062};
+vr_to_example_group_element("SH") -> {16#0008, 16#0094};
 vr_to_example_group_element(VR) -> {error, VR, ["No example found"]}.
 
 %%==============================================================================
