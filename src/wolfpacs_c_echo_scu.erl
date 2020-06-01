@@ -30,12 +30,15 @@ echo(CEchoSCU, Host, Port, CalledAE, Strategy) ->
 
 %% @hidden
 init(_) ->
-    {ok, #{sock => none,
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    {ok, #{flow => Flow,
+	   sock => none,
 	   from => none, data => <<>>,
 	   strategy => {none, none}}}.
 
 %% @hidden
-handle_call({echo, Host, Port, CalledAE, Strategy}, From, State=#{sock := none}) ->
+handle_call({echo, Host, Port, CalledAE, Strategy}, From, State=#{sock := none, flow := Flow}) ->
+    wolfpacs_flow:reset(Flow),
     case gen_tcp:connect(Host, Port, [binary, {active, true}]) of
 	{ok, Sock} ->
 	    {noreply, send_associate_rq(State#{calledae => CalledAE,
@@ -113,14 +116,14 @@ transfer_syntax(TransferSyntax) ->
     _ = lager:warning("[c_echo_scu] Unknown transfer syntax ~p", [TransferSyntax]),
     ?EXPLICIT_LITTLE_ENDIAN.
 
-send_associate_rq(State=#{sock := Sock, calledae := CalledAE_, strategy := Strategy}) ->
+send_associate_rq(State=#{flow := Flow, sock := Sock, calledae := CalledAE_, strategy := Strategy}) ->
     PrCID = 1,
     AbstractSyntax = ?VERIFICATION,
     TransferSyntax = [transfer_syntax(Strategy)],
     MaxPDUSize = 16384,
     %% TODO, little or big here ?
-    CallingAE = wolfpacs_vr_ae:encode(Strategy, <<"WolfPACS">>),
-    CalledAE = wolfpacs_vr_ae:encode(Strategy, CalledAE_),
+    CallingAE = wolfpacs_vr_ae:encode(Flow, Strategy, <<"WolfPACS">>),
+    CalledAE = wolfpacs_vr_ae:encode(Flow, Strategy, CalledAE_),
     Class = <<"1.2.276.0.7230010.3.0.3.6.4">>, %% TODO Change
     VersionName = <<"WolfPACS_000">>,
 
