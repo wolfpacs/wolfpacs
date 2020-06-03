@@ -2,7 +2,8 @@
 %% @doc Value Representation Date Time.
 %%
 %% A concatenated date-time character string in the format:
-%%  YYYYMMDDHHMMSS.FFFFFF&ZZXX
+%%  YYYYMMDDHHMMSS.FFFFFF$ZZXX
+%%
 %% The components of this string, from left to right, are
 %%  YYYY = Year,
 %%  MM = Month,
@@ -14,8 +15,8 @@
 %% FFFFFF = Fractional Second contains a fractional part of a second
 %% as small as 1 millionth of a second (range "000000" - "999999").
 %%
-%% &ZZXX is an optional suffix for offset from Coordinated Universal
-%% Time (UTC), where & = "+" or "-", and ZZ = Hours and
+%% $ZZXX is an optional suffix for offset from Coordinated Universal
+%% Time (UTC), where $ = "+" or "-", and ZZ = Hours and
 %% XX = Minutes of offset.
 %%
 %% @end
