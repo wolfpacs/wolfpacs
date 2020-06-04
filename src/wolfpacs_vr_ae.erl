@@ -12,7 +12,7 @@
 -export([encode/3, decode/3]).
 
 encode(Flow, _Strategy, AE) ->
-    wolfpacs_vr_common:encode_with_limit(Flow, ?MODULE, 16, AE).
+    wolfpacs_vr_common:encode_binary_with_limit(Flow, ?MODULE, 16, AE).
 
 decode(Flow, _Strategy, Data) ->
-    wolfpacs_vr_common:decode(Flow, ?MODULE, Data).
+    wolfpacs_vr_common:decode_binary(Flow, ?MODULE, Data).

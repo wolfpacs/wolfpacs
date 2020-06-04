@@ -531,7 +531,7 @@ decode_example_one_test() ->
     %% (fffe,e0dd) na (SequenceDelimitationItem for re-encod.) #   0, 0 SequenceDelimitationItem
 
     Correct = [#{{112,2} => <<"ANNOTATION LAYER">>,
-		{112,98} => <<"1">>,
+		{112,98} => 1,
 		{112,104} => <<"Annotations">>}],
 
     Encoded = wolfpacs_utils:hexl_log_to_binary(

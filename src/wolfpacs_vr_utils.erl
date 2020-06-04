@@ -48,6 +48,8 @@ pad_binary(Item) ->
 	false -> Item
     end.
 
+trim(Item) when is_binary(Item) ->
+    trim(binary_to_list(Item));
 trim(Item) ->
     string:strip(string:strip(Item, right, 0),
 		 right, 32).
