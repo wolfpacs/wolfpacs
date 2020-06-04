@@ -6,9 +6,7 @@
 %% leading "+" or "-". It may be padded with leading and/or trailing spaces.
 %% Embedded spaces are not allowed.
 %%
-%% The integer, n, represented shall be in the range:
-%%
-%%  -231<= n <= (231-1).
+%% The integer, n, represented shall be in the range: [-231, 230]
 %%
 %% @end
 %%%-------------------------------------------------------------------

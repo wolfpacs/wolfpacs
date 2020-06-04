@@ -3,7 +3,7 @@
 %%
 %% PITFALL: I found out this the hard way. The delination tags should
 %% not be read as a 32bit tag, but as a normal (gggg, eeee) tag.
-%% Example, <<FFFE:16, E0DD:16>> not <<FFFEE0DD:32>>
+%% Example, FFFE:16, E0DD:16 not FFFEE0DD:32
 %%
 %% PITFALL: There can be more than one element in the sequence.
 %% Example:
