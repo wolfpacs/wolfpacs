@@ -87,3 +87,31 @@ encode_binary_with_limit(Flow, Module, Limit, Data) ->
 %%==============================================================================
 
 -include_lib("eunit/include/eunit.hrl").
+
+encode_decode_test() ->
+    Data = "WolfPACS",
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    Encoded0 = encode(Flow, ?MODULE, Data),
+    {ok, Decoded0, <<>>} = decode(Flow, ?MODULE, Encoded0),
+    ?assertEqual(Data, Decoded0).
+
+encode_decode_with_limit_test() ->
+    Data = "WolfPACS",
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    Encoded0 = encode_with_limit(Flow, ?MODULE, 4, Data),
+    {ok, Decoded0, <<>>} = decode(Flow, ?MODULE, Encoded0),
+    ?assertEqual("Wolf", Decoded0).
+
+encode_decode_binary_test() ->
+    Data = <<"WolfPACS">>,
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    Encoded0 = encode_binary(Flow, ?MODULE, Data),
+    {ok, Decoded0, <<>>} = decode_binary(Flow, ?MODULE, Encoded0),
+    ?assertEqual(Data, Decoded0).
+
+encode_decode_binary_with_limit_test() ->
+    Data = <<"WolfPACS">>,
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    Encoded0 = encode_binary_with_limit(Flow, ?MODULE, 4, Data),
+    {ok, Decoded0, <<>>} = decode_binary(Flow, ?MODULE, Encoded0),
+    ?assertEqual(<<"Wolf">>, Decoded0).

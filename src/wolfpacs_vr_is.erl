@@ -15,13 +15,19 @@
 -export([encode/3,
 	 decode/3]).
 
+encode(Flow, _Strategy, IS) when is_integer(IS) ->
+    wolfpacs_vr_common:encode_binary(Flow, ?MODULE, integer_to_list(IS));
 encode(Flow, _Strategy, IS) ->
-    wolfpacs_vr_common:encode_binary(Flow, ?MODULE, integer_to_list(IS)).
+    wolfpacs_vr_common:encode_binary(Flow, ?MODULE, IS).
 
 decode(Flow, _Strategy, Data) ->
     case wolfpacs_vr_common:decode(Flow, ?MODULE, Data) of
-	{ok, Value, <<>>} ->
-	    {ok, list_to_integer(Value), <<>>};
+	{ok, ValueString, <<>>} ->
+	    try
+		Value = list_to_integer(ValueString),
+		{ok, Value, <<>>}
+	    catch error:badarg -> error
+	    end;
 	_ ->
 	    error
     end.
@@ -38,3 +44,10 @@ encode_decode_test() ->
     Encoded0 = encode(Flow, {explicit, little}, Data),
     {ok, Decoded0, <<>>} = decode(Flow, {explicit, little}, Encoded0),
     ?assertEqual(Data, Decoded0).
+
+encode_decode_error_test() ->
+    Data = "Banana",
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    Encoded0 = encode(Flow, {explicit, little}, Data),
+    Result = decode(Flow, {explicit, little}, Encoded0),
+    ?assertEqual(error, Result).

@@ -54,3 +54,10 @@ priv_decode(_Flow, Data) ->
 %%==============================================================================
 
 -include_lib("eunit/include/eunit.hrl").
+
+encode_decode_test() ->
+    Data = <<"WolfPACS">>,
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    Encoded0 = encode(Flow, {explicit, little}, Data),
+    {ok, Decoded0, <<>>} = decode(Flow, {explicit, little}, Encoded0),
+    ?assertEqual(Data, Decoded0).
