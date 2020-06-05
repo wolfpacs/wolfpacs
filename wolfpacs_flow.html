@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module wolfpacs_flow</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module wolfpacs_flow</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Flow.
+
+<p><b>Behaviours:</b> <a href="gen_server.html"><tt>gen_server</tt></a>.</p>
+
+<h2><a name="description">Description</a></h2><p>Flow</p>
+ 
+  Flow helps track the flow through wolfpacs.
+ 
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#bad-3">bad/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#code_change-3">code_change/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#complete_flow-1">complete_flow/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#consumed-3">consumed/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#expected_16-3">expected_16/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#expected_32-3">expected_32/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#failed-2">failed/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#failed-3">failed/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#generated-3">generated/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#good-3">good/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#handle_info-2">handle_info/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#reset-1">reset/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#start_decode-2">start_decode/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#start_encode-2">start_encode/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#start_link-0">start_link/0</a></td><td></td></tr>
+<tr><td valign="top"><a href="#success-2">success/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#warning-3">warning/3</a></td><td></td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="bad-3">bad/3</a></h3>
+<div class="spec">
+<p><tt>bad(Flow, Module, Info) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="code_change-3">code_change/3</a></h3>
+<div class="spec">
+<p><tt>code_change(Vsn, Flow, Extra) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="complete_flow-1">complete_flow/1</a></h3>
+<div class="spec">
+<p><tt>complete_flow(Flow) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="consumed-3">consumed/3</a></h3>
+<div class="spec">
+<p><tt>consumed(Flow, Module, NumberOfBytes) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="expected_16-3">expected_16/3</a></h3>
+<div class="spec">
+<p><tt>expected_16(Flow, Module, Data) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="expected_32-3">expected_32/3</a></h3>
+<div class="spec">
+<p><tt>expected_32(Flow, Module, Data) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="failed-2">failed/2</a></h3>
+<div class="spec">
+<p><tt>failed(Flow, Module) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="failed-3">failed/3</a></h3>
+<div class="spec">
+<p><tt>failed(Flow, Module, Info) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="generated-3">generated/3</a></h3>
+<div class="spec">
+<p><tt>generated(Flow, Module, NumberOfBytes) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="good-3">good/3</a></h3>
+<div class="spec">
+<p><tt>good(Flow, Module, Info) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="handle_call-3">handle_call/3</a></h3>
+<div class="spec">
+<p><tt>handle_call(What, From, State) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="handle_cast-2">handle_cast/2</a></h3>
+<div class="spec">
+<p><tt>handle_cast(Event, Flow) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="handle_info-2">handle_info/2</a></h3>
+<div class="spec">
+<p><tt>handle_info(What, Flow) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="reset-1">reset/1</a></h3>
+<div class="spec">
+<p><tt>reset(Flow) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="start_decode-2">start_decode/2</a></h3>
+<div class="spec">
+<p><tt>start_decode(Flow, Module) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="start_encode-2">start_encode/2</a></h3>
+<div class="spec">
+<p><tt>start_encode(Flow, Module) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="start_link-0">start_link/0</a></h3>
+<div class="spec">
+<p><tt>start_link() -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="success-2">success/2</a></h3>
+<div class="spec">
+<p><tt>success(Flow, Module) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="terminate-2">terminate/2</a></h3>
+<div class="spec">
+<p><tt>terminate(Reason, Flow) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="warning-3">warning/3</a></h3>
+<div class="spec">
+<p><tt>warning(Flow, Module, Warning) -&gt; any()</tt></p>
+</div>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc</i></p>
+</body>
+</html>

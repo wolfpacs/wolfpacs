@@ -10,7 +10,7 @@
 <hr>
 
 <h1>Module wolfpacs_vr_ae</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Value Representation Application Entity.
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Value Representation Application Entity.
 
 
 <h2><a name="description">Description</a></h2><p>Value Representation Application Entity.</p>
@@ -19,27 +19,21 @@
   leading and trailing spaces (20H) being non-significant.
   A value consisting solely of spaces shall not be used.
  
-<h2><a name="types">Data Types</a></h2>
-
-<h3 class="typedecl"><a name="type-strategy">strategy()</a></h3>
-<p><tt>strategy() = {explicit, little} | {explicit, big} | {implicit, little} | {implicit, big}</tt></p>
-
-
 <h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#decode-2">decode/2</a></td><td></td></tr>
-<tr><td valign="top"><a href="#encode-2">encode/2</a></td><td></td></tr>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#decode-3">decode/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#encode-3">encode/3</a></td><td></td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
 
-<h3 class="function"><a name="decode-2">decode/2</a></h3>
+<h3 class="function"><a name="decode-3">decode/3</a></h3>
 <div class="spec">
-<p><tt>decode(Strategy::<a href="#type-strategy">strategy()</a>, Data::binary()) -&gt; {ok, binary(), binary()} | {error, binary(), [string()]}</tt><br></p>
+<p><tt>decode(Flow, Strategy, Data) -&gt; any()</tt></p>
 </div>
 
-<h3 class="function"><a name="encode-2">encode/2</a></h3>
+<h3 class="function"><a name="encode-3">encode/3</a></h3>
 <div class="spec">
-<p><tt>encode(Strategy::<a href="#type-strategy">strategy()</a>, AE::binary()) -&gt; binary()</tt><br></p>
+<p><tt>encode(Flow, Strategy, AE) -&gt; any()</tt></p>
 </div>
 <hr>
 
