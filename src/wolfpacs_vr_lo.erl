@@ -5,18 +5,18 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_lo).
--export([encode/2,
-	 decode/2]).
+-export([encode/3,
+	 decode/3]).
 -import(wolfpacs_vr_utils, [pad_binary/1,
 			    limit_binary/2,
 			    trim_binary/1]).
 
 -type lo() :: list() | binary().
 
-encode(_Strategy, LO) ->
+encode(_Flow, _Strategy, LO) ->
     encode(LO).
 
-decode(_Strategy, LO) ->
+decode(_Flow, _Strategy, LO) ->
     decode(LO).
 
 %%==============================================================================

@@ -23,33 +23,30 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_dt).
--export([encode/2,
-	 decode/2]).
+-export([encode/3,
+	 decode/3]).
 -import(wolfpacs_vr_utils, [pad_binary/1,
 			    trim_binary/1]).
 
--type un() :: list() | binary().
+encode(Flow, _Strategy, DT) ->
+    priv_encode(Flow, DT).
 
-encode(_Strategy, DT) ->
-    encode(DT).
-
-decode(_Strategy, DT) ->
-    decode(DT).
+decode(Flow, _Strategy, DT) ->
+    priv_decode(Flow, DT).
 
 %%==============================================================================
 %% Private
 %%==============================================================================
 
--spec encode(un()) -> binary().
-encode(DT) when is_list(DT) ->
-    encode(list_to_binary(DT));
-encode(DT) ->
+priv_encode(Flow, DT) when is_list(DT) ->
+    priv_encode(Flow, list_to_binary(DT));
+priv_encode(_Flow, DT) ->
     pad_binary(DT).
 
--spec decode(binary()) -> binary().
-decode(<<>>) ->
-    {error, <<>>, ["empty DT"]};
-decode(Data) ->
+priv_decode(Flow, <<>>) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "empty DT"),
+    error;
+priv_decode(_Flow, Data) ->
     {ok, trim_binary(Data), <<>>}.
 
 %%==============================================================================
@@ -57,3 +54,10 @@ decode(Data) ->
 %%==============================================================================
 
 -include_lib("eunit/include/eunit.hrl").
+
+encode_decode_test() ->
+    Data = <<"WolfPACS">>,
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    Encoded0 = encode(Flow, {explicit, little}, Data),
+    {ok, Decoded0, <<>>} = decode(Flow, {explicit, little}, Encoded0),
+    ?assertEqual(Data, Decoded0).

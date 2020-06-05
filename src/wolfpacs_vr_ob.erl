@@ -5,16 +5,16 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_ob).
--export([encode/2,
-	 decode/2]).
+-export([encode/3,
+	 decode/3]).
 -include("wolfpacs_types.hrl").
 
--spec encode(strategy(), list()) -> binary().
-encode(_, List) ->
+-spec encode(flow(), strategy(), list()) -> binary().
+encode(_Flow, _, List) ->
     list_to_binary(List).
 
--spec decode(strategy(), binary()) -> list().
-decode(_, Data) ->
+-spec decode(flow(), strategy(), binary()) -> list().
+decode(_Flow, _, Data) ->
     {ok, binary_to_list(Data), <<>>}.
 
 %%==============================================================================
@@ -29,8 +29,9 @@ decode(_, Data) ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_decode_common(Strategy, Data) ->
-    Encoded = encode(Strategy, Data),
-    [ ?_assertEqual(decode(Strategy, Encoded), {ok, Data, <<>>}) ].
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    Encoded = encode(Flow, Strategy, Data),
+    [ ?_assertEqual(decode(Flow, Strategy, Encoded), {ok, Data, <<>>}) ].
 
 encode_decode_little_test_() ->
     Data = [1, 2, 3, 4, 5],

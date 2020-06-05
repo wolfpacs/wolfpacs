@@ -1,21 +1,17 @@
 %%%-------------------------------------------------------------------
-%% @doc Value Representation Application Entity.
-%%
-%% A string of characters that identifies an Application Entity with
-%% leading and trailing spaces (20H) being non-significant.
-%% A value consisting solely of spaces shall not be used.
+%% @doc
 %%
 %% @end
 %%%-------------------------------------------------------------------
 
--module(wolfpacs_vr_ae).
--export([encode/3, decode/3]).
+-module(wolfpacs_vr_ss).
+-export([encode/3,  decode/3]).
 
-encode(Flow, _Strategy, AE) ->
-    wolfpacs_vr_common:encode_binary_with_limit(Flow, ?MODULE, 16, AE).
+encode(Flow, _Strategy, UI) ->
+    wolfpacs_vr_common:encode_with_limit(Flow, ?MODULE, 64, UI).
 
 decode(Flow, _Strategy, Data) ->
-    wolfpacs_vr_common:decode_binary(Flow, ?MODULE, Data).
+    wolfpacs_vr_common:decode(Flow, ?MODULE, Data).
 
 %%==============================================================================
 %% Test
@@ -24,7 +20,7 @@ decode(Flow, _Strategy, Data) ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_decode_test() ->
-    Data = <<"WolfPACS">>,
+    Data = "WolfPACS",
     {ok, Flow} = wolfpacs_flow:start_link(),
     Encoded0 = encode(Flow, {explicit, little}, Data),
     {ok, Decoded0, <<>>} = decode(Flow, {explicit, little}, Encoded0),

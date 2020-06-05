@@ -15,16 +15,16 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_as).
--export([encode/2, decode/2]).
+-export([encode/3, decode/3]).
 -include("wolfpacs_types.hrl").
 -import(wolfpacs_vr_utils, [limit_binary/2]).
 
--spec encode(strategy(), binary()) -> binary().
-encode(_Strategy, AE) ->
+-spec encode(flow(), strategy(), binary()) -> binary().
+encode(_Flow, _Strategy, AE) ->
     encode(AE).
 
--spec decode(strategy(), binary()) -> {ok, binary(), binary()} | {error, binary(), list(string())}.
-decode(_Strategy, Data) ->
+-spec decode(flow(), strategy(), binary()) -> {ok, binary(), binary()} | {error, binary(), list(string())}.
+decode(_Flow, _Strategy, Data) ->
     decode(Data).
 
 %%==============================================================================
@@ -39,8 +39,7 @@ encode(AS) ->
 
 -spec decode(binary()) -> binary().
 decode(<<>>) ->
-    {error, <<>>, ["empty AS"]};
-
+    error;
 decode(<<A, B, C, "D", Rest/binary>>) ->
     {ok, <<A, B, C, "D">>, Rest};
 decode(<<A, B, C, "W", Rest/binary>>) ->
@@ -49,9 +48,8 @@ decode(<<A, B, C, "M", Rest/binary>>) ->
     {ok, <<A, B, C, "M">>, Rest};
 decode(<<A, B, C, "Y", Rest/binary>>) ->
     {ok, <<A, B, C, "Y">>, Rest};
-
-decode(Data) ->
-    {error, Data, ["incorrect AS"]}.
+decode(_Data) ->
+    error.
 
 %%==============================================================================
 %% Test
@@ -60,15 +58,17 @@ decode(Data) ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_test_() ->
+    {ok, Flow} = wolfpacs_flow:start_link(),
     [ ?_assertEqual(encode("018M"), <<"018M">>)
-    , ?_assertEqual(encode({explicit, little}, "018M"), <<"018M">>)
+    , ?_assertEqual(encode(Flow, {explicit, little}, "018M"), <<"018M">>)
     ].
 
 decode_test_() ->
-    [ ?_assertEqual(decode(<<>>), {error, <<>>, ["empty AS"]})
-    , ?_assertEqual(decode(<<"ABCQ">>), {error, <<"ABCQ">>, ["incorrect AS"]})
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    [ ?_assertEqual(decode(<<>>), error)
+    , ?_assertEqual(decode(<<"ABCQ">>), error)
     , ?_assertEqual(decode(<<"123WABC">>), {ok, <<"123W">>, <<"ABC">>})
-    , ?_assertEqual(decode({explicit, little}, <<"123WABC">>), {ok, <<"123W">>, <<"ABC">>})
+    , ?_assertEqual(decode(Flow, {explicit, little}, <<"123WABC">>), {ok, <<"123W">>, <<"ABC">>})
     ].
 
 encode_decode_test_() ->

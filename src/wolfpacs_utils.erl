@@ -10,6 +10,7 @@
 	 split/2,
 	 log_hex_to_int/1,
 	 log_to_binary/1,
+	 hexl_log_to_binary/1,
 	 clear_byte/2,
 	 remove_keys/2,
 	 clear_even/1,
@@ -73,6 +74,10 @@ clear_odd(Data) ->
 random_clear(Data, FlipPropability) ->
     random_clear(Data, FlipPropability, []).
 
+hexl_log_to_binary(Data) ->
+    Tokens = string:tokens(Data, ",: \n\t"),
+    list_to_binary(lists:map(fun log_hex_to_int/1, regroup_by_two(Tokens))).
+
 %%==============================================================================
 %% Private
 %%==============================================================================
@@ -118,6 +123,14 @@ random_clear(<<Head, Tail/binary>>, FlipPropability, Acc) ->
 	false  ->
 	    random_clear(Tail, FlipPropability, [Head|Acc])
     end.
+
+regroup_by_two(List) ->
+    regroup_by_two(List, []).
+
+regroup_by_two([], Acc) ->
+    lists:reverse(Acc);
+regroup_by_two([[A, B, C, D]|Rest], Acc) ->
+    regroup_by_two(Rest, [[C, D], [A, B]|Acc]).
 
 %%==============================================================================
 %% Test
@@ -195,3 +208,6 @@ random_clear_no_flip_test() ->
 random_clear_flip_test() ->
     Data = <<0:64>>,
     ?assertNotEqual(random_clear(Data, 1.0), Data).
+
+regroup_by_two_test_() ->
+    [?_assertEqual(regroup_by_two(["1234", "4567"]), ["12", "34", "45", "67"])].

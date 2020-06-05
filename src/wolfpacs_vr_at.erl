@@ -13,19 +13,19 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_at).
--export([encode/2,
-	 decode/2]).
+-export([encode/3,
+	 decode/3]).
 
-encode({_, little}, {First, Second}) ->
+encode(_Flow, {_, little}, {First, Second}) ->
     <<First:16/little, Second:16/little>>;
-encode({_, big}, {First, Second}) ->
+encode(_Flow, {_, big}, {First, Second}) ->
     <<First:16/big, Second:16/big>>.
 
-decode({_, little}, <<First:16/little, Second:16/little>>) ->
+decode(_Flow, {_, little}, <<First:16/little, Second:16/little>>) ->
     {ok, {First, Second}, <<>>};
-decode({_, big}, <<First:16/big, Second:16/big>>) ->
+decode(_Flow, {_, big}, <<First:16/big, Second:16/big>>) ->
     {ok, {First, Second}, <<>>};
-decode(_, OrgData) ->
+decode(_Flow, _, OrgData) ->
     {error, OrgData, ["unable to decode"]}.
 
 %%==============================================================================
@@ -41,17 +41,19 @@ decode(_, OrgData) ->
 encode_decode_little_test_() ->
     %% Example taken from standard,
     %% Table A-2: DICOM Value Representations (VR) Types
-    Encoded = encode({explicit, little}, {16#18, 16#ff}),
-    {ok, Decoded, <<>>} = decode({explicit, little}, Encoded),
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    Encoded = encode(Flow, {explicit, little}, {16#18, 16#ff}),
+    {ok, Decoded, <<>>} = decode(Flow, {explicit, little}, Encoded),
     [ ?_assertEqual(Encoded, <<16#18, 16#00, 16#ff, 16#00>>)
     , ?_assertEqual(Decoded, {16#18, 16#ff})
     ].
 
 encode_decode_big_test_() ->
+    {ok, Flow} = wolfpacs_flow:start_link(),
     %% Example taken from standard,
     %% Table A-2: DICOM Value Representations (VR) Types
-    Encoded = encode({explicit, big}, {16#18, 16#ff}),
-    {ok, Decoded, <<>>} = decode({explicit, big}, Encoded),
+    Encoded = encode(Flow, {explicit, big}, {16#18, 16#ff}),
+    {ok, Decoded, <<>>} = decode(Flow, {explicit, big}, Encoded),
     [ ?_assertEqual(Encoded, <<16#00, 16#18, 16#00, 16#ff>>)
     , ?_assertEqual(Decoded, {16#18, 16#ff})
     ].

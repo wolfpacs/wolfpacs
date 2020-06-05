@@ -10,27 +10,13 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_da).
--export([encode/2, decode/2]).
+-export([encode/3, decode/3]).
 
-encode(_Strategy, DA) ->
-    encode(DA).
+encode(Flow, _Strategy, DA) ->
+    wolfpacs_vr_common:encode_with_limit(Flow, ?MODULE, 64, DA).
 
-decode(_Strategy, DA) ->
-    decode(DA).
-
-%%==============================================================================
-%% Private
-%%==============================================================================
-
-encode(DA) when is_list(DA)->
-    list_to_binary(DA);
-encode(DA) ->
-    DA.
-
-decode(<<DA:64/bitstring, Rest/binary>>) ->
-    {ok, DA, Rest};
-decode(OrgData) ->
-    {error, OrgData, ["incorrect header"]}.
+decode(Flow, _Strategy, Data) ->
+    wolfpacs_vr_common:decode(Flow, ?MODULE, Data).
 
 
 %%==============================================================================
@@ -40,8 +26,10 @@ decode(OrgData) ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_test_() ->
-    DA0 = <<"20070102">>,
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    DA0 = "20070102",
     DAL = "20070102",
-    [ ?_assertEqual(decode(encode(not_important, DA0)), {ok, DA0, <<>>})
-    , ?_assertEqual(decode(encode(not_important, DAL)), {ok, DA0, <<>>})
+    S = {implicit, little},
+    [ ?_assertEqual(decode(Flow, S, encode(Flow, S, DA0)), {ok, DA0, <<>>})
+    , ?_assertEqual(decode(Flow, S, encode(Flow, S, DAL)), {ok, DA0, <<>>})
     ].

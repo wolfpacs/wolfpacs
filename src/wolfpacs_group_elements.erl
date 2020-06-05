@@ -43,6 +43,14 @@ vr_to_example_group_element("UN") -> {16#0072, 16#006D};
 vr_to_example_group_element("CS") -> {16#0072, 16#0208};
 vr_to_example_group_element("DA") -> {16#0008, 16#0012};
 vr_to_example_group_element("AT") -> {16#3008, 16#0062};
+vr_to_example_group_element("SH") -> {16#0008, 16#0094};
+vr_to_example_group_element("TM") -> {16#0008, 16#0013};
+vr_to_example_group_element("DT") -> {16#0008, 16#0015};
+vr_to_example_group_element("ST") -> {16#0008, 16#0081};
+vr_to_example_group_element("IS") -> {16#0008, 16#1160};
+vr_to_example_group_element("AS") -> {16#0010, 16#1010};
+vr_to_example_group_element("DS") -> {16#0010, 16#1020};
+vr_to_example_group_element("SS") -> {16#0018, 16#9219};
 vr_to_example_group_element(VR) -> {error, VR, ["No example found"]}.
 
 %%==============================================================================

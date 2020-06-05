@@ -5,52 +5,54 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_data_elements).
--export([encode/2,
-	 decode/2]).
+-export([encode/3,
+	 decode/3]).
 -include("wolfpacs_types.hrl").
 
--spec encode(strategy(), map() | list()) -> binary().
-encode(Strategy, Info) when is_map(Info) ->
-    encode(Strategy, maps:to_list(Info));
-encode(Strategy, Elements) ->
-    encode(Strategy, lists:sort(Elements), <<>>).
+-spec encode(pid(), strategy(), map() | list()) -> binary().
+encode(Flow, Strategy, Info) when is_map(Info) ->
+    encode(Flow, Strategy, maps:to_list(Info));
+encode(Flow, Strategy, Elements) ->
+    encode(Flow, Strategy, lists:sort(Elements), <<>>).
 
--spec decode(strategy(), binary()) -> {ok, map(), binary()} | {error, binary(), list(string())}.
-decode(Strategy, Data) ->
-    decode(Strategy, Data, []).
+-spec decode(pid(), strategy(), binary()) -> {ok, map(), binary()} | {error, binary(), list(string())}.
+decode(Flow, Strategy, Data) ->
+    decode(Flow, Strategy, Data, []).
 
 %%==============================================================================
 %% Private Encoders
 %%==============================================================================
 
-encode(_, [], Acc) ->
+encode(_Flow, _, [], Acc) ->
     Acc;
-encode(Strategy, [{{G, E}, Data}|Rest], Acc) ->
+encode(Flow, Strategy, [{{G, E}, Data}|Rest], Acc) ->
     VR = wolfpacs_group_elements:vr(G, E),
-    Encoded = wolfpacs_data_element:encode(Strategy, G, E, VR, Data),
-    encode(Strategy, Rest, <<Acc/binary, Encoded/binary>>);
-encode(Strategy, [{{G, E, VR}, Data}|Rest], Acc) ->
-    Encoded = wolfpacs_data_element:encode(Strategy, G, E, VR, Data),
-    encode(Strategy, Rest, <<Acc/binary, Encoded/binary>>).
+    Encoded = wolfpacs_data_element:encode(Flow, Strategy, G, E, VR, Data),
+    encode(Flow, Strategy, Rest, <<Acc/binary, Encoded/binary>>);
+encode(Flow, Strategy, [{{G, E, VR}, Data}|Rest], Acc) ->
+    Encoded = wolfpacs_data_element:encode(Flow, Strategy, G, E, VR, Data),
+    encode(Flow, Strategy, Rest, <<Acc/binary, Encoded/binary>>).
 
--spec decode(strategy(), binary(), list()) -> {ok, map(), binary()} | {error, binary(), list(string())}.
-decode(_, <<>>, []) ->
-    {error, <<>>, ["no data to decode"]};
-decode(_, <<>>, Acc) ->
+-spec decode(pid(), strategy(), binary(), list()) -> {ok, map(), binary()} | {error, binary(), list(string())}.
+decode(Flow, _, <<>>, []) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "no data to decode"),
+    error;
+
+decode(_Flow, _, <<>>, Acc) ->
     {ok, maps:from_list(Acc), <<>>};
-decode(Strategy, Data, []) ->
-    case wolfpacs_data_element:decode(Strategy, Data) of
-	{error, _, Msg} ->
-	    {error, Data, ["unable to decode data element"|Msg]};
+decode(Flow, _, Rest, [{{16#fffe, 16#e00d}, _}|Acc]) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "Found item delimitation"),
+    {ok, maps:from_list(Acc), Rest};
+decode(Flow, _, Rest, [{{16#fffe, 16#e0dd}, _}|Acc]) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "Found sequence delimitation"),
+    {ok, maps:from_list(Acc), Rest};
+decode(Flow, Strategy, Data, Acc) ->
+    case wolfpacs_data_element:decode(Flow, Strategy, Data) of
 	{ok, Res, Rest} ->
-	    decode(Strategy, Rest, [Res])
-    end;
-decode(Strategy, Data, Acc) ->
-    case wolfpacs_data_element:decode(Strategy, Data) of
-	{error, _, __} ->
-	    {ok, maps:from_list(Acc), Data};
-	{ok, Res, Rest} ->
-	    decode(Strategy, Rest, [Res|Acc])
+	    decode(Flow, Strategy, Rest, [Res|Acc]);
+	_ ->
+	    wolfpacs_flow:failed(Flow, ?MODULE, "failed to decode data element"),
+	    error
     end.
 
 %%==============================================================================
@@ -69,14 +71,27 @@ decode(Strategy, Data, Acc) ->
 -define(STU, 16#0900).
 
 encode_decode_common(Strategy) ->
+    {ok, Flow} = wolfpacs_flow:start_link(),
     UID = <<"1.2.3.4">>,
     Items = #{{?CMD, ?UID} => UID,
 	      {?CMD, ?FLD} => 16#8030,
 	      {?CMD, ?RPID} => ?RQID,
 	      {?CMD, ?SET} => 16#0101,
 	      {?CMD, ?STU} => 16#0000},
-    Encoded0 = encode(Strategy, Items),
-    [ ?_assertEqual(decode(Strategy, Encoded0), {ok, Items, <<>>}) ].
+
+    Encoded0 = encode(Flow, Strategy, Items),
+
+    Incorrect1 = wolfpacs_utils:drop_first_byte(Encoded0),
+    Incorrect2 = wolfpacs_utils:drop_last_byte(Encoded0),
+    Incorrect3 = <<1, 2, 3, 4, 5>>,
+    Incorrect4 = <<>>,
+
+    [ ?_assertEqual(decode(Flow, Strategy, Encoded0), {ok, Items, <<>>})
+    , ?_assertEqual(decode(Flow, Strategy, Incorrect1), error)
+    , ?_assertEqual(decode(Flow, Strategy, Incorrect2), error)
+    , ?_assertEqual(decode(Flow, Strategy, Incorrect3), error)
+    , ?_assertEqual(decode(Flow, Strategy, Incorrect4), error)
+    ].
 
 
 encode_decode_explicit_little_test_() ->
@@ -96,7 +111,8 @@ encode_decode_implicit_big_test_() ->
     encode_decode_common(Strategy).
 
 encode_decode_empty_test() ->
+    {ok, Flow} = wolfpacs_flow:start_link(),
     Strategy = {explicit, little},
     Items = #{},
-    Encoded0 = encode(Strategy, Items),
-    ?assertEqual(decode(Strategy, Encoded0), {error, <<>>, ["no data to decode"]}).
+    Encoded0 = encode(Flow, Strategy, Items),
+    ?assertEqual(decode(Flow, Strategy, Encoded0), error).

@@ -5,23 +5,26 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_us).
--export([encode/2,
-	 decode/2]).
+-export([encode/3,
+	 decode/3]).
 -include("wolfpacs_types.hrl").
 
--spec encode(strategy(), integer()) -> binary().
-encode({_, little}, US) ->
+-spec encode(flow(), strategy(), integer()) -> binary().
+encode(_Flow, {_, little}, US) ->
     <<US:16/little>>;
-encode({_, big}, US) ->
+encode(_Flow, {_, big}, US) ->
     <<US:16/big>>.
 
--spec decode(strategy(), binary()) -> integer().
-decode({_, little}, <<US:16/little>>) ->
+-spec decode(flow(), strategy(), binary()) -> integer().
+decode(_Flow, {_, little}, <<US:16/little, _Rest/binary>>) ->
     {ok, US, <<>>};
-decode({_, big}, <<US:16/big>>) ->
+decode(_Flow, {_, big}, <<US:16/big, _Rest/binary>>) ->
     {ok, US, <<>>};
-decode(_, Data) ->
-    {error, Data, ["unable to decode US"]}.
+decode(Flow, _Strategy, Data) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode US"),
+    wolfpacs_flow:expected_16(Flow, ?MODULE, Data),
+    wolfpacs_flow:bad(Flow, ?MODULE, Data),
+    error.
 
 %%==============================================================================
 %% Test
@@ -30,14 +33,17 @@ decode(_, Data) ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_decode_little_test() ->
+    {ok, Flow} = wolfpacs_flow:start_link(),
     S = {explicit, little},
-    ?assertEqual(decode(S, encode(S, 1024)), {ok, 1024, <<>>}).
+    ?assertEqual(decode(Flow, S, encode(Flow, S, 1024)), {ok, 1024, <<>>}).
 
 encode_decode_big_test() ->
+    {ok, Flow} = wolfpacs_flow:start_link(),
     S = {explicit, big},
-    ?assertEqual(decode(S, encode(S, 1024)), {ok, 1024, <<>>}).
+    ?assertEqual(decode(Flow, S, encode(Flow, S, 1024)), {ok, 1024, <<>>}).
 
 decode_error_test_() ->
+    {ok, Flow} = wolfpacs_flow:start_link(),
     S = {explicit, little},
-    [ ?_assertEqual(decode(S, <<>>), {error, <<>>, ["unable to decode US"]})
+    [ ?_assertEqual(decode(Flow, S, <<>>), error)
     ].
