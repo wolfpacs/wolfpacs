@@ -13,25 +13,11 @@
 -export([encode/3, decode/3]).
 
 encode(Flow, _Strategy, DA) ->
-    priv_encode(Flow, DA).
+    wolfpacs_vr_common:encode_with_limit(Flow, ?MODULE, 64, DA).
 
-decode(Flow, _Strategy, DA) ->
-    priv_decode(Flow, DA).
+decode(Flow, _Strategy, Data) ->
+    wolfpacs_vr_common:decode(Flow, ?MODULE, Data).
 
-%%==============================================================================
-%% Private
-%%==============================================================================
-
-priv_encode(_Flow, DA) when is_list(DA)->
-    list_to_binary(DA);
-priv_encode(_Flow, DA) ->
-    DA.
-
-priv_decode(_Flow, <<DA:64/bitstring, Rest/binary>>) ->
-    {ok, DA, Rest};
-priv_decode(Flow, _Data) ->
-    wolfpacs_flow:failed(Flow, ?MODULE, "incorrect header"),
-    error.
 
 %%==============================================================================
 %% Test
@@ -41,7 +27,7 @@ priv_decode(Flow, _Data) ->
 
 encode_test_() ->
     {ok, Flow} = wolfpacs_flow:start_link(),
-    DA0 = <<"20070102">>,
+    DA0 = "20070102",
     DAL = "20070102",
     S = {implicit, little},
     [ ?_assertEqual(decode(Flow, S, encode(Flow, S, DA0)), {ok, DA0, <<>>})

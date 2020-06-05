@@ -494,7 +494,28 @@ encode_decode_ul_test_() ->
     encode_decode_common("UL", 1024).
 
 encode_decode_da_test_() ->
-    encode_decode_common("DA", <<"20201011">>).
+    encode_decode_common("DA", "20201011A").
+
+encode_decode_tm_test_() ->
+    encode_decode_common("TM", <<"20201011B">>).
+
+encode_decode_dt_test_() ->
+    encode_decode_common("DT", <<"20201011C">>).
+
+encode_decode_st_test_() ->
+    encode_decode_common("ST", <<"20201011D">>).
+
+encode_decode_is_test_() ->
+    encode_decode_common("IS", 123).
+
+encode_decode_as_test_() ->
+    encode_decode_common("AS", <<"123D">>).
+
+encode_decode_ds_test_() ->
+    encode_decode_common("DS", "20201011G").
+
+encode_decode_ss_test_() ->
+    encode_decode_common("SS", "20201011H").
 
 encode_decode_common(VR, Data) ->
     lists:flatten(
