@@ -42,7 +42,7 @@ test_sq(Config) ->
 
     <<"ORIGINAL\\PRIMARY\\OTHER">> = GetInfo(0008,0008),
 
-    <<"20070101">> = GetInfo(16#0008, 16#0012),
+    "20070101" = GetInfo(16#0008, 16#0012),
 
     CorrectSQ = [#{{8,256} => <<"121327">>,
 		   {8,258} => <<"DCM">>,
