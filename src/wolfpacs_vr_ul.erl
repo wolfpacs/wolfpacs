@@ -12,16 +12,16 @@
 -spec encode(flow(), strategy(), integer()) -> binary().
 encode(Flow, {_, little}, UL) ->
     wolfpacs_flow:generated(Flow, ?MODULE, 4),
-    <<UL:32/little>>;
+    <<UL:32/little-unsigned>>;
 encode(Flow, {_, big}, UL) ->
     wolfpacs_flow:generated(Flow, ?MODULE, 4),
-    <<UL:32/big>>.
+    <<UL:32/big-unsigned>>.
 
 -spec decode(flow(), strategy(), binary()) -> integer().
-decode(Flow, {_, little}, <<UL:32/little>>) ->
+decode(Flow, {_, little}, <<UL:32/little-unsigned>>) ->
     wolfpacs_flow:consumed(Flow, ?MODULE, 4),
     {ok, UL, <<>>};
-decode(Flow, {_, big}, <<UL:32/big>>) ->
+decode(Flow, {_, big}, <<UL:32/big-unsigned>>) ->
     wolfpacs_flow:consumed(Flow, ?MODULE, 4),
     {ok, UL, <<>>};
 decode(Flow, _, _) ->
