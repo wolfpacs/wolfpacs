@@ -17,7 +17,6 @@
 -export([encode/5]).
 
 encode(Flow, Strategy, UID, RQID, StoredUID) ->
-    _ = lager:warning("store rsp ~p ~p", [UID, RQID]),
     Info = #{{16#0000, 16#0002, "UI"} => UID,
 	     {16#0000, 16#0100, "US"} => 16#8001,
 	     {16#0000, 16#0120, "US"} => RQID,
