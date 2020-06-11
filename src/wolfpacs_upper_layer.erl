@@ -11,7 +11,8 @@
 -include_lib("eunit/include/eunit.hrl").
 
 %% API
--export([start_link/4]).
+-export([start_link/4,
+	 responde/2]).
 
 %% Behaviour
 -export([init/1,
@@ -27,6 +28,9 @@
 
 start_link(_Ref, Socket, Transport, Opts) ->
     gen_server:start_link(?MODULE, [Socket, Transport, Opts], []).
+
+responde(UpperLayer, Payload) ->
+    gen_server:cast(UpperLayer, {responde, Payload}).
 
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
@@ -52,6 +56,10 @@ handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
 
 %% @hidden
+handle_cast({responde, Payload}, State) ->
+    send_response(Payload, State),
+    {noreply, State};
+
 handle_cast(What, State) ->
     _ = lager:warning("unhandle cast ~p", [What]),
     {noreply, State}.
