@@ -11,6 +11,7 @@
 
 %% API
 -export([start_link/0,
+	 stop/1,
 	 reset/1,
 	 generated/3,
 	 consumed/3,
@@ -40,6 +41,9 @@
 
 start_link() ->
     gen_server:start_link(?MODULE, [], []).
+
+stop(Flow) ->
+    gen_server:stop(Flow).
 
 generated(Flow, Module, NumberOfBytes) ->
     common_cast(Flow, {generated, Module, NumberOfBytes}).
