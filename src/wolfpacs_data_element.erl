@@ -515,7 +515,7 @@ encode_decode_ds_test_() ->
     encode_decode_common("DS", "20201011G").
 
 encode_decode_ss_test_() ->
-    encode_decode_common("SS", "20201011H").
+    encode_decode_common("SS", -128).
 
 encode_decode_common(VR, Data) ->
     lists:flatten(

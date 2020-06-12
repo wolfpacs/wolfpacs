@@ -62,7 +62,9 @@ init(UpperLayer) ->
 callback_mode() ->
     state_functions.
 
-terminate(_Reason, _State, _Data) ->
+terminate(_Reason, _State, Data) ->
+    #wolfpacs_upper_layer_fsm_data{flow = Flow} = Data,
+    wolfpacs_flow:stop(Flow),
     void.
 
 code_change(_Vsn, State, Data, _Extra) ->
@@ -179,40 +181,32 @@ handle_pdv_item({image_storage, _Strategy}, _, false, false, Fragment, Data) ->
 
 handle_pdv_item({image_storage, Strategy}, PrCID, true, false, Fragment, Data) ->
     #wolfpacs_upper_layer_fsm_data{flow=Flow,
+				   upper_layer=UpperLayer,
 				   blob=OldBlob,
 				   request_uid=UID,
 				   request_id=RQID,
 				   affected_uid=AffectedUID} = Data,
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
-    FileData = wolfpacs_file_format:encode(Flow, {explicit, little}, NewBlob),
-    ok = file:write_file("abc.dcm", FileData),
-    _ = lager:warning("saved abc.dcm"),
-
+    store(Flow, wolfpacs_data_elements:decode(Flow, Strategy, NewBlob)),
 
     %%
     StoreResp = wolfpacs_c_store_scp:encode(Flow, Strategy, UID, RQID, AffectedUID),
-
     PDVItem = #pdv_item{pr_cid=PrCID,
 			is_last=true,
 			is_command=true,
 			pdv_data=StoreResp},
-
     StoreRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
 
     %%
+    wolfpacs_upper_layer:responde(UpperLayer, StoreRespPDataTF),
 
-
-    #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
-    UpperLayer ! {send_response, StoreRespPDataTF},
-
-    NewData = Data#wolfpacs_upper_layer_fsm_data{blob = <<>>},
-    {keep_state, NewData, []};
+    %%
+    {keep_state, Data#wolfpacs_upper_layer_fsm_data{blob = <<>>}, [hibernate]};
 
 handle_pdv_item({image_storage, Strategy}, _, true, true, Fragment, Data) ->
     #wolfpacs_upper_layer_fsm_data{flow=Flow, blob=OldBlob} = Data,
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
     {ok, Info, _Rest} = wolfpacs_data_elements:decode(Flow, Strategy, NewBlob),
-    _ = lager:warning("image_storage true true ~p", [Info]),
     #{{0, 16#0002} := UID,
       {0, 16#0110} := RQID,
       {0, 16#1000} := AffectedUID} = Info,
@@ -225,6 +219,13 @@ handle_pdv_item({image_storage, Strategy}, _, true, true, Fragment, Data) ->
 handle_pdv_item(Tag, PrCID, A, B, _, Data) ->
     _ = lager:warning("unhandle pdv item ~p, ~p, ~p, ~p", [Tag, PrCID, A, B]),
     {keep_state, Data, []}.
+
+store(Flow, {ok, Payload, <<>>}) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "pass on payload to storage"),
+    wolfpacs_storage:store(Payload);
+store(Flow, _) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode payload"),
+    error.
 
 %%==============================================================================
 %% Test
