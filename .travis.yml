@@ -32,7 +32,7 @@ script:
   - ./rebar3 xref
   - ./rebar3 eunit --cover
   - ./rebar3 proper --cover
-  - ./rebar3 ct --cover --readable=false
+  - ./rebar3 ct --verbose --cover --readable=false
   - ./rebar3 cover
   - ./rebar3 codecov analyze
 
