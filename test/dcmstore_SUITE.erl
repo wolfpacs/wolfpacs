@@ -46,4 +46,9 @@ dataset_using_dcmtk_storescu(_Flow, Filename) ->
 compare([], []) ->
     ok;
 compare([H|T1], [H|T2]) ->
-    compare(T1, T2).
+    compare(T1, T2);
+compare([H1|_], [H2|_]) ->
+    lager:warning("H1 ~p", [H1]),
+    lager:warning("H2 ~p", [H2]),
+    %% fail test
+    H1 = H2.
