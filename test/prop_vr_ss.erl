@@ -5,7 +5,7 @@
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
 prop_random_clear_test() ->
-    ?FORALL(Info, binary(),
+    ?FORALL(Info, integer(),
 	    begin
 		{ok, Flow} = wolfpacs_flow:start_link(),
 		Strategy = {explicit, little},
@@ -14,7 +14,7 @@ prop_random_clear_test() ->
 		case wolfpacs_vr_ss:decode(Flow, Strategy, Corrupt) of
 		    {ok, _, _} ->
 			true;
-		    {error, Corrupt, _} ->
+		    error ->
 			true;
 		    _ ->
 			false
@@ -22,14 +22,14 @@ prop_random_clear_test() ->
 	    end).
 
 prop_decode_test() ->
-    ?FORALL(Data, binary(),
+    ?FORALL(Data, integer(),
 	    begin
 		{ok, Flow} = wolfpacs_flow:start_link(),
 		Strategy = wolfpacs_test_generators:valid_strategy(),
 		case wolfpacs_vr_ss:decode(Flow, Strategy, Data) of
 		    {ok, _, _} ->
 			true;
-		    {error, Data, _} ->
+		    error ->
 			true;
 		    _ ->
 			false
