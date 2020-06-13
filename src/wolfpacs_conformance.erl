@@ -5,7 +5,7 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_conformance).
--export([supported/1,
+-export([supported/2,
 	 transfer_syntax_to_strategy/1]).
 -include("transfer_syntax.hrl").
 -include("abstract_syntax.hrl").
@@ -15,8 +15,13 @@
 %%
 %% @end
 %%-------------------------------------------------------------------
-supported(PresentationContexts) ->
-    supported(PresentationContexts, [], #{}).
+supported(PresentationContexts, true) ->
+    supported(PresentationContexts, [], #{});
+supported(PresentationContexts, false) ->
+    lager:warning("Only allow verification"),
+    supported(lists:filter(fun only_keep_verification/1,
+			   PresentationContexts),
+	      true).
 
 transfer_syntax_to_strategy(?IMPLICIT_LITTLE_ENDIAN) ->
     {implicit, little};
@@ -82,6 +87,11 @@ supported_transfer_syntax(?MR_IMAGE_STORAGE, ?EXPLICIT_BIG_ENDIAN) ->
 supported_transfer_syntax(_, _) ->
     no.
 
+only_keep_verification({_PrCID, ?VERIFICATION, _TransferSyntexes}) ->
+    true;
+only_keep_verification(_) ->
+    false.
+
 %%==============================================================================
 %% Test
 %%==============================================================================
@@ -105,7 +115,8 @@ supported_test() ->
 		   43 => {verification, {explicit, little}},
 		   44 => {verification, {explicit, little}}},
 
-    ?assertEqual(supported(Contexts), {ok, Correct, CorrectMap}).
+    Allowed = true,
+    ?assertEqual(supported(Contexts, Allowed), {ok, Correct, CorrectMap}).
 
 transfer_syntax_to_strategy_test() ->
     Correct = no_strategy_for_transfer_syntax,

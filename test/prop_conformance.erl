@@ -8,7 +8,8 @@ prop_test() ->
     ?FORALL(PCS_, presentation_contextes(),
 	    begin
 		PCS = add_id(PCS_),
-		{ok, Items, Map} = wolfpacs_conformance:supported(PCS),
+		AuthenticationOK = true,
+		{ok, Items, Map} = wolfpacs_conformance:supported(PCS, AuthenticationOK),
 		check_all(Items, Map)
 	    end).
 
