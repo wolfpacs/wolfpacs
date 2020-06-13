@@ -8,6 +8,7 @@
 -export([encode/3,
 	 decode/3]).
 -include("wolfpacs_types.hrl").
+-include("transfer_syntax.hrl").
 
 -define(ERROR_DECODE, "unable to decode data element").
 -define(ERROR_META, "unable to decode meta file information").
@@ -31,13 +32,8 @@ encode(Flow, Strategy, Data) ->
 decode(Flow, Strategy, Data) ->
     case wolfpacs_file_meta_information:decode(Flow, Strategy, Data) of
 	{ok, Meta, Rest} ->
-	    case wolfpacs_data_elements:decode(Flow, Strategy, Rest) of
-		{ok, Content, Rest2} ->
-		    {ok, {Meta, Content}, Rest2};
-		_ ->
-		    wolfpacs_flow:failed(Flow, ?MODULE, ?ERROR_DECODE),
-		    error
-	    end;
+	    TransferSyntax = maps:get({2, 16#10}, Meta, missing),
+	    decode_with_transfer_syntax(Flow, Meta, TransferSyntax, Rest);
 	_ ->
 	    wolfpacs_flow:failed(Flow, ?MODULE, ?ERROR_META),
 	    error
@@ -46,6 +42,44 @@ decode(Flow, Strategy, Data) ->
 %%==============================================================================
 %% Private
 %%==============================================================================
+
+decode_with_transfer_syntax(Flow, _Meta, missing, _Data) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "transfer syntax missing"),
+    error;
+
+decode_with_transfer_syntax(Flow, Meta, ?IMPLICIT_LITTLE_ENDIAN, Data) ->
+    Strategy = {implicit, little},
+    case wolfpacs_data_elements:decode(Flow, Strategy, Data) of
+	{ok, Content, Rest} ->
+	    {ok, {Meta, Content}, Rest};
+	_ ->
+	    wolfpacs_flow:failed(Flow, ?MODULE, ?ERROR_DECODE),
+	    error
+    end;
+
+decode_with_transfer_syntax(Flow, Meta, ?EXPLICIT_LITTLE_ENDIAN, Data) ->
+    Strategy = {explicit, little},
+    case wolfpacs_data_elements:decode(Flow, Strategy, Data) of
+	{ok, Content, Rest} ->
+	    {ok, {Meta, Content}, Rest};
+	_ ->
+	    wolfpacs_flow:failed(Flow, ?MODULE, ?ERROR_DECODE),
+	    error
+    end;
+
+decode_with_transfer_syntax(Flow, Meta, ?EXPLICIT_BIG_ENDIAN, Data) ->
+    Strategy = {explicit, big},
+    case wolfpacs_data_elements:decode(Flow, Strategy, Data) of
+	{ok, Content, Rest} ->
+	    {ok, {Meta, Content}, Rest};
+	_ ->
+	    wolfpacs_flow:failed(Flow, ?MODULE, ?ERROR_DECODE),
+	    error
+    end;
+
+decode_with_transfer_syntax(Flow, _Meta, TransferSyntax, _Data) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("unknown transfer syntax ~p", [TransferSyntax])),
+    error.
 
 -spec meta_info() -> map().
 meta_info() ->
