@@ -33,12 +33,13 @@ start_link() ->
 init([]) ->
     Storage = #{id => wolfpacs_storage,
 		start => {wolfpacs_storage, start_link, []}},
+    Authentication = #{id => wolfpacs_authentication,
+		start => {wolfpacs_authentication, start_link, []}},
     ListenerSpec = ranch:child_spec(wolfpack,
 				    ranch_tcp, [{port, 11112}],
 				    wolfpacs_upper_layer, []),
-
-
     Children = [Storage,
+		Authentication,
 		ListenerSpec],
 
     {ok, {{one_for_one, 1, 1}, Children}}.
