@@ -121,7 +121,9 @@ handle_associate_rq(AssociateRQ, Data) ->
      _MaxSize, Class, VersionName,
      _Rest} = AssociateRQ,
 
-    {ok, SupportedContexts, ContextMap} = wolfpacs_conformance:supported(Contexts),
+    {ok, Allowed} = wolfpacs_authentication:authenticate(CallingAE, CalledAE),
+
+    {ok, SupportedContexts, ContextMap} = wolfpacs_conformance:supported(Contexts, Allowed),
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
 
     AssociateAC = wolfpacs_associate_ac:encode(CalledAE, CallingAE, R,
