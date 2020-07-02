@@ -84,6 +84,20 @@ supported_transfer_syntax(?MR_IMAGE_STORAGE, ?EXPLICIT_LITTLE_ENDIAN) ->
 supported_transfer_syntax(?MR_IMAGE_STORAGE, ?EXPLICIT_BIG_ENDIAN) ->
     {image_storage, {explicit, big}};
 
+supported_transfer_syntax(?GRAYSCALE_PRESENTATION_STATE, ?IMPLICIT_LITTLE_ENDIAN) ->
+    {image_storage, {implicit, little}};
+supported_transfer_syntax(?GRAYSCALE_PRESENTATION_STATE, ?EXPLICIT_LITTLE_ENDIAN) ->
+    {image_storage, {explicit, little}};
+supported_transfer_syntax(?GRAYSCALE_PRESENTATION_STATE, ?EXPLICIT_BIG_ENDIAN) ->
+    {image_storage, {explicit, big}};
+
+supported_transfer_syntax(?COLOR_PRESENTATION_STATE, ?IMPLICIT_LITTLE_ENDIAN) ->
+    {image_storage, {implicit, little}};
+supported_transfer_syntax(?COLOR_PRESENTATION_STATE, ?EXPLICIT_LITTLE_ENDIAN) ->
+    {image_storage, {explicit, little}};
+supported_transfer_syntax(?COLOR_PRESENTATION_STATE, ?EXPLICIT_BIG_ENDIAN) ->
+    {image_storage, {explicit, big}};
+
 supported_transfer_syntax(_, _) ->
     no.
 
