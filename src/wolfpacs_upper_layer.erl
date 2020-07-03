@@ -66,7 +66,6 @@ handle_cast(What, State) ->
 
 %% @hidden
 handle_info({tcp_closed, _Port}, State) ->
-    _ = lager:debug("connection closed"),
     {stop, normal, State};
 
 handle_info({tcp, _Port, DataNew}, State0=#state{data=DataOld, fsm=FSM}) ->
@@ -80,7 +79,6 @@ handle_info({tcp, _Port, DataNew}, State0=#state{data=DataOld, fsm=FSM}) ->
     end;
 
 handle_info({handshake, wolfpack, _, _, _}, State) ->
-    _ = lager:debug("handshake"),
     {noreply, State};
 
 handle_info({send_response, Payload}, State) ->
@@ -114,7 +112,6 @@ protocol_data_unit_complete(Data) ->
     {error, Data, ["not enough data"]}.
 
 send_response(Payload, #state{socket=Socket, transport=Transport}) ->
-    _ = lager:debug("send response of size ~p", [byte_size(Payload)]),
     Transport:send(Socket, Payload).
 
 %%------------------------------------------------------------------------------
