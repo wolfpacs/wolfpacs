@@ -26,8 +26,8 @@
 %% API
 %%------------------------------------------------------------------------------
 
-start_link(_Ref, Socket, Transport, Opts) ->
-    gen_server:start_link(?MODULE, [Socket, Transport, Opts], []).
+start_link(Ref, Socket, Transport, Opts) ->
+    gen_server:start_link(?MODULE, [Ref, Socket, Transport, Opts], []).
 
 responde(UpperLayer, Payload) ->
     gen_server:cast(UpperLayer, {responde, Payload}).
@@ -45,7 +45,8 @@ responde(UpperLayer, Payload) ->
 	       }).
 
 %% @hidden
-init([Socket, Transport, _Opts = []]) ->
+init([Side, Socket, Transport, _Opts = []]) ->
+    lager:warning("SIDE: ~p", [Side]),
     {ok, FSM} = wolfpacs_upper_layer_fsm:start(self()),
     Transport:setopts(Socket, [{active, true}]),
     {ok, #state{socket=Socket, transport=Transport, fsm=FSM}}.
@@ -73,7 +74,8 @@ handle_info({tcp, _Port, DataNew}, State=#state{data=DataOld}) ->
     ok = lager:debug("[UpperLayer] Received ~p bytes", [byte_size(DataNew)]),
     handle_new_data(State#state{data=Data});
 
-handle_info({handshake, wolfpack, _, _, _}, State) ->
+handle_info({handshake, Name, _, _, _}, State) ->
+    lager:warning("handshake: ~p", [Name]),
     {noreply, State};
 
 handle_info({send_response, Payload}, State) ->

@@ -35,12 +35,16 @@ init([]) ->
 		start => {wolfpacs_storage, start_link, []}},
     Authentication = #{id => wolfpacs_authentication,
 		start => {wolfpacs_authentication, start_link, []}},
-    ListenerSpec = ranch:child_spec(wolfpack,
-				    ranch_tcp, [{port, 11112}],
-				    wolfpacs_upper_layer, []),
+    OutsideListener = ranch:child_spec(wolfpacs_outside,
+				       ranch_tcp, [{port, 11112}],
+				       wolfpacs_upper_layer, []),
+    InsideListener = ranch:child_spec(wolfpacs_inside,
+				      ranch_tcp, [{port, 11113}],
+				      wolfpacs_upper_layer, []),
     Children = [Storage,
 		Authentication,
-		ListenerSpec],
+		OutsideListener,
+		InsideListener],
 
     {ok, {{one_for_one, 1, 1}, Children}}.
 
