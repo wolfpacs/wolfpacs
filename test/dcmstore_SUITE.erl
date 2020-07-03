@@ -4,9 +4,13 @@
 -export([all/0,
 	 init_per_suite/1,
 	 end_per_suite/1]).
--export([compatibility_with_storescu/1]).
+-export([ receive_mr_image/1
+	, receive_presentation_state/1
+	]).
 
-all() -> [compatibility_with_storescu].
+all() -> [ receive_mr_image
+	 , receive_presentation_state
+	 ].
 
 init_per_suite(Cfg) ->
     lager_common_test_backend:bounce(debug),
@@ -15,12 +19,18 @@ init_per_suite(Cfg) ->
 end_per_suite(Cfg) ->
     Cfg.
 
-compatibility_with_storescu(Config) ->
+receive_mr_image(Config) ->
+    send_receive_test_file(Config, "0000.dcm").
+
+receive_presentation_state(Config) ->
+    send_receive_test_file(Config, "gsps.dcm").
+
+send_receive_test_file(Config, TestFile) ->
     application:ensure_all_started(wolfpacs),
 
     {ok, Flow} = wolfpacs_flow:start_link(),
 
-    Filename = filename:join([?config(data_dir, Config), "0000.dcm"]),
+    Filename = filename:join([?config(data_dir, Config), TestFile]),
     Dataset1 = dataset_from_file(Flow, Filename),
     Dataset2 = dataset_using_dcmtk_storescu(Flow, Filename),
 
