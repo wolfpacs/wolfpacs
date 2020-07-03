@@ -170,8 +170,7 @@ handle_pdv_item({verification, Strategy}, PrCID, _IsLast, _IsCommand, Raw, Data)
 			pdv_data=EchoResp},
 
     EchoRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
-
-    UpperLayer ! {send_response, EchoRespPDataTF},
+    wolfpacs_upper_layer:responde(UpperLayer, EchoRespPDataTF),
 
     {keep_state, Data, []};
 
