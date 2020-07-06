@@ -207,3 +207,41 @@ encode_decode_test_() ->
      ?_assertEqual(decode(Incorrect4), {error,  Incorrect4, ["unable to decode called and calling"]}),
      ?_assertEqual(decode(Incorrect5), {error,  Incorrect5, ["no data"]})
     ].
+
+decode_test_() ->
+    Log = "\
+D:   01  00  00  00  00  cd  00  01  00  00  43  41  4c  4c  49  4e
+D:   47  38  41  42  31  32  33  34  35  36  31  32  33  34  35  36
+D:   37  38  39  30  31  32  33  34  35  36  00  00  00  00  00  00
+D:   00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00
+D:   00  00  00  00  00  00  00  00  00  00  10  00  00  15  31  2e
+D:   32  2e  38  34  30  2e  31  30  30  30  38  2e  33  2e  31  2e
+D:   31  2e  31  20  00  00  2e  01  00  ff  00  30  00  00  11  31
+D:   2e  32  2e  38  34  30  2e  31  30  30  30  38  2e  31  2e  31
+D:   40  00  00  11  31  2e  32  2e  38  34  30  2e  31  30  30  30
+D:   38  2e  31  2e  32  50  00  00  3a  51  00  00  04  00  00  40
+D:   00  52  00  00  1b  31  2e  32  2e  32  37  36  2e  30  2e  37
+D:   32  33  30  30  31  30  2e  33  2e  30  2e  33  2e  36  2e  34
+D:   55  00  00  0f  4f  46  46  49  53  5f  44  43  4d  54  4b  5f
+D:   33  36  34 ff",
+    Encoded = wolfpacs_utils:log_to_binary(Log),
+    {ok,
+     CalledAE,
+     CallingAE,
+     _R,
+     Contexts,
+     MaxSize,
+     Class,
+     VersionName,
+     Rest} = decode(Encoded),
+
+    [ ?_assertEqual(CalledAE, <<"CALLING8AB123456">>)
+    , ?_assertEqual(CallingAE, <<"1234567890123456">>)
+    , ?_assertEqual(Contexts, [{1,
+				<<"1.2.840.10008.1.1">>,
+				[<<"1.2.840.10008.1.2">>]}])
+    , ?_assertEqual(MaxSize, 16384)
+    , ?_assertEqual(Class, <<"1.2.276.0.7230010.3.0.3.6.4">>)
+    , ?_assertEqual(VersionName, <<"OFFIS_DCMTK_364">>)
+    , ?_assertEqual(Rest, <<16#ff>>)
+    ].
