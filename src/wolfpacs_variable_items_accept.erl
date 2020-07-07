@@ -11,7 +11,7 @@
 -spec encode(list({byte(), binary()}), non_neg_integer(), binary(), binary()) -> binary().
 encode(SupportedContexts, MaxPDUSize, Class, VersionName) ->
     Fixed = <<"1.2.840.10008.3.1.1.1">>,
-    ApplicationContextName = wolfpacs_application_context_name:encode(Fixed),
+    ApplicationContextName = wolfpacs_application_context_name:encode(no_flow, Fixed),
     PresentationContexts = wolfpacs_presentation_contexts_accept:encode(SupportedContexts),
     UserInformation = wolfpacs_user_information:encode(MaxPDUSize, Class, VersionName),
     Payload = <<ApplicationContextName/binary,
@@ -20,7 +20,7 @@ encode(SupportedContexts, MaxPDUSize, Class, VersionName) ->
     Payload.
 
 decode(Data) ->
-    decode_with_name(Data, wolfpacs_application_context_name:decode(Data)).
+    decode_with_name(Data, wolfpacs_application_context_name:decode(no_flow, Data)).
 
 %%==============================================================================
 %% Private
