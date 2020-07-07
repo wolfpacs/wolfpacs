@@ -14,6 +14,7 @@ all() -> [ receive_mr_image
 
 init_per_suite(Cfg) ->
     lager_common_test_backend:bounce(debug),
+    application:ensure_all_started(wolfpacs),
     Cfg.
 
 end_per_suite(Cfg) ->
@@ -26,8 +27,6 @@ receive_presentation_state(Config) ->
     send_receive_test_file(Config, "gsps.dcm").
 
 send_receive_test_file(Config, TestFile) ->
-    application:ensure_all_started(wolfpacs),
-
     {ok, Flow} = wolfpacs_flow:start_link(),
 
     Filename = filename:join([?config(data_dir, Config), TestFile]),
@@ -46,6 +45,7 @@ dataset_from_file(Flow, Filename) ->
 
 dataset_using_dcmtk_storescu(_Flow, Filename) ->
     {ok, U} = dcmtk_storescu:start_link(),
+    timer:sleep(1000),
     dcmtk_storescu:send(U, "localhost", "11112", Filename),
 
     {ok, Stored} = wolfpacs_storage:retreive(),
