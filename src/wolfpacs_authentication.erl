@@ -156,7 +156,7 @@ env_test_() ->
     ].
 
 minimal_both_calling_and_called__test_() ->
-    start_link(),
+    _ = start_link(),
     [ ?_assertEqual(authenticate("A", "B"), {ok, true}) %% all are allowed
     , ?_assertEqual(authenticate("C", "D"), {ok, true}) %% all are allowed
     , ?_assertEqual(add("A", "B"), ok)
@@ -166,7 +166,7 @@ minimal_both_calling_and_called__test_() ->
     ].
 
 minimal_calling_test_() ->
-    start_link(),
+    _ = start_link(),
     [ ?_assertEqual(authenticate("A", "B"), {ok, true}) %% all are allowed
     , ?_assertEqual(authenticate("C", "D"), {ok, true}) %% all are allowed
     , ?_assertEqual(add_calling("A"), ok)
@@ -177,7 +177,7 @@ minimal_calling_test_() ->
     ].
 
 minimal_called_test_() ->
-    start_link(),
+    _ = start_link(),
     [ ?_assertEqual(authenticate("A", "B"), {ok, true}) %% all are allowed
     , ?_assertEqual(authenticate("C", "D"), {ok, true}) %% all are allowed
     , ?_assertEqual(add_called("B"), ok)
