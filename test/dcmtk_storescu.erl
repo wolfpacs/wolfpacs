@@ -19,7 +19,7 @@ stop(StoreSCP) ->
     gen_server:call(StoreSCP, stop).
 
 send(StoreSCU, Host, Port, Filename) ->
-    gen_server:call(StoreSCU, {send, Host, Port, Filename}).
+    gen_server:call(StoreSCU, {send, Host, Port, Filename}, 15000).
 
 init(_) ->
     {ok, #{}}.
