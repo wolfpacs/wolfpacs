@@ -30,6 +30,8 @@ limit_binary(Item, Max) when byte_size(Item) > Max ->
 limit_binary(Item, _) ->
     Item.
 
+exact_binary(Item, Target) when is_list(Item) ->
+    exact_binary(list_to_binary(Item), Target);
 exact_binary(Item, Target) ->
     NbBytes = byte_size(Item),
     exact_binary(Item, Target, NbBytes).

@@ -25,7 +25,9 @@ decode(Data = <<16#50, _, _Length:16, UserInformation/binary>>) ->
 	    Succes
     end;
 decode(Data = <<H, _/binary>>) ->
-    {error, Data, ["incorrect header", H]}.
+    {error, Data, ["incorrect header", H]};
+decode(<<>>) ->
+    {error, <<>>, ["no data"]}.
 
 %%==============================================================================
 %% Private

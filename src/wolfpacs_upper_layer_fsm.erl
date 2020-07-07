@@ -64,7 +64,7 @@ callback_mode() ->
 
 terminate(_Reason, _State, Data) ->
     #wolfpacs_upper_layer_fsm_data{flow = Flow} = Data,
-    wolfpacs_flow:stop(Flow),
+    _ = wolfpacs_flow:stop(Flow),
     void.
 
 code_change(_Vsn, State, Data, _Extra) ->

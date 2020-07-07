@@ -117,9 +117,7 @@ transfer_syntax(TransferSyntax) ->
     ?EXPLICIT_LITTLE_ENDIAN.
 
 send_associate_rq(State=#{flow := Flow, sock := Sock, calledae := CalledAE_, strategy := Strategy}) ->
-    PrCID = 1,
-    AbstractSyntax = ?VERIFICATION,
-    TransferSyntax = [transfer_syntax(Strategy)],
+    Contexts = [{1, ?VERIFICATION, [transfer_syntax(Strategy)]}],
     MaxPDUSize = 16384,
     %% TODO, little or big here ?
     CallingAE = wolfpacs_vr_ae:encode(Flow, Strategy, <<"WolfPACS">>),
@@ -128,7 +126,7 @@ send_associate_rq(State=#{flow := Flow, sock := Sock, calledae := CalledAE_, str
     VersionName = <<"WolfPACS_000">>,
 
     AssociateRQ = wolfpacs_associate_rq:encode(CalledAE, CallingAE,
-					       PrCID, AbstractSyntax, TransferSyntax,
+					       Contexts,
 					       MaxPDUSize, Class, VersionName),
 
     ok = gen_tcp:send(Sock, AssociateRQ),
