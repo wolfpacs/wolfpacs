@@ -19,10 +19,10 @@ stop(StoreSCP) ->
     gen_server:call(StoreSCP, stop).
 
 send(StoreSCU, Host, Port, Filename) ->
-    gen_server:call(StoreSCU, {send, Host, Port, Filename}).
+    gen_server:call(StoreSCU, {send, Host, Port, Filename}, 15000).
 
 init(_) ->
-    {ok, #{}}.
+    {ok, #{process => none, from => none}}.
 
 handle_call(stop, _From, State=#{process := none}) ->
     {reply, {ok, closing}, State};
@@ -59,8 +59,10 @@ handle_info(What, State) ->
     lager:warning("Info ~p", [What]),
     {noreply, State}.
 
-terminate(Reason, _State) ->
-    lager:warning("Terminated with reason ~p", [Reason]),
+terminate(_Reason, #{from := none}) ->
+    ok;
+terminate(Reason, #{from := From}) ->
+    gen_server:reply(From, {error, Reason}),
     ok.
 
 code_change(_Vsn, State, _Extra) ->
