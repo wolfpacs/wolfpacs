@@ -57,7 +57,7 @@ handle_call(What, _From, State) ->
 
 %% @hidden
 handle_cast({responde, Payload}, State) ->
-    send_response(Payload, State),
+    ok = send_response(Payload, State),
     {noreply, State};
 
 handle_cast(What, State) ->
@@ -68,15 +68,10 @@ handle_cast(What, State) ->
 handle_info({tcp_closed, _Port}, State) ->
     {stop, normal, State};
 
-handle_info({tcp, _Port, DataNew}, State0=#state{data=DataOld, fsm=FSM}) ->
+handle_info({tcp, _Port, DataNew}, State=#state{data=DataOld}) ->
     Data = <<DataOld/binary, DataNew/binary>>,
-    case protocol_data_unit_complete(Data) of
-	{ok, PDUType, PDU, Rest} ->
-	    wolfpacs_upper_layer_fsm:pdu(FSM, PDUType, PDU),
-	    {noreply, State0#state{data=Rest}};
-	{error, Data, _Error} ->
-	    {noreply, State0#state{data=Data}}
-    end;
+    ok = lager:debug("[UpperLayer] Received ~p bytes", [byte_size(DataNew)]),
+    handle_new_data(State#state{data=Data});
 
 handle_info({handshake, wolfpack, _, _, _}, State) ->
     {noreply, State};
@@ -85,7 +80,8 @@ handle_info({send_response, Payload}, State) ->
     send_response(Payload, State),
     {noreply, State};
 
-handle_info(_What, State) ->
+handle_info(What, State) ->
+    lager:warning("[UpperLayer] Unhandle ~p", [What]),
     {noreply, State}.
 
 %% @hidden
@@ -100,6 +96,17 @@ code_change(_OldVsn, State, _Extra) ->
 %%------------------------------------------------------------------------------
 %% Private
 %%------------------------------------------------------------------------------
+
+handle_new_data(State=#state{data=Data, fsm=FSM}) ->
+    case protocol_data_unit_complete(Data) of
+	{ok, PDUType, PDU, Rest} ->
+	    ok = lager:debug("[UpperLayer] Complete data unit. Type: ~p ~p", [PDUType, byte_size(PDU)]),
+	    wolfpacs_upper_layer_fsm:pdu(FSM, PDUType, PDU),
+	    handle_new_data(State#state{data=Rest});
+	{error, Data, _Error} ->
+	    ok = lager:debug("[UpperLayer] Incomplete data unit"),
+	    {noreply, State#state{data=Data}}
+    end.
 
 protocol_data_unit_complete(Data = <<PDUType, _, PDUSize:32, _/binary>>) ->
     case wolfpacs_utils:split(Data, PDUSize + 6) of
