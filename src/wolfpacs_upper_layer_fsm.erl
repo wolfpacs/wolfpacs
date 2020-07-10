@@ -10,7 +10,7 @@
 -behaviour(gen_statem).
 -include("wolfpacs_types.hrl").
 
--export([start/1,
+-export([start/2,
 	 stop/1,
 	 pdu/3]).
 -export([init/1,
@@ -23,9 +23,9 @@
 %% API
 %%=============================================================================
 
--spec start(pid()) -> {ok, pid()}.
-start(UpperLayer) ->
-    gen_statem:start(?MODULE, UpperLayer, []).
+-spec start(pid(), atom()) -> {ok, pid()}.
+start(UpperLayer, RouteTag) ->
+    gen_statem:start(?MODULE, [UpperLayer, RouteTag], []).
 
 -spec stop(pid()) -> ok.
 stop(FSM) ->
@@ -40,6 +40,9 @@ pdu(FSM, PDUType, PDU) ->
 %%=============================================================================
 
 -record(wolfpacs_upper_layer_fsm_data, {flow :: flow(),
+					route_tag :: atom(),
+					called_ae :: binary(),
+					calling_ae :: binary(),
 					upper_layer :: pid(),
 					context_map :: map(),
 					request_uid :: binary(),
@@ -47,10 +50,13 @@ pdu(FSM, PDUType, PDU) ->
 					affected_uid :: binary(),
 					blob :: binary()}).
 
-init(UpperLayer) ->
+init([UpperLayer, RouteTag]) ->
     State = idle,
     {ok, Flow} = wolfpacs_flow:start_link(),
     Data = #wolfpacs_upper_layer_fsm_data{flow = Flow,
+					  route_tag = RouteTag,
+					  called_ae = <<>>,
+					  calling_ae = <<>>,
 					  upper_layer = UpperLayer,
 					  context_map = #{},
 					  request_uid = <<>>,
@@ -131,7 +137,11 @@ handle_associate_rq(AssociateRQ, Data) ->
 					       MaxPDUSize, Class, VersionName),
 
     UpperLayer ! {send_response, AssociateAC},
-    {keep_state, Data#wolfpacs_upper_layer_fsm_data{context_map=ContextMap}, []}.
+    NewData = Data#wolfpacs_upper_layer_fsm_data{context_map=ContextMap,
+						 called_ae=CalledAE,
+						 calling_ae=CallingAE
+						},
+    {keep_state, NewData, []}.
 
 handle_abort({error, _}, Data) ->
     {keep_state, Data, []};
@@ -174,37 +184,45 @@ handle_pdv_item({verification, Strategy}, PrCID, _IsLast, _IsCommand, Raw, Data)
 
     {keep_state, Data, []};
 
-handle_pdv_item({image_storage, _Strategy}, _, false, false, Fragment, Data) ->
+handle_pdv_item({_AbstractSyntrax, _Strategy}, _, false, false, Fragment, Data) ->
     #wolfpacs_upper_layer_fsm_data{blob=OldBlob} = Data,
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
     NewData = Data#wolfpacs_upper_layer_fsm_data{blob=NewBlob},
     {keep_state, NewData, []};
 
-handle_pdv_item({image_storage, Strategy}, PrCID, true, false, Fragment, Data) ->
+handle_pdv_item({_AbstractSyntrax, Strategy}, PrCID, true, false, Fragment, Data) ->
     #wolfpacs_upper_layer_fsm_data{flow=Flow,
+				   route_tag=RouteTag,
+				   called_ae=CalledAE,
+				   calling_ae=CallingAE,
 				   upper_layer=UpperLayer,
 				   blob=OldBlob,
 				   request_uid=UID,
 				   request_id=RQID,
 				   affected_uid=AffectedUID} = Data,
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
-    store(Flow, wolfpacs_data_elements:decode(Flow, Strategy, NewBlob)),
 
-    %%
-    StoreResp = wolfpacs_c_store_scp:encode(Flow, Strategy, UID, RQID, AffectedUID),
-    PDVItem = #pdv_item{pr_cid=PrCID,
-			is_last=true,
-			is_command=true,
-			pdv_data=StoreResp},
-    StoreRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+    %% Very important section of the code.
+    %% We have received a complete payload, NewBlob.
+    %% For maximum flexibility in WolfPACS, we route
+    %% The payload deeper into the framework.
+    Decoded = wolfpacs_data_elements:decode(Flow, Strategy, NewBlob),
+    case route_payload(Flow, RouteTag, CalledAE, CallingAE, Decoded) of
+	ok ->
+	    StoreResp = wolfpacs_c_store_scp:encode(Flow, Strategy, UID, RQID, AffectedUID),
+	    PDVItem = #pdv_item{pr_cid=PrCID,
+				is_last=true,
+				is_command=true,
+				pdv_data=StoreResp},
+	    StoreRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+	    wolfpacs_upper_layer:responde(UpperLayer, StoreRespPDataTF),
+	    {keep_state, Data#wolfpacs_upper_layer_fsm_data{blob = <<>>}, [hibernate]};
+	_ ->
+	    wolfpacs_flow:failed(Flow, ?MODULE, "route_payload failed"),
+	    {keep_state, Data#wolfpacs_upper_layer_fsm_data{blob = NewBlob}, [stop]}
+    end;
 
-    %%
-    wolfpacs_upper_layer:responde(UpperLayer, StoreRespPDataTF),
-
-    %%
-    {keep_state, Data#wolfpacs_upper_layer_fsm_data{blob = <<>>}, [hibernate]};
-
-handle_pdv_item({image_storage, Strategy}, _, true, true, Fragment, Data) ->
+handle_pdv_item({_AbstractSyntrax, Strategy}, _, true, true, Fragment, Data) ->
     #wolfpacs_upper_layer_fsm_data{flow=Flow, blob=OldBlob} = Data,
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
     {ok, Info, _Rest} = wolfpacs_data_elements:decode(Flow, Strategy, NewBlob),
@@ -221,10 +239,23 @@ handle_pdv_item(Tag, PrCID, A, B, _, Data) ->
     _ = lager:warning("unhandle pdv item ~p, ~p, ~p, ~p", [Tag, PrCID, A, B]),
     {keep_state, Data, []}.
 
-store(Flow, {ok, Payload, <<>>}) ->
+%%
+%%
+%%
+
+route_payload(Flow, RouteTag, CalledAE, CallingAE, {ok, DataSet, <<>>}) ->
     wolfpacs_flow:good(Flow, ?MODULE, "pass on payload to storage"),
-    wolfpacs_storage:store(Payload);
-store(Flow, _) ->
+    StudyUID = maps:get({16#0020, 16#000d}, DataSet, missing),
+    case RouteTag of
+	wolfpacs_outside ->
+	    wolfpacs_outside_router:route(CalledAE, CallingAE, DataSet),
+	    wolfpacs_inside_router:remember({CalledAE, CallingAE}, StudyUID);
+	wolfpacs_inside ->
+	    wolfpacs_inside_router:route(StudyUID, DataSet);
+	_ ->
+	    lager:warning("[UpperLayerFSM] Critical error. Incorrect RouteTag: ~p", [RouteTag])
+    end;
+route_payload(Flow, _, _, _, _) ->
     wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode payload"),
     error.
 
@@ -235,7 +266,7 @@ store(Flow, _) ->
 -include_lib("eunit/include/eunit.hrl").
 
 minimal_test() ->
-    {ok, FMS} = start(self()),
+    {ok, FMS} = start(self(), wolfpacs_outside),
     pdu(FMS, 12345, <<1, 2, 3, 4, 5>>),
     Success = receive
 		  {unknown_pdu, _N} ->

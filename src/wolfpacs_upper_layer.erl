@@ -47,7 +47,7 @@ responde(UpperLayer, Payload) ->
 %% @hidden
 init([Side, Socket, Transport, _Opts = []]) ->
     lager:warning("SIDE: ~p", [Side]),
-    {ok, FSM} = wolfpacs_upper_layer_fsm:start(self()),
+    {ok, FSM} = wolfpacs_upper_layer_fsm:start(self(), Side),
     Transport:setopts(Socket, [{active, true}]),
     {ok, #state{socket=Socket, transport=Transport, fsm=FSM}}.
 
