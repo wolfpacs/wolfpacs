@@ -29,7 +29,7 @@ send_dataset(StoreSCU, Host, Port, DataSet) ->
     Filename = generate_filename(DataSet),
     lager:warning("SEND ~p", [Filename]),
     ok = file:write_file(Filename, Encoded),
-    ok = gen_server:call(StoreSCU, {send, Host, Port, Filename}),
+    gen_server:call(StoreSCU, {send, Host, Port, Filename}),
     %% It is much more stable if we wait removing the filename
     spawn(fun() ->
 		  timer:sleep(5000),
