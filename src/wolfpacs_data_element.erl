@@ -227,8 +227,13 @@ decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"SQ", _:16, Data/binary>
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
     decode_with_vr_32bit_length(Flow, Strategy, G, E, "SQ", Data);
 
-decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<VRTag:16/bitstring, Data/binary>>, _Extra) ->
-    VR = binary_to_list(VRTag),
+decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<VRTag:16/bitstring, Data/binary>>, Extra) ->
+    VR = case maps:get({G, E}, Extra, missing) of
+	     missing ->
+		 binary_to_list(VRTag);
+	     FoundVR ->
+		 FoundVR
+	 end,
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
     decode_with_vr_16bit_length(Flow, Strategy, G, E, VR, Data);
 
@@ -385,9 +390,9 @@ decode_common(Flow, Strategy, G, E, "SQ", Len, Data) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_common SQ"),
     decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_sq);
 
-decode_common(Flow, Strategy, G, E, _VR, Len, Data) ->
-    wolfpacs_flow:good(Flow, ?MODULE, "decode_common defer"),
-    decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_defer).
+decode_common(Flow, _Strategy, G, E, VR, _Len, _Data) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("Unable to decode (~p, ~p) ~p", [G, E, VR])),
+    error.
 
 %%==============================================================================
 %% Test
