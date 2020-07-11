@@ -59,7 +59,6 @@ handle_cast({route, _CalledAE, _CallingAE, DataSet},  State=#{nb_workers := 0}) 
     wolfpacs_storage:store(DataSet),
     {noreply, State};
 handle_cast({route, _CalledAE, _CallingAE, DataSet},  State=#{workers := Workers, next_worker := I}) ->
-    lager:warning("OUTSIDE ROUTE"),
     case priv_route(DataSet, maps:get(I, Workers)) of
 	error ->
 	    lager:warning("[OutsideRouter] Drop dataset. Unable to propagate"),

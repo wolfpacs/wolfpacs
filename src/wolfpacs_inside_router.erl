@@ -30,16 +30,16 @@ stop() ->
 remember(missing, _) ->
     ok;
 remember(Ref, StudyUID) ->
-    gen_server:cast(?MODULE, {remember, Ref, StudyUID}).
+    gen_server:cast(?MODULE, {remember, clean_ref(Ref), StudyUID}).
 
 route(StudyUID, DataSet) ->
     gen_server:cast(?MODULE, {route, StudyUID, DataSet}).
 
 set_destination(Ref, Host, Port) ->
-    gen_server:cast(?MODULE, {set_destination, Ref, Host, Port}).
+    gen_server:cast(?MODULE, {set_destination, clean_ref(Ref), Host, Port}).
 
 remove_destination(Ref) ->
-    gen_server:cast(?MODULE, {remove_destination, Ref}).
+    gen_server:cast(?MODULE, {remove_destination, clean_ref(Ref)}).
 
 debug() ->
     gen_server:call(?MODULE, debug).
@@ -59,7 +59,6 @@ handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
 
 handle_cast({route, StudyUID, DataSet}, State=#{hosts := Hosts, studies := Studies}) ->
-    lager:warning("OUTSIDE INSIDE"),
     case maps:get(StudyUID, Studies, missing) of
 	missing ->
 	    lager:warning("[InsideRouter] Study not mapped: ~p", [StudyUID]),
@@ -101,6 +100,16 @@ priv_route(DataSet, _CalledAE, _CallingAE, {Host, Port}) ->
     {ok, Sender} = dcmtk_storescu:start_link(),
     dcmtk_storescu:send_dataset(Sender, Host, Port, DataSet),
     dcmtk_storescu:stop(Sender).
+
+trim(Item) when is_binary(Item) ->
+    trim(binary_to_list(Item));
+trim(Item) ->
+    string:strip(string:strip(Item, right, 0), right, 32).
+
+clean_ref({A, B}) ->
+    {trim(A), trim(B)};
+clean_ref(Ref) ->
+    Ref.
 
 %%-----------------------------------------------------------------------------
 %% Tests
