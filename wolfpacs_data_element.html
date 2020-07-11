@@ -15,9 +15,16 @@
 
 <h2><a name="description">Description</a></h2><p>Data Element</p>
  
-  http://dicom.nema.org/medical/dicom/2014c/output/chtml/part05/chapter_7.html#sect_7.1.1
-  Command Dictionary is always implicit
-  http://dicom.nema.org/dicom/2013/output/chtml/part07/sect_6.3.html
+  <p>http://dicom.nema.org/medical/dicom/2014c/output/chtml/part05/chapter_7.html#sect_7.1.1  
+Command Dictionary is always implicit  
+http://dicom.nema.org/dicom/2013/output/chtml/part07/sect_6.3.html</p>
+ 
+  The headers in a DICOM file is unfortunately not always know before hand.
+  Especially the pixel data header might be OB or OB.
+  When the data is explicitly encoded it is easy, however, for implicitly
+  encoded/decoded data it becomes trickier. Because of this, we need
+  to use the "Extra" map. Where we accumulate information about the
+  dataset while we are encoding/decoding.
  
 <h2><a name="types">Data Types</a></h2>
 
@@ -26,21 +33,35 @@
 
 
 <h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#decode-3">decode/3</a></td><td>Decode a Data Element.</td></tr>
-<tr><td valign="top"><a href="#encode-6">encode/6</a></td><td>Encodes a Data Element.</td></tr>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#decode-3">decode/3</a></td><td>Decode a Data Element without extra information.</td></tr>
+<tr><td valign="top"><a href="#decode-4">decode/4</a></td><td>Decode a Data Element.</td></tr>
+<tr><td valign="top"><a href="#encode-6">encode/6</a></td><td>Encodes a Data Element without extra information.</td></tr>
+<tr><td valign="top"><a href="#encode-7">encode/7</a></td><td>Encodes a Data Element.</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
 
 <h3 class="function"><a name="decode-3">decode/3</a></h3>
 <div class="spec">
-<p><tt>decode(Flow::pid(), X2::<a href="#type-strategy">strategy()</a>, Data::binary()) -&gt; {ok, {{integer(), integer()}, any()}, binary()} | {error, binary(), [string()]}</tt><br></p>
+<p><tt>decode(Flow::pid(), Strategy::<a href="#type-strategy">strategy()</a>, Data::binary()) -&gt; {ok, {{integer(), integer()}, any()}, binary()} | {error, binary(), [string()]}</tt><br></p>
+</div><p>Decode a Data Element without extra information
+ </p>
+
+<h3 class="function"><a name="decode-4">decode/4</a></h3>
+<div class="spec">
+<p><tt>decode(Flow::pid(), X2::<a href="#type-strategy">strategy()</a>, Data::binary(), Extra::map()) -&gt; {ok, {{integer(), integer()}, any()}, binary()} | {error, binary(), [string()]}</tt><br></p>
 </div><p>Decode a Data Element
  </p>
 
 <h3 class="function"><a name="encode-6">encode/6</a></h3>
 <div class="spec">
 <p><tt>encode(Flow::pid(), Strategy::<a href="#type-strategy">strategy()</a>, G::integer(), E::integer(), VR::string(), Bytes::any()) -&gt; binary()</tt><br></p>
+</div><p>Encodes a Data Element without extra information
+ </p>
+
+<h3 class="function"><a name="encode-7">encode/7</a></h3>
+<div class="spec">
+<p><tt>encode(Flow::pid(), Strategy::<a href="#type-strategy">strategy()</a>, G::integer(), E::integer(), VR::string(), Bytes::any(), Extra::map()) -&gt; binary()</tt><br></p>
 </div><p>Encodes a Data Element
  </p>
 <hr>

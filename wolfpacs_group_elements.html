@@ -16,7 +16,8 @@
 <h2><a name="description">Description</a></h2>Group Elements.
  
 <h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#vr-2">vr/2</a></td><td></td></tr>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#vr-2">vr/2</a></td><td>VR.</td></tr>
+<tr><td valign="top"><a href="#vr-3">vr/3</a></td><td>VR with extra information.</td></tr>
 <tr><td valign="top"><a href="#vr_to_example_group_element-1">vr_to_example_group_element/1</a></td><td>Return an example {Group, Element} for a VR.</td></tr>
 </table>
 
@@ -25,7 +26,18 @@
 <h3 class="function"><a name="vr-2">vr/2</a></h3>
 <div class="spec">
 <p><tt>vr(Group::integer(), Element::integer()) -&gt; list()</tt><br></p>
-</div>
+</div><p><p>VR.</p>
+ 
+  Use internal db to extract the value representation.
+ </p>
+
+<h3 class="function"><a name="vr-3">vr/3</a></h3>
+<div class="spec">
+<p><tt>vr(Group, Element, Extra) -&gt; any()</tt></p>
+</div><p><p>VR with extra information</p>
+ 
+  The extra information with take precedence over DB.
+ </p>
 
 <h3 class="function"><a name="vr_to_example_group_element-1">vr_to_example_group_element/1</a></h3>
 <div class="spec">
