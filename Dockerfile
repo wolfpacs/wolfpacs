@@ -15,4 +15,5 @@ RUN tar xvfh /tmp/wolfpacs-0.0.1.tar.gz -C /usr/local
 
 EXPOSE 11112
 
-CMD ["/usr/local/bin/wolfpacs", "foreground"]
+ENTRYPOINT ["/usr/local/bin/wolfpacs"]
+CMD ["foreground"]
