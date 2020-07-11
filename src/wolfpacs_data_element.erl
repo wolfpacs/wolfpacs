@@ -22,6 +22,9 @@
 encode(Flow, {explicit, _Endian}, 0, E, VR, Bytes) ->
     wolfpacs_flow:good(Flow, ?MODULE, "command group is always implicit little"),
     wolfpacs_data_element:encode(Flow, {implicit, little}, 0, E, VR, Bytes);
+encode(Flow, Strategy, G, 0, "UN", Bytes) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "group lengths are always UL"),
+    encode(Flow, Strategy, G, 0, "UL", Bytes);
 encode(Flow, Strategy, G, E, "OB", Bytes) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode OB"),
     encode_common(Strategy, G, E, "OB", wolfpacs_vr_ob:encode(Flow, Strategy, Bytes));
