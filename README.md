@@ -28,8 +28,34 @@ We use four different test in WolfPACS and we aim to test the software thoroughl
 
 ## Quick Start
 
+Start WolfPACS in background.
+
 ```sh
 docker run -d -p 11112:11112 wolfpacs/wolfpacs
+```
+Debug WolfPACS instance
+
+```sh
+docker run -it -p 11112:11112 wolfpacs/wolfpacs console
+```
+
+## Configuration
+
+```
+# wolfpacs.conf
+
+# Add worker (s)
+{worker, "localhost", 1234, "abc"}.
+{worker, "localhost", 1235, "abc"}.
+
+# Add destination(s)
+
+{destination, {"abcd", "def"}, "pacs.hosp1.com", 11112}.
+{destination, {"abcsd32412", "defdsfdsaf12"}, "pacs.hosp2.com", 12345}.
+```
+
+```sh
+docker run -d -v /a/path/config/folder:/app123 -e WOLFPACS_DIR=/app123 -p 11112:11112 wolfpacs/wolfpacs
 ```
 
 ## DICOM Conformance Statement
