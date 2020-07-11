@@ -24,7 +24,7 @@
 <tr><td valign="top"><a href="#idle-3">idle/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#init-1">init/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#pdu-3">pdu/3</a></td><td></td></tr>
-<tr><td valign="top"><a href="#start-1">start/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#start-2">start/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#stop-1">stop/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#terminate-3">terminate/3</a></td><td></td></tr>
 </table>
@@ -48,7 +48,7 @@
 
 <h3 class="function"><a name="init-1">init/1</a></h3>
 <div class="spec">
-<p><tt>init(UpperLayer) -&gt; any()</tt></p>
+<p><tt>init(X1) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="pdu-3">pdu/3</a></h3>
@@ -56,9 +56,9 @@
 <p><tt>pdu(FSM::pid(), PDUType::pos_integer(), PDU::binary()) -&gt; ok</tt><br></p>
 </div>
 
-<h3 class="function"><a name="start-1">start/1</a></h3>
+<h3 class="function"><a name="start-2">start/2</a></h3>
 <div class="spec">
-<p><tt>start(UpperLayer::pid()) -&gt; {ok, pid()}</tt><br></p>
+<p><tt>start(UpperLayer::pid(), RouteTag::atom()) -&gt; {ok, pid()}</tt><br></p>
 </div>
 
 <h3 class="function"><a name="stop-1">stop/1</a></h3>
