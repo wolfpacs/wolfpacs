@@ -5,120 +5,147 @@
 %% Command Dictionary is always implicit
 %% http://dicom.nema.org/dicom/2013/output/chtml/part07/sect_6.3.html
 %%
+%% The headers in a DICOM file is unfortunately not always know before hand.
+%% Especially the pixel data header might be OB or OB.
+%% When the data is explicitly encoded it is easy, however, for implicitly
+%% encoded/decoded data it becomes trickier. Because of this, we need
+%% to use the "Extra" map. Where we accumulate information about the
+%% dataset while we are encoding/decoding.
+%%
 %% @end
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_data_element).
 -export([encode/6,
-	 decode/3]).
+	 encode/7,
+	 decode/3,
+	 decode/4]).
 -include("wolfpacs_types.hrl").
+
+%%-------------------------------------------------------------------
+%% @doc Encodes a Data Element without extra information
+%%
+%% @end
+%%-------------------------------------------------------------------
+-spec encode(pid(), strategy(), integer(), integer(), string(), any()) -> binary().
+encode(Flow, Strategy, G, E, VR, Bytes) ->
+    encode(Flow, Strategy, G, E, VR, Bytes, #{}).
 
 %%-------------------------------------------------------------------
 %% @doc Encodes a Data Element
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec encode(pid(), strategy(), integer(), integer(), string(), any()) -> binary().
-encode(Flow, {explicit, _Endian}, 0, E, VR, Bytes) ->
+-spec encode(pid(), strategy(), integer(), integer(), string(), any(), map()) -> binary().
+encode(Flow, {explicit, _Endian}, 0, E, VR, Bytes, Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "command group is always implicit little"),
-    wolfpacs_data_element:encode(Flow, {implicit, little}, 0, E, VR, Bytes);
-encode(Flow, Strategy, G, 0, "UN", Bytes) ->
+    wolfpacs_data_element:encode(Flow, {implicit, little}, 0, E, VR, Bytes, Extra);
+encode(Flow, Strategy, G, 0, "UN", Bytes, Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "group lengths are always UL"),
-    encode(Flow, Strategy, G, 0, "UL", Bytes);
-encode(Flow, Strategy, G, E, "OB", Bytes) ->
+    encode(Flow, Strategy, G, 0, "UL", Bytes, Extra);
+encode(Flow, Strategy, G, E, "OB", Bytes, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode OB"),
     encode_common(Strategy, G, E, "OB", wolfpacs_vr_ob:encode(Flow, Strategy, Bytes));
-encode(Flow, Strategy, G, E, "OW", Bytes) ->
+encode(Flow, Strategy, G, E, "OW", Bytes, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode OW"),
     encode_common(Strategy, G, E, "OW", wolfpacs_vr_ow:encode(Flow, Strategy, Bytes));
-encode(Flow, Strategy, G, E, "OF", Bytes) ->
+encode(Flow, Strategy, G, E, "OF", Bytes, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode OF"),
     encode_common(Strategy, G, E, "OF", wolfpacs_vr_of:encode(Flow, Strategy, Bytes));
-encode(Flow, Strategy, G, E, "AE", Title) ->
+encode(Flow, Strategy, G, E, "AE", Title, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode AE"),
     encode_common(Strategy, G, E, "AE", wolfpacs_vr_ae:encode(Flow, Strategy, Title));
-encode(Flow, Strategy, G, E, "AT", AT) ->
+encode(Flow, Strategy, G, E, "AT", AT, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode AT"),
     encode_common(Strategy, G, E, "AT", wolfpacs_vr_at:encode(Flow, Strategy, AT));
-encode(Flow, Strategy, G, E, "UI", Title) ->
+encode(Flow, Strategy, G, E, "UI", Title, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode UI"),
     encode_common(Strategy, G, E, "UI", wolfpacs_vr_ui:encode(Flow, Strategy, Title));
-encode(Flow, Strategy, G, E, "US", US) ->
+encode(Flow, Strategy, G, E, "US", US, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode US"),
     encode_common(Strategy, G, E, "US", wolfpacs_vr_us:encode(Flow, Strategy, US));
-encode(Flow, Strategy, G, E, "UL", UL) ->
+encode(Flow, Strategy, G, E, "UL", UL, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode UL"),
     encode_common(Strategy, G, E, "UL", wolfpacs_vr_ul:encode(Flow, Strategy, UL));
-encode(Flow, Strategy, G, E, "PN", Name) ->
+encode(Flow, Strategy, G, E, "PN", Name, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode PN"),
     encode_common(Strategy, G, E, "PN", wolfpacs_vr_pn:encode(Flow, Strategy, Name));
-encode(Flow, Strategy, G, E, "LO", Name) ->
+encode(Flow, Strategy, G, E, "LO", Name, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode LO"),
     encode_common(Strategy, G, E, "LO", wolfpacs_vr_lo:encode(Flow, Strategy, Name));
-encode(Flow, Strategy, G, E, "UN", Name) ->
+encode(Flow, Strategy, G, E, "UN", Name, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode UN"),
     encode_common(Strategy, G, E, "UN", wolfpacs_vr_un:encode(Flow, Strategy, Name));
-encode(Flow, Strategy, G, E, "CS", Name) ->
+encode(Flow, Strategy, G, E, "CS", Name, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode CS"),
     encode_common(Strategy, G, E, "CS", wolfpacs_vr_cs:encode(Flow, Strategy, Name));
-encode(Flow, Strategy, G, E, "SH", Name) ->
+encode(Flow, Strategy, G, E, "SH", Name, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode SH"),
     encode_common(Strategy, G, E, "SH", wolfpacs_vr_sh:encode(Flow, Strategy, Name));
-encode(Flow, Strategy, G, E, "DA", Name) ->
+encode(Flow, Strategy, G, E, "DA", Name, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode DA"),
     encode_common(Strategy, G, E, "DA", wolfpacs_vr_da:encode(Flow, Strategy, Name));
-encode(Flow, Strategy, G, E, "TM", Name) ->
+encode(Flow, Strategy, G, E, "TM", Name, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode TM"),
     encode_common(Strategy, G, E, "TM", wolfpacs_vr_tm:encode(Flow, Strategy, Name));
-encode(Flow, Strategy, G, E, "DT", Name) ->
+encode(Flow, Strategy, G, E, "DT", Name, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode DT"),
     encode_common(Strategy, G, E, "DT", wolfpacs_vr_dt:encode(Flow, Strategy, Name));
-encode(Flow, Strategy, G, E, "ST", Name) ->
+encode(Flow, Strategy, G, E, "ST", Name, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode ST"),
     encode_common(Strategy, G, E, "ST", wolfpacs_vr_st:encode(Flow, Strategy, Name));
-encode(Flow, Strategy, G, E, "IS", Name) ->
+encode(Flow, Strategy, G, E, "IS", Name, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode IS"),
     encode_common(Strategy, G, E, "IS", wolfpacs_vr_is:encode(Flow, Strategy, Name));
-encode(Flow, Strategy, G, E, "AS", Name) ->
+encode(Flow, Strategy, G, E, "AS", Name, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode AS"),
     encode_common(Strategy, G, E, "AS", wolfpacs_vr_as:encode(Flow, Strategy, Name));
-encode(Flow, Strategy, G, E, "DS", Name) ->
+encode(Flow, Strategy, G, E, "DS", Name, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode DS"),
     encode_common(Strategy, G, E, "DS", wolfpacs_vr_ds:encode(Flow, Strategy, Name));
-encode(Flow, Strategy, G, E, "SS", Name) ->
+encode(Flow, Strategy, G, E, "SS", Name, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode SS"),
     encode_common(Strategy, G, E, "SS", wolfpacs_vr_ss:encode(Flow, Strategy, Name));
-
-encode(Flow, Strategy, G, E, "SQ", Bytes) ->
+encode(Flow, Strategy, G, E, "SQ", Bytes, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode OB"),
     encode_common(Strategy, G, E, "SQ", wolfpacs_vr_sq:encode(Flow, Strategy, Bytes));
+encode(Flow, Strategy, G, E, VR, Bytes, Extra) ->
+    case maps:get({G, E}, Extra, missing) of
+	missing ->
+	    wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("unable to pick encoder ~p ~p ~p", [G, E, VR])),
+	    <<>>;
+	RecoveredVR ->
+	    encode(Flow, Strategy, G, E, RecoveredVR, Bytes, Extra)
+    end.
 
-encode(Flow, _Strategy, _G, _E, "ox", _) ->
-    wolfpacs_flow:failed(Flow, ?MODULE, "unable to encode ox (OB or OW)"),
-    <<>>;
-encode(Flow, _Strategy, G, E, VRTag, _) ->
-    wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("unable to encode ~p ~p ~p", [G, E, VRTag])),
-    <<>>.
+%%-------------------------------------------------------------------
+%% @doc Decode a Data Element without extra information
+%%
+%% @end
+%%-------------------------------------------------------------------
+-spec decode(pid(), strategy(), binary()) -> {ok, {{integer(), integer()}, any()}, binary()} | {error, binary(), list(string())}.
+decode(Flow, Strategy, Data) ->
+    decode(Flow, Strategy, Data, #{}).
 
 %%-------------------------------------------------------------------
 %% @doc Decode a Data Element
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec decode(pid(), strategy(), binary()) -> {ok, {{integer(), integer()}, any()}, binary()} | {error, binary(), list(string())}.
-decode(Flow, {explicit, _Endian}, Data = <<0:16, _/binary>>) ->
+-spec decode(pid(), strategy(), binary(), map()) -> {ok, {{integer(), integer()}, any()}, binary()} | {error, binary(), list(string())}.
+decode(Flow, {explicit, _Endian}, Data = <<0:16, _/binary>>, Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "command group is always implicit little"),
-    decode(Flow, {implicit, little}, Data);
+    decode(Flow, {implicit, little}, Data, Extra);
 
-decode(Flow, {Type, little}, <<G:16/little, E:16/little, Data/binary>>) ->
+decode(Flow, {Type, little}, <<G:16/little, E:16/little, Data/binary>>, Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode little"),
-    decode_correct_vr(Flow, {Type, little}, G, E, Data);
+    decode_correct_vr(Flow, {Type, little}, G, E, Data, Extra);
 
-decode(Flow, {Type, big}, <<G:16/big, E:16/big, Data/binary>>) ->
+decode(Flow, {Type, big}, <<G:16/big, E:16/big, Data/binary>>, Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode big"),
-    decode_correct_vr(Flow, {Type, big}, G, E, Data);
+    decode_correct_vr(Flow, {Type, big}, G, E, Data, Extra);
 
-decode(Flow, _, _) ->
+decode(Flow, _, _, _) ->
     wolfpacs_flow:failed(Flow, ?MODULE, "unable to handle strategy"),
     error.
 
@@ -179,33 +206,38 @@ encode_common_short({explicit, big}, G, E, VRTag, Data) ->
 %%
 %% @end
 %%-------------------------------------------------------------------
-decode_correct_vr(Flow, Strategy={implicit, _}, G, E, Data) ->
-    VR = wolfpacs_group_elements:vr(G, E),
+decode_correct_vr(Flow, Strategy={implicit, _}, G, E, Data, Extra) ->
+    VR = wolfpacs_group_elements:vr(G, E, Extra),
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr {implicit, little}"),
     decode_with_vr_32bit_length(Flow, Strategy, G, E, VR, Data);
 
-decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"OB", _:16, Data/binary>>) ->
+decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"OB", _:16, Data/binary>>, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
     decode_with_vr_32bit_length(Flow, Strategy, G, E, "OB", Data);
 
-decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"OW", _:16, Data/binary>>) ->
+decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"OW", _:16, Data/binary>>, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
     decode_with_vr_32bit_length(Flow, Strategy, G, E, "OW", Data);
 
-decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"OF", _:16, Data/binary>>) ->
+decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"OF", _:16, Data/binary>>, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
     decode_with_vr_32bit_length(Flow, Strategy, G, E, "OF", Data);
 
-decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"SQ", _:16, Data/binary>>) ->
+decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"SQ", _:16, Data/binary>>, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
     decode_with_vr_32bit_length(Flow, Strategy, G, E, "SQ", Data);
 
-decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<VRTag:16/bitstring, Data/binary>>) ->
-    VR = binary_to_list(VRTag),
+decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<VRTag:16/bitstring, Data/binary>>, Extra) ->
+    VR = case maps:get({G, E}, Extra, missing) of
+	     missing ->
+		 binary_to_list(VRTag);
+	     FoundVR ->
+		 FoundVR
+	 end,
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
     decode_with_vr_16bit_length(Flow, Strategy, G, E, VR, Data);
 
-decode_correct_vr(Flow, _Strategy, G, E, _Data) ->
+decode_correct_vr(Flow, _Strategy, G, E, _Data, _Extra) ->
     wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("unsupported VR for ~p ~p", [G, E])),
     error.
 
@@ -253,7 +285,7 @@ decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, Decoder) ->
 		{ok, Value, <<>>} ->
 		    wolfpacs_flow:success(Flow, ?MODULE),
 		    Tag = io_lib:format("(~.16B, ~.16B)", [G, E]),
-		    wolfpacs_flow:good(Flow, ?MODULE, {Tag, Value}),
+		    wolfpacs_flow:good(Flow, ?MODULE, Tag),
 
 		    {ok, {{G, E}, Value}, Rest};
 		_ ->
@@ -358,8 +390,8 @@ decode_common(Flow, Strategy, G, E, "SQ", Len, Data) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_common SQ"),
     decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_sq);
 
-decode_common(Flow, _, _G, _E, VR, _Len, _Data) ->
-    wolfpacs_flow:failed(Flow, ?MODULE, {"unsupported VR", VR}),
+decode_common(Flow, _Strategy, G, E, VR, _Len, _Data) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("Unable to decode (~p, ~p) ~p", [G, E, VR])),
     error.
 
 %%==============================================================================
@@ -540,10 +572,6 @@ encode_decode_common(Strategy, VR, Data) ->
      ?_assertEqual(decode(Flow, Strategy, Encoded1), {ok, {{G, E}, Data}, <<42>>}),
      ?_assertEqual(decode(Flow, Strategy, Incorrect0), error),
      ?_assertEqual(decode(Flow, Strategy, Incorrect1), error)].
-
-encode_ox_test() ->
-    {ok, Flow} = wolfpacs_flow:start_link(),
-    ?assertEqual(encode(Flow, {explicit, little}, 1, 2, "ox", <<1, 2, 3, 4>>), <<>>).
 
 decode_example_one_test() ->
     %% (0070,0060) SQ (Sequence with explicit length #=1)      #  62, 1 GraphicLayerSequence

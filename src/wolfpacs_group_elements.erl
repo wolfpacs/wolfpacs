@@ -5,10 +5,42 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_group_elements).
--export([vr/2]).
+-export([vr/2,
+	 vr/3]).
 -export([vr_to_example_group_element/1]).
 
+%%-------------------------------------------------------------------
+%% @doc VR with extra information
+%%
+%% The extra information with take precedence over DB.
+%%
+%% @end
+%%-------------------------------------------------------------------
+
+vr(Group, Element, Extra) ->
+    case maps:get({Group, Element}, Extra, missing) of
+	missing ->
+	    vr(Group, Element);
+	VR ->
+	    VR
+    end.
+
+%%-------------------------------------------------------------------
+%% @doc VR.
+%%
+%% Use internal db to extract the value representation.
+%%
+%% @end
+%%-------------------------------------------------------------------
+
 -spec vr(integer(), integer()) -> list().
+vr(_Group, 0) ->
+    %% PS 3.5, 3.6, 7.2 Group Length
+    %%  The Group Length (gggg,0000) Standard Data Element
+    %%  shall be implicitly defined for all Data Element
+    %%  groups with a Value Representation of UL and a Value
+    %%  Multiplicity of 1
+    "UL";
 vr(Group, Element) ->
     DB = wolfpacs_group_elements_db:db(),
     vr_lookup(Group, Element, maps:get({Group, Element}, DB, missing)).

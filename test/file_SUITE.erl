@@ -5,10 +5,14 @@
 	 init_per_suite/1,
 	 end_per_suite/1]).
 -export([test_file_meta_information/1,
-	 test_file_format/1]).
+	 test_little_explicit/1,
+	 test_little_implicit/1,
+	 test_big_explicit/1]).
 
 all() -> [test_file_meta_information,
-	  test_file_format].
+	  test_little_explicit,
+	  test_little_implicit,
+	  test_big_explicit].
 
 init_per_suite(Cfg) ->
     lager_common_test_backend:bounce(debug),
@@ -50,18 +54,21 @@ test_file_meta_information(Config) ->
     %% OK
     ok.
 
-test_file_format(_Config) ->
+check_file_read_ok(Filename) ->
+    lager:warning("FILE: ~p", [Filename]),
     {ok, Flow} = wolfpacs_flow:start_link(),
+    {ok, Content} = file:read_file(Filename),
     Strategy = {explicit, little},
+    {ok, {_Meta, _Info}, <<>>} = wolfpacs_file_format:decode(Flow, Strategy, Content).
 
-    Group = 16#7fe0,
-    Element = 16#10,
-    RawData = [255, 254, 255, 254],
+test_little_explicit(Config) ->
+    Filename = filename:join([?config(data_dir, Config), "littleexplicit.dcm"]),
+    check_file_read_ok(Filename).
 
-    Content = #{{Group, Element, "OB"} => RawData},
-    EncodedContent = wolfpacs_data_elements:encode(Flow, Strategy, Content),
-    BinData = wolfpacs_file_format:encode(Flow, Strategy, EncodedContent),
+test_little_implicit(Config) ->
+    Filename = filename:join([?config(data_dir, Config), "littleimplicit.dcm"]),
+    check_file_read_ok(Filename).
 
-    {ok, {_Meta, Content2}, _Rest} = wolfpacs_file_format:decode(Flow, Strategy, BinData),
-
-    RawData = maps:get({Group, Element}, Content2).
+test_big_explicit(Config) ->
+    Filename = filename:join([?config(data_dir, Config), "bigexplicit.dcm"]),
+    check_file_read_ok(Filename).
