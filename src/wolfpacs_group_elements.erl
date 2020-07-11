@@ -9,6 +9,13 @@
 -export([vr_to_example_group_element/1]).
 
 -spec vr(integer(), integer()) -> list().
+vr(_Group, 0) ->
+    %% PS 3.5, 3.6, 7.2 Group Length
+    %%  The Group Length (gggg,0000) Standard Data Element
+    %%  shall be implicitly defined for all Data Element
+    %%  groups with a Value Representation of UL and a Value
+    %%  Multiplicity of 1
+    "UL";
 vr(Group, Element) ->
     DB = wolfpacs_group_elements_db:db(),
     vr_lookup(Group, Element, maps:get({Group, Element}, DB, missing)).
