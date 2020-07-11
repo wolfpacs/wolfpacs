@@ -5,8 +5,33 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_group_elements).
--export([vr/2]).
+-export([vr/2,
+	 vr/3]).
 -export([vr_to_example_group_element/1]).
+
+%%-------------------------------------------------------------------
+%% @doc VR with extra information
+%%
+%% The extra information with take precedence over DB.
+%%
+%% @end
+%%-------------------------------------------------------------------
+
+vr(Group, Element, Extra) ->
+    case maps:get({Group, Element}, Extra, missing) of
+	missing ->
+	    vr(Group, Element);
+	VR ->
+	    VR
+    end.
+
+%%-------------------------------------------------------------------
+%% @doc VR.
+%%
+%% Use internal db to extract the value representation.
+%%
+%% @end
+%%-------------------------------------------------------------------
 
 -spec vr(integer(), integer()) -> list().
 vr(_Group, 0) ->
