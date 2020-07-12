@@ -46,7 +46,6 @@ responde(UpperLayer, Payload) ->
 
 %% @hidden
 init([Side, Socket, Transport, _Opts = []]) ->
-    lager:warning("SIDE: ~p", [Side]),
     {ok, FSM} = wolfpacs_upper_layer_fsm:start(self(), Side),
     Transport:setopts(Socket, [{active, true}]),
     {ok, #state{socket=Socket, transport=Transport, fsm=FSM}}.
@@ -71,11 +70,9 @@ handle_info({tcp_closed, _Port}, State) ->
 
 handle_info({tcp, _Port, DataNew}, State=#state{data=DataOld}) ->
     Data = <<DataOld/binary, DataNew/binary>>,
-    ok = lager:debug("[UpperLayer] Received ~p bytes", [byte_size(DataNew)]),
     handle_new_data(State#state{data=Data});
 
-handle_info({handshake, Name, _, _, _}, State) ->
-    lager:warning("handshake: ~p", [Name]),
+handle_info({handshake, _Name, _, _, _}, State) ->
     {noreply, State};
 
 handle_info({send_response, Payload}, State) ->
@@ -83,7 +80,7 @@ handle_info({send_response, Payload}, State) ->
     {noreply, State};
 
 handle_info(What, State) ->
-    lager:warning("[UpperLayer] Unhandle ~p", [What]),
+    _ = lager:warning("[UpperLayer] Unhandle ~p", [What]),
     {noreply, State}.
 
 %% @hidden
@@ -102,11 +99,10 @@ code_change(_OldVsn, State, _Extra) ->
 handle_new_data(State=#state{data=Data, fsm=FSM}) ->
     case protocol_data_unit_complete(Data) of
 	{ok, PDUType, PDU, Rest} ->
-	    ok = lager:debug("[UpperLayer] Complete data unit. Type: ~p ~p", [PDUType, byte_size(PDU)]),
 	    wolfpacs_upper_layer_fsm:pdu(FSM, PDUType, PDU),
 	    handle_new_data(State#state{data=Rest});
 	{error, Data, _Error} ->
-	    ok = lager:debug("[UpperLayer] Incomplete data unit"),
+	    %% PDU not finished
 	    {noreply, State#state{data=Data}}
     end.
 
