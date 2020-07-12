@@ -45,13 +45,23 @@ docker run -it -p 11112:11112 wolfpacs/wolfpacs console
 # wolfpacs.conf
 
 # Add worker (s)
-{worker, "localhost", 1234, "abc"}.
-{worker, "localhost", 1235, "abc"}.
+# A worker is an "internal" machine that may do some processing on DICOM files.
+# The specification is: {worker, <host>, <port>, <ae>}
+# The worker should reply to wolfpacs on port 11113 (default).
+
+{worker, "localhost", 1234, "WORKER"}.
 
 # Add destination(s)
+# A destination is an "external" machine that will recieve the final
+# series that where created by the worker.
+# The specification is: {destination, {<called AE>, <calling AE>}, <destination-host>, <destination-port>}
+# The destination should be prepared to answer and receive data on <host> and <port>.
+# The <called AE> and <calling AE> acts as a "key"/"authorization"/"routing" pair.
+# Especially, it is the original call to wolfpacs that uses this pair.
+#
+# dcmsend -aec WOLFPACS -aet DCMSEND <wolfpacs-host> <wolfpacs-port>
 
-{destination, {"abcd", "def"}, "pacs.hosp1.com", 11112}.
-{destination, {"abcsd32412", "defdsfdsaf12"}, "pacs.hosp2.com", 12345}.
+{destination, {"WOLFPACS", "DCMSEND"}, "pacs.example.com", 11112}.
 ```
 
 ```sh
