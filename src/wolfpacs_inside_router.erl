@@ -41,6 +41,9 @@ set_destination(Ref, Host, Port) ->
 remove_destination(Ref) ->
     gen_server:cast(?MODULE, {remove_destination, clean_ref(Ref)}).
 
+number_of_destinations() ->
+    gen_server:call(?MODULE, number_of_destinations).
+
 debug() ->
     gen_server:call(?MODULE, debug).
 
@@ -55,6 +58,9 @@ init(_) ->
 
 handle_call(debug, _From, State) ->
     {reply, {ok, State}, State};
+handle_call(number_of_destinations, _From, State) ->
+    #{hosts := Hosts} = State,
+    {reply, {ok, maps:size(Hosts)}, State};
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
 
@@ -76,6 +82,9 @@ handle_cast({remember, Ref, StudyUID}, State=#{studies := Studies}) ->
 handle_cast({set_destination, Ref, Host, Port}, State=#{hosts := Hosts}) ->
     lager:warning("DESTINATION: ~p", [Ref]),
     {noreply, State#{hosts => Hosts#{Ref => {Host, Port}}}};
+
+handle_cast({remove_destination, Ref}, State=#{hosts := Hosts}) ->
+    {noreply, State#{hosts => maps:remove(Ref, Hosts)}};
 
 handle_cast(_What, State) ->
     {noreply, State}.
@@ -114,3 +123,28 @@ clean_ref(Ref) ->
 %%-----------------------------------------------------------------------------
 %% Tests
 %%------------------------------------------------------------------------------
+
+-include_lib("eunit/include/eunit.hrl").
+
+start_debug_info_stop_test() ->
+    {ok, _} = start_link(),
+    {ok, _} = debug(),
+    ?MODULE ! test_message,
+    ok = stop().
+
+minimal_destinations_test() ->
+    {ok, _} = start_link(),
+    {ok, 0} = number_of_destinations(),
+    ok = set_destination({"foo", "bar"}, "localhost", 1234),
+    {ok, 1} = number_of_destinations(),
+    ok = set_destination({"foo", "bar"}, "localhost", 1234),
+    {ok, 1} = number_of_destinations(),
+    ok = set_destination({"fooy", "bary"}, "localhost", 1234),
+    {ok, 2} = number_of_destinations(),
+    ok = remove_destination({"foo", "bar"}),
+    {ok, 1} = number_of_destinations(),
+    ok = remove_destination({"foo", "bar"}),
+    {ok, 1} = number_of_destinations(),
+    ok = remove_destination({"fooy", "bary"}),
+    {ok, 0} = number_of_destinations(),
+    ok = stop().
