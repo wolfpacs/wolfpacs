@@ -35,6 +35,9 @@ add_worker(Host, Port, AE) ->
 remove_worker(Host, Port, AE) ->
     gen_server:cast(?MODULE, {remove_worker, Host, Port, AE}).
 
+number_of_workers() ->
+    gen_server:call(?MODULE, number_of_workers).
+
 debug() ->
     gen_server:call(?MODULE, debug).
 
@@ -52,6 +55,8 @@ init(_) ->
 
 handle_call(debug, _From, State) ->
     {reply, {ok, State}, State};
+handle_call(number_of_workers, _From, State=#{nb_workers := N}) ->
+    {reply, {ok, N}, State};
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
 
@@ -105,3 +110,24 @@ round_robin_and_note_studyuid(State, StudyUID, SendInfo) ->
     #{next_worker := I, nb_workers := N, study_workers := StudyMap} = State,
     J = (I + 1) rem N,
     State#{next_worker => J, study_workers => StudyMap#{StudyUID => SendInfo}}.
+
+%%-----------------------------------------------------------------------------
+%% Tests
+%%------------------------------------------------------------------------------
+
+-include_lib("eunit/include/eunit.hrl").
+
+start_debug_info_stop_test() ->
+    {ok, _} = start_link(),
+    {ok, _} = debug(),
+    ?MODULE ! test_message,
+    ok = stop().
+
+minimal_worker_test() ->
+    {ok, _} = start_link(),
+    {ok, 0} = number_of_workers(),
+    ok = add_worker("localhost", 1234, "AE1"),
+    {ok, 1} = number_of_workers(),
+    ok = add_worker("localhost", 1234, "AE2"),
+    {ok, 2} = number_of_workers(),
+    ok = stop().
