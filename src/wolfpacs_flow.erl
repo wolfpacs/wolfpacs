@@ -18,14 +18,12 @@
 	 start_encode/2,
 	 start_decode/2,
 	 success/2,
-	 failed/2,
 	 failed/3,
-	 warning/3,
 	 good/3,
 	 bad/3,
 	 expected_16/3,
 	 expected_32/3,
-	 complete_flow/1]).
+	 events/1]).
 
 %% Behaviour
 -export([init/1,
@@ -63,17 +61,11 @@ start_decode(Flow, Module) ->
 success(Flow, Module) ->
     common_cast(Flow, {good, Module, "success"}).
 
-failed(Flow, Module) ->
-    common_cast(Flow, {bad, Module, "failed"}).
-
 failed(Flow, Module, Info) ->
     common_cast(Flow, {bad, Module, Info}).
 
 good(Flow, Module, Info) ->
     common_cast(Flow, {good, Module, Info}).
-
-warning(Flow, Module, Warning) ->
-    common_cast(Flow, {warning, Module, Warning}).
 
 expected_16(Flow, Module, <<Bytes:16/bitstring, _Rest/binary>>) ->
     common_cast(Flow, {expected, Module, Bytes});
@@ -88,8 +80,8 @@ expected_32(Flow, Module, _Data) ->
 bad(Flow, Module, Info) ->
     common_cast(Flow, {bad, Module, Info}).
 
-complete_flow(Flow) ->
-    gen_server:call(Flow, complete_flow).
+events(Flow) ->
+    gen_server:call(Flow, events).
 
 %%------------------------------------------------------------------------------
 %% @doc Common Cast protect agasint no_flow
@@ -114,7 +106,7 @@ common_cast(Flow, Info) ->
 init(_) ->
     {ok, #flow_state{}}.
 
-handle_call(complete_flow, _From, State=#flow_state{events=Events}) ->
+handle_call(events, _From, State=#flow_state{events=Events}) ->
     {reply, {ok, Events}, State};
 
 handle_call(What, _From, Flow) ->
@@ -140,3 +132,26 @@ terminate(_Reason, _Flow) ->
 
 code_change(_Vsn, Flow, _Extra) ->
     {ok, Flow}.
+
+%%-----------------------------------------------------------------------------
+%% Tests
+%%-----------------------------------------------------------------------------
+
+-include_lib("eunit/include/eunit.hrl").
+
+minimal_test() ->
+    {ok, Flow} = start_link(),
+    {ok, []} = events(Flow),
+
+    ok = expected_16(Flow, "", <<256:16, 1, 2, 3>>),
+    {ok, [{expected, "", <<256:16>>}]} = events(Flow),
+    ok = expected_16(Flow, "", <<>>),
+    {ok, [{expected, "", not_enough_data}|_]} = events(Flow),
+    reset(Flow),
+
+    ok = expected_32(Flow, "", <<256:32, 1, 2, 3>>),
+    {ok, [{expected, "", <<256:32>>}]} = events(Flow),
+    ok = expected_32(Flow, "", <<>>),
+    {ok, [{expected, "", not_enough_data}|_]} = events(Flow),
+
+    ok = stop(Flow).
