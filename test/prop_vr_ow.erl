@@ -13,7 +13,7 @@ prop_random_clear_test() ->
 		case wolfpacs_vr_ow:decode(no_flow, Strategy, Corrupt) of
 		    {ok, _, _} ->
 			true;
-		    {error, Corrupt, _} ->
+		    error ->
 			true;
 		    _ ->
 			false
@@ -27,7 +27,7 @@ prop_decode_test() ->
 		case wolfpacs_vr_ow:decode(no_flow, Strategy, Data) of
 		    {ok, _, _} ->
 			true;
-		    {error, Data, _} ->
+		    error ->
 			true;
 		    _ ->
 			false
