@@ -28,9 +28,9 @@ encode(UI) when is_list(UI) ->
 encode(UI) ->
     limit_binary(pad_binary(UI), 1024).
 
--spec decode(binary()) -> binary().
+-spec decode(binary()) -> binary() | error.
 decode(<<>>) ->
-    {error, <<>>, ["empty ST"]};
+    error;
 decode(Data) ->
     {ok, trim_binary(Data), <<>>}.
 
@@ -48,7 +48,7 @@ encode_test_() ->
 encode_decode_test_() ->
     Long = [$A || _ <- lists:seq(1, 4096)],
     Trimmed = list_to_binary([$A || _ <- lists:seq(1, 1024)]),
-    [?_assertEqual(decode(encode("")), {error, <<>>, ["empty ST"]}),
+    [?_assertEqual(decode(encode("")), error),
      ?_assertEqual(decode(encode("A")), {ok, <<"A">>, <<>>}),
      ?_assertEqual(decode(encode("AB")), {ok, <<"AB">>, <<>>}),
      ?_assertEqual(decode(encode("ABC")), {ok, <<"ABC">>, <<>>}),
