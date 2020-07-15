@@ -13,11 +13,11 @@
 encode(_Flow, Strategy, List) ->
     priv_encode(Strategy, List, <<>>).
 
--spec decode(flow(), strategy(), binary()) -> list().
+-spec decode(flow(), strategy(), binary()) -> {ok, list(), binary()} | error.
 decode(_Flow, Strategy, Data) ->
     case priv_decode(Strategy, Data, []) of
 	error ->
-	    {error, Data, ["unable to decode"]};
+	    error;
 	Result ->
 	    {ok, Result, <<>>}
     end.
