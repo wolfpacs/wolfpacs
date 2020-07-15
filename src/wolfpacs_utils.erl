@@ -84,6 +84,8 @@ chunk(Data, Size) ->
 
 chunk(Data, Size, Acc) ->
     case split(Data, Size) of
+	{ok, Chunk, <<>>} ->
+	    lists:reverse([Chunk|Acc]);
 	{ok, Chunk, Rest} ->
 	    chunk(Rest, Size, [Chunk|Acc]);
 	_ ->
