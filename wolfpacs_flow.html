@@ -21,11 +21,10 @@
 <h2><a name="index">Function Index</a></h2>
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#bad-3">bad/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#code_change-3">code_change/3</a></td><td></td></tr>
-<tr><td valign="top"><a href="#complete_flow-1">complete_flow/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#consumed-3">consumed/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#events-1">events/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#expected_16-3">expected_16/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#expected_32-3">expected_32/3</a></td><td></td></tr>
-<tr><td valign="top"><a href="#failed-2">failed/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#failed-3">failed/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#generated-3">generated/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#good-3">good/3</a></td><td></td></tr>
@@ -39,7 +38,6 @@
 <tr><td valign="top"><a href="#stop-1">stop/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#success-2">success/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td></td></tr>
-<tr><td valign="top"><a href="#warning-3">warning/3</a></td><td></td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
@@ -54,14 +52,14 @@
 <p><tt>code_change(Vsn, Flow, Extra) -&gt; any()</tt></p>
 </div>
 
-<h3 class="function"><a name="complete_flow-1">complete_flow/1</a></h3>
-<div class="spec">
-<p><tt>complete_flow(Flow) -&gt; any()</tt></p>
-</div>
-
 <h3 class="function"><a name="consumed-3">consumed/3</a></h3>
 <div class="spec">
 <p><tt>consumed(Flow, Module, NumberOfBytes) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="events-1">events/1</a></h3>
+<div class="spec">
+<p><tt>events(Flow) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="expected_16-3">expected_16/3</a></h3>
@@ -72,11 +70,6 @@
 <h3 class="function"><a name="expected_32-3">expected_32/3</a></h3>
 <div class="spec">
 <p><tt>expected_32(Flow, Module, Data) -&gt; any()</tt></p>
-</div>
-
-<h3 class="function"><a name="failed-2">failed/2</a></h3>
-<div class="spec">
-<p><tt>failed(Flow, Module) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="failed-3">failed/3</a></h3>
@@ -142,11 +135,6 @@
 <h3 class="function"><a name="terminate-2">terminate/2</a></h3>
 <div class="spec">
 <p><tt>terminate(Reason, Flow) -&gt; any()</tt></p>
-</div>
-
-<h3 class="function"><a name="warning-3">warning/3</a></h3>
-<div class="spec">
-<p><tt>warning(Flow, Module, Warning) -&gt; any()</tt></p>
 </div>
 <hr>
 
