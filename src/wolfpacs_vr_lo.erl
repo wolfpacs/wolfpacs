@@ -11,11 +11,15 @@
 			    limit_binary/2,
 			    trim_binary/1]).
 
+-include("wolfpacs_types.hrl").
+
 -type lo() :: list() | binary().
 
+-spec encode(flow(), strategy(), lo()) -> binary().
 encode(_Flow, _Strategy, LO) ->
     encode(LO).
 
+-spec decode(flow(), strategy(), binary()) -> {ok, lo(), binary()} | error.
 decode(_Flow, _Strategy, LO) ->
     decode(LO).
 
@@ -23,15 +27,13 @@ decode(_Flow, _Strategy, LO) ->
 %% Private
 %%==============================================================================
 
--spec encode(lo()) -> binary().
 encode(LO) when is_list(LO) ->
     encode(list_to_binary(LO));
 encode(LO) ->
     limit_binary(pad_binary(LO), 64).
 
--spec decode(binary()) -> binary().
 decode(<<>>) ->
-    {error, <<>>, ["empty LO"]};
+    error;
 decode(Data) ->
     {ok, trim_binary(Data), <<>>}.
 
@@ -51,7 +53,7 @@ encode_test_() ->
 encode_decode_test_() ->
     Long = [$A || _ <- lists:seq(1, 128)],
     Trimmed = list_to_binary([$A || _ <- lists:seq(1, 64)]),
-    [?_assertEqual(decode(encode("")), {error, <<>>, ["empty LO"]}),
+    [?_assertEqual(decode(encode("")), error),
      ?_assertEqual(decode(encode("A")), {ok, <<"A">>, <<>>}),
      ?_assertEqual(decode(encode("AB")), {ok, <<"AB">>, <<>>}),
      ?_assertEqual(decode(encode("ABC")), {ok, <<"ABC">>, <<>>}),
