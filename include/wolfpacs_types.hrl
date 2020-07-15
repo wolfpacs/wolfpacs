@@ -8,6 +8,6 @@
 		    {implicit, little} |
 		    {implicit, big}.
 
--type flow() :: pid().
+-type flow() :: pid() | no_flow.
 
 -type ui() :: list() | binary().
