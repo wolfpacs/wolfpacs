@@ -27,7 +27,7 @@ drop_first_byte(<<_, Data/binary>>) ->
 drop_last_byte(Data) ->
     list_to_binary(lists:droplast(binary_to_list(Data))).
 
--spec split(binary(), non_neg_integer()) -> {ok, binary(), binary()} | {error, binary(), list(string())}.
+-spec split(binary(), integer()) -> {ok, binary(), binary()} | error.
 split(Data, At) when At >= 0 ->
     Size = byte_size(Data),
     case At =< Size of
@@ -36,10 +36,10 @@ split(Data, At) when At >= 0 ->
 	    R = binary:part(Data, At, Size - At),
 	    {ok, L, R};
 	false ->
-	    {error, Data, ["not enough data to split"]}
+	    error
     end;
-split(Data, _) ->
-    {error, Data, ["incorrect header"]}.
+split(_, _) ->
+    error.
 
 log_hex_to_int([L]) ->
     hv(L);
@@ -175,8 +175,8 @@ split_test_() ->
      ?_assertEqual(split(<<1, 2, 3, 4>>, 3), {ok, <<1 ,2, 3>>, << 4>>}),
      ?_assertEqual(split(<<1, 2, 3, 4>>, 2), {ok, <<1 ,2>>, <<3, 4>>}),
      ?_assertEqual(split(<<1, 2, 3, 4>>, 1), {ok, <<1>>, <<2, 3, 4>>}),
-     ?_assertEqual(split(<<1, 2, 3, 4>>, 5), {error, <<1, 2, 3, 4>>, ["not enough data to split"]}),
-     ?_assertEqual(split(<<1, 2, 3, 4>>, -1), {error, <<1, 2, 3, 4>>, ["incorrect header"]})
+     ?_assertEqual(split(<<1, 2, 3, 4>>, 5), error),
+     ?_assertEqual(split(<<1, 2, 3, 4>>, -1), error)
     ].
 
 log_to_binary_test_() ->
