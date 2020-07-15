@@ -21,6 +21,8 @@ jobs:
   include:
     - otp_release: 19.3
       arch: s390x
+    - otp_release: 21.1
+      arch: arm32
   exclude:
     - otp_release: 19.3
       arch: ppc64le
