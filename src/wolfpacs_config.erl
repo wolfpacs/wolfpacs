@@ -9,7 +9,7 @@ load() ->
     ok.
 
 load_config_file(false) ->
-     lager:warning("[Config] No config file specified");
+    _ = lager:warning("[Config] No config file specified");
 load_config_file(Folder) ->
     Filename = filename:join(Folder, "wolfpacs.conf"),
     load_config_content(file:consult(Filename)).
@@ -30,5 +30,5 @@ load_terms([{destination, Ref, Host, Port}|Terms]) ->
     wolfpacs_inside_router:set_destination(Ref, Host, Port),
     load_terms(Terms);
 load_terms([Item|Terms]) ->
-    lager:warning("[Config] Don't understand ~p", [Item]),
+    _ = lager:warning("[Config] Don't understand ~p", [Item]),
     load_terms(Terms).
