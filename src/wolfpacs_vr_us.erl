@@ -9,13 +9,19 @@
 	 decode/3]).
 -include("wolfpacs_types.hrl").
 
--spec encode(flow(), strategy(), integer()) -> binary().
+encode(Flow, Strategy, Values) when is_list(Values) ->
+    Parts = [ encode(Flow, Strategy, US) || US <- Values ],
+    F = fun(Part, Acc) -> <<Acc/binary, Part/binary>> end,
+    lists:foldl(F, <<>>, Parts);
 encode(_Flow, {_, little}, US) ->
     <<US:16/little>>;
 encode(_Flow, {_, big}, US) ->
     <<US:16/big>>.
 
--spec decode(flow(), strategy(), binary()) -> integer().
+decode(Flow, Strategy, Data) when byte_size(Data) > 2 ->
+    Parts = wolfpacs_utils:chunk(Data, 2),
+    F = fun(Part) -> decode(Flow, Strategy, Part) end,
+    wolfpacs_utils:flatten_decoded(lists:map(F, Parts));
 decode(_Flow, {_, little}, <<US:16/little, _Rest/binary>>) ->
     {ok, US, <<>>};
 decode(_Flow, {_, big}, <<US:16/big, _Rest/binary>>) ->
@@ -46,4 +52,12 @@ decode_error_test_() ->
     {ok, Flow} = wolfpacs_flow:start_link(),
     S = {explicit, little},
     [ ?_assertEqual(decode(Flow, S, <<>>), error)
+    ].
+
+encode_decode_vm_test_() ->
+    S = {explicit, little},
+    Values = [1, 16, 256, 1024],
+    Encoded = encode(no_flow, S, Values),
+    Result = decode(no_flow, S, Encoded),
+    [ ?_assertEqual(Result, {ok, Values, <<>>})
     ].
