@@ -1,3 +1,4 @@
+
 %%%-------------------------------------------------------------------
 %% @doc Value Representation Signed Short (SS).
 %%
@@ -8,11 +9,14 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_ss).
--export([encode/3,  decode/3]).
+-export([encode/3, decode/3]).
 
 -include("wolfpacs_types.hrl").
 
--spec encode(flow(), strategy(), integer()) -> binary().
+encode(Flow, Strategy, Values) when is_list(Values) ->
+    Parts = [ encode(Flow, Strategy, Value) || Value <- Values ],
+    F = fun(Part, Acc) -> <<Acc/binary, Part/binary>> end,
+    lists:foldl(F, <<>>, Parts);
 encode(Flow, {_, little}, SS) ->
     wolfpacs_flow:generated(Flow, ?MODULE, 4),
     <<SS:16/little-signed>>;
@@ -20,7 +24,10 @@ encode(Flow, {_, big}, SS) ->
     wolfpacs_flow:generated(Flow, ?MODULE, 4),
     <<SS:16/big-signed>>.
 
--spec decode(flow(), strategy(), binary()) -> integer().
+decode(Flow, Strategy, Data) when byte_size(Data) > 2 ->
+    Parts = wolfpacs_utils:chunk(Data, 2),
+    F = fun(Part) -> decode(Flow, Strategy, Part) end,
+    wolfpacs_utils:flatten_decoded(lists:map(F, Parts));
 decode(Flow, {_, little}, <<SS:16/little-signed>>) ->
     wolfpacs_flow:consumed(Flow, ?MODULE, 4),
     {ok, SS, <<>>};
@@ -49,7 +56,6 @@ encode_decode_all_strategies(Flow, Value) ->
     , encode_decode(Flow, {implicit, big}, Value)
     ].
 
-
 encode_decode_test_() ->
     {ok, Flow} = wolfpacs_flow:start_link(),
     lists:flatten(
@@ -58,3 +64,11 @@ encode_decode_test_() ->
       , encode_decode_all_strategies(Flow, 127)
       ]
      ).
+
+encode_decode_vm_test_() ->
+    S = {explicit, little},
+    Values = [1, 16, 256, 1024],
+    Encoded = encode(no_flow, S, Values),
+    Result = decode(no_flow, S, Encoded),
+    [ ?_assertEqual(Result, {ok, Values, <<>>})
+    ].
