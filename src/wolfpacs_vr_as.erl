@@ -19,11 +19,11 @@
 -include("wolfpacs_types.hrl").
 -import(wolfpacs_vr_utils, [limit_binary/2]).
 
--spec encode(flow(), strategy(), binary()) -> binary().
+-spec encode(flow(), strategy(), list() | binary()) -> binary().
 encode(_Flow, _Strategy, AE) ->
     encode(AE).
 
--spec decode(flow(), strategy(), binary()) -> {ok, binary(), binary()} | {error, binary(), list(string())}.
+-spec decode(flow(), strategy(), binary()) -> {ok, binary(), binary()} | error.
 decode(_Flow, _Strategy, Data) ->
     decode(Data).
 
@@ -37,7 +37,7 @@ encode(AS) when is_list(AS) ->
 encode(AS) ->
     limit_binary(AS, 4).
 
--spec decode(binary()) -> binary().
+-spec decode(binary()) -> {ok, binary(), binary()} | error.
 decode(<<>>) ->
     error;
 decode(<<A, B, C, "D", Rest/binary>>) ->
