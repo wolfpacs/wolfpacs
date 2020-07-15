@@ -101,3 +101,33 @@ encode_decode_test_() ->
     , ?_assertEqual(decode(Incorrect3), {error, Incorrect3, ["incorrect header"]})
     , ?_assertEqual(decode(Incorrect4), {error, Incorrect4, ["incorrect header"]})
     ].
+
+decode_pdu_4_test_() ->
+    HexlData =
+	"0400 0000 0114 0000 0110 0102 0800 0500
+         4353 0a00 4953 4f5f 4952 2031 3030 0800
+         1600 5549 1c00 312e 322e 3834 302e 3130
+         3030 382e 352e 312e 342e 312e 312e 3131
+         2e31 0800 1800 5549 3800 312e 322e 3237
+         362e 302e 3732 3330 3031 302e 332e 312e
+         342e 3833 3233 3332 392e 3132 3430 332e
+         3135 3839 3831 3134 3933 2e32 3039 3434
+         3400 0800 5000 5348 0000 0800 6000 4353
+         0200 5052 1800 2200 4353 0200 4653 2000
+         1000 5348 0000 2000 1100 4953 0400 3530
+         3720 2000 1300 4953 0200 3820 2800 5210
+         4453 0200 3020 2800 5410 4c4f 0200 5553
+         7000 6000 5351 0000 3e00 0000 feff 00e0
+         3600 0000 7000 0200 4353 1000 414e 4e4f
+         5441 5449 4f4e 204c 4159 4552 7000 6200
+         4953 0200 3120 7000 6800 4c4f 0c00 416e
+         6e6f 7461 7469 6f6e 7320",
+    Encoded = wolfpacs_utils:hexl_log_to_binary(HexlData),
+    282 = byte_size(Encoded),
+    {ok, [PDVItem], <<>>} = decode(Encoded),
+    #pdv_item{pr_cid = 1, is_last = true, is_command = false, pdv_data = PDVData} = PDVItem,
+    {ok, DataSet, <<>>} = wolfpacs_data_elements:decode(no_flow, {explicit, little}, PDVData),
+    Get = fun(H) -> maps:get(H, DataSet) end,
+    SOPInstanceUID = <<"1.2.276.0.7230010.3.1.4.8323329.12403.1589811493.209444">>,
+
+    [ ?_assertEqual(Get({16#8, 16#18}), SOPInstanceUID) ].

@@ -15,11 +15,9 @@ init_per_suite(Cfg) ->
 end_per_suite(Cfg) ->
     Cfg.
 
-test_send_mr(_Config) ->
-    %% Filename = filename:join([?config(data_dir, Config), "0000.dcm"]),
-    %% DataSet = testutils:read_dataset(Filename),
-    DataSet = #{{16#0008, 16#0016} => <<"1.2.840.10008.5.1.4.1.1.2">>},
-
+test_send_mr(Config) ->
+    Filename = filename:join([?config(data_dir, Config), "0000.dcm"]),
+    DataSet = testutils:read_dataset(Filename),
     Host = "127.0.0.1",
     Port = 1234,
     CalledAE = <<"CalledAE">>,

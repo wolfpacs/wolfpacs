@@ -248,7 +248,7 @@ route_payload(Flow, RouteTag, CalledAE, CallingAE, {ok, DataSet, <<>>}) ->
     StudyUID = maps:get({16#0020, 16#000d}, DataSet, missing),
     case RouteTag of
 	wolfpacs_outside ->
-	    wolfpacs_outside_router:route(CalledAE, CallingAE, DataSet),
+	    wolfpacs_outside_router:route(CalledAE, CallingAE, DataSet, StudyUID),
 	    wolfpacs_inside_router:remember({CalledAE, CallingAE}, StudyUID);
 	wolfpacs_inside ->
 	    wolfpacs_inside_router:route(StudyUID, DataSet);

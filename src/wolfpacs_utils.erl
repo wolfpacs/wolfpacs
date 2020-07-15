@@ -15,7 +15,8 @@
 	 remove_keys/2,
 	 clear_even/1,
 	 clear_odd/1,
-	 random_clear/2]).
+	 random_clear/2,
+	 chunk/2]).
 
 -spec drop_first_byte(binary()) -> binary().
 drop_first_byte(<<_, Data/binary>>) ->
@@ -77,6 +78,17 @@ random_clear(Data, FlipPropability) ->
 hexl_log_to_binary(Data) ->
     Tokens = string:tokens(Data, ",: \n\t"),
     list_to_binary(lists:map(fun log_hex_to_int/1, regroup_by_two(Tokens))).
+
+chunk(Data, Size) ->
+    chunk(Data, Size, []).
+
+chunk(Data, Size, Acc) ->
+    case split(Data, Size) of
+	{ok, Chunk, Rest} ->
+	    chunk(Rest, Size, [Chunk|Acc]);
+	_ ->
+	    lists:reverse([Data|Acc])
+    end.
 
 %%==============================================================================
 %% Private
@@ -211,3 +223,7 @@ random_clear_flip_test() ->
 
 regroup_by_two_test_() ->
     [?_assertEqual(regroup_by_two(["1234", "4567"]), ["12", "34", "45", "67"])].
+
+chunk_test_() ->
+    [?_assertEqual(chunk(<<1, 2, 3, 4, 5>>, 2), [<<1, 2>>, <<3, 4>>, <<5>>])
+    ].

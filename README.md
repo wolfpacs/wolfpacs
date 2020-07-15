@@ -28,8 +28,44 @@ We use four different test in WolfPACS and we aim to test the software thoroughl
 
 ## Quick Start
 
+Start WolfPACS in background.
+
 ```sh
 docker run -d -p 11112:11112 wolfpacs/wolfpacs
+```
+Debug WolfPACS instance
+
+```sh
+docker run -it -p 11112:11112 wolfpacs/wolfpacs console
+```
+
+## Configuration
+
+```
+# wolfpacs.conf
+
+# Add worker (s)
+# A worker is an "internal" machine that may do some processing on DICOM files.
+# The specification is: {worker, <host>, <port>, <ae>}
+# The worker should reply to wolfpacs on port 11113 (default).
+
+{worker, "localhost", 1234, "WORKER"}.
+
+# Add destination(s)
+# A destination is an "external" machine that will recieve the final
+# series that where created by the worker.
+# The specification is: {destination, {<called AE>, <calling AE>}, <destination-host>, <destination-port>}
+# The destination should be prepared to answer and receive data on <host> and <port>.
+# The <called AE> and <calling AE> acts as a "key"/"authorization"/"routing" pair.
+# Especially, it is the original call to wolfpacs that uses this pair.
+#
+# dcmsend -aec WOLFPACS -aet DCMSEND <wolfpacs-host> <wolfpacs-port>
+
+{destination, {"WOLFPACS", "DCMSEND"}, "pacs.example.com", 11112}.
+```
+
+```sh
+docker run -d -v /a/path/config/folder:/app123 -e WOLFPACS_DIR=/app123 -p 11112:11112 wolfpacs/wolfpacs
 ```
 
 ## DICOM Conformance Statement
