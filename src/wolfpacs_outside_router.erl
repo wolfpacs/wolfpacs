@@ -101,10 +101,11 @@ code_change(_Vsn, State, _Extra) ->
 %% Private
 %%------------------------------------------------------------------------------
 
-priv_send(DataSet, {Host, Port, _AE}) ->
-    {ok, Sender} = dcmtk_storescu:start_link(),
-    dcmtk_storescu:send_dataset(Sender, Host, Port, DataSet),
-    dcmtk_storescu:stop(Sender).
+priv_send(DataSet, {Host, Port, CalledAE}) ->
+    CallingAE = <<"WolfPACS">>,
+    {ok, Sender} = wolfpacs_sender:start_link(Host, Port, CalledAE, CallingAE),
+    wolfpacs_sender:send(Sender, DataSet),
+    wolfpacs_sender:stop(Sender).
 
 round_robin_and_note_studyuid(State, StudyUID, SendInfo) ->
     #{next_worker := I, nb_workers := N, study_workers := StudyMap} = State,
