@@ -67,7 +67,7 @@ handle_call(What, _From, State) ->
 handle_cast({route, StudyUID, DataSet}, State=#{hosts := Hosts, studies := Studies}) ->
     case maps:get(StudyUID, Studies, missing) of
 	missing ->
-	    lager:warning("[InsideRouter] Study not mapped: ~p", [StudyUID]),
+	    _ = lager:warning("[InsideRouter] Study not mapped: ~p", [StudyUID]),
 	    {noreply, State};
 	{CalledAE, CallingAE} ->
 	    Host = maps:get({CalledAE, CallingAE}, Hosts, missing),
@@ -76,11 +76,11 @@ handle_cast({route, StudyUID, DataSet}, State=#{hosts := Hosts, studies := Studi
     end;
 
 handle_cast({remember, Ref, StudyUID}, State=#{studies := Studies}) ->
-    lager:warning("REMEMBER: ~p", [Ref]),
+    _ = lager:debug("[InsideRouter] Remember: ~p", [Ref]),
     {noreply, State#{studies => Studies#{StudyUID => Ref}}};
 
 handle_cast({set_destination, Ref, Host, Port}, State=#{hosts := Hosts}) ->
-    lager:warning("DESTINATION: ~p", [Ref]),
+    _ = lager:debug("[InsideRouter] New destination: ~p", [Ref]),
     {noreply, State#{hosts => Hosts#{Ref => {Host, Port}}}};
 
 handle_cast({remove_destination, Ref}, State=#{hosts := Hosts}) ->
@@ -103,7 +103,7 @@ code_change(_Vsn, State, _Extra) ->
 %%------------------------------------------------------------------------------
 
 priv_route(_DataSet, CalledAE, CallingAE, missing) ->
-    lager:warning("[InsideRouter] Host not mapped for ~p ~p", [CalledAE, CallingAE]),
+    _ = lager:warning("[InsideRouter] Host not mapped for ~p ~p", [CalledAE, CallingAE]),
     ok;
 priv_route(DataSet, CalledAE, CallingAE, {Host, Port}) ->
     {ok, Sender} = wolfpacs_sender:start_link(Host, Port, CalledAE, CallingAE),

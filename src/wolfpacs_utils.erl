@@ -16,7 +16,8 @@
 	 clear_even/1,
 	 clear_odd/1,
 	 random_clear/2,
-	 chunk/2]).
+	 chunk/2,
+	 flatten_decoded/1]).
 
 -spec drop_first_byte(binary()) -> binary().
 drop_first_byte(<<_, Data/binary>>) ->
@@ -84,11 +85,16 @@ chunk(Data, Size) ->
 
 chunk(Data, Size, Acc) ->
     case split(Data, Size) of
+	{ok, Chunk, <<>>} ->
+	    lists:reverse([Chunk|Acc]);
 	{ok, Chunk, Rest} ->
 	    chunk(Rest, Size, [Chunk|Acc]);
 	_ ->
 	    lists:reverse([Data|Acc])
     end.
+
+flatten_decoded(Parts) ->
+    flatten_decoded(Parts, []).
 
 %%==============================================================================
 %% Private
@@ -143,6 +149,13 @@ regroup_by_two([], Acc) ->
     lists:reverse(Acc);
 regroup_by_two([[A, B, C, D]|Rest], Acc) ->
     regroup_by_two(Rest, [[C, D], [A, B]|Acc]).
+
+flatten_decoded([], Acc) ->
+    {ok, lists:reverse(Acc), <<>>};
+flatten_decoded([{ok, X, <<>>}|Tail], Acc) ->
+    flatten_decoded(Tail, [X|Acc]);
+flatten_decoded(_, _) ->
+    error.
 
 %%==============================================================================
 %% Test
@@ -225,5 +238,17 @@ regroup_by_two_test_() ->
     [?_assertEqual(regroup_by_two(["1234", "4567"]), ["12", "34", "45", "67"])].
 
 chunk_test_() ->
-    [?_assertEqual(chunk(<<1, 2, 3, 4, 5>>, 2), [<<1, 2>>, <<3, 4>>, <<5>>])
+    [ ?_assertEqual(chunk(<<1, 2, 3, 4, 5>>, 2), [<<1, 2>>, <<3, 4>>, <<5>>])
+    , ?_assertEqual(chunk(<<1, 2, 3, 4>>, 2), [<<1, 2>>, <<3, 4>>])
+    ].
+
+flatten_decoded_test_() ->
+    E0 = [],
+    E1 = [{ok, 1, <<>>}],
+    E2 = [{ok, 1, <<>>}, {ok, 2, <<>>}],
+    E3 = [{ok, 1, <<>>}, error],
+    [ ?_assertEqual(flatten_decoded(E0), {ok, [], <<>>})
+    , ?_assertEqual(flatten_decoded(E1), {ok, [1], <<>>})
+    , ?_assertEqual(flatten_decoded(E2), {ok, [1, 2], <<>>})
+    , ?_assertEqual(flatten_decoded(E3), error)
     ].

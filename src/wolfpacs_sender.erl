@@ -111,10 +111,10 @@ code_change(_Vsn, State, SenderData, _Extra) ->
 %%-------------------------------------------------------------------
 
 idle(enter, _Prev, SenderData) ->
-    lager:debug("[Sender] [Idel] Enter"),
+    _ = lager:debug("[Sender] [Idel] Enter"),
     {keep_state, SenderData, []};
 idle({call, From}, {send, DataSet, AbstractSyntax, InstanceUID}, SenderData) ->
-    lager:debug("[Sender] [Idle] Connect over tcp/ip"),
+    _ = lager:debug("[Sender] [Idle] Connect over tcp/ip"),
     #sender_data{flow = Flow, host = Host, port = Port} = SenderData,
     wolfpacs_flow:reset(Flow),
     case gen_tcp:connect(Host, int(Port), [binary, {active, true}]) of
@@ -127,11 +127,11 @@ idle({call, From}, {send, DataSet, AbstractSyntax, InstanceUID}, SenderData) ->
 						  },
 	    {next_state, associate, NewSenderData};
 	{error, Error} ->
-	    lager:debug("[Sender] [Idle] Unable to connect: ~p", [Error]),
+	    _ = lager:warning("[Sender] [Idle] Unable to connect: ~p", [Error]),
 	    {keep_state, SenderData, [{reply, From, {error, Error}}]}
     end;
 idle(A, B, SenderData) ->
-    lager:debug("[Sender] [Idel] Unknown message ~p ~p", [A, B]),
+    _ = lager:warning("[Sender] [Idel] Unknown message ~p ~p", [A, B]),
     {keep_state, SenderData, []}.
 
 %%-------------------------------------------------------------------
@@ -143,7 +143,7 @@ idle(A, B, SenderData) ->
 %%-------------------------------------------------------------------
 
 associate(enter, _Prev, SenderData) ->
-    lager:debug("[Sender] [Associate] Send Associate RQ"),
+    _ = lager:debug("[Sender] [Associate] Send Associate RQ"),
     #sender_data{sock = Sock,
 		 called = CalledAE,
 		 calling = CallingAE,
@@ -169,15 +169,15 @@ associate(info, {tcp, _Port, DataNew}, SenderData) ->
     Data = <<DataOld/binary, DataNew/binary>>,
     case wolfpacs_associate_ac:decode(Data) of
 	{ok, _CalledAE, _CallingAE, _R, Contexts, MaxPDU, _Class, _VersionName, Rest} ->
-	    lager:debug("[Sender] [Associate] Association accepted"),
-	    lager:debug("[Sender] [Associate] Context ~p", [Contexts]),
+	    _ = lager:debug("[Sender] [Associate] Association accepted"),
+	    _ = lager:debug("[Sender] [Associate] Context ~p", [Contexts]),
 	    {next_state, send_data, SenderData#sender_data{data = Rest, maxpdu = MaxPDU}};
 	{error, Data, Error}  ->
-	    lager:debug("[Sender] [Associate] Association failed ~p", [Error]),
+	    _ = lager:warning("[Sender] [Associate] Association failed ~p", [Error]),
 	    {keep_state, SenderData#sender_data{data = Data}, []}
     end;
 associate(A, B, Data) ->
-    lager:debug("[Sender] [Associate] Unknown message ~p ~p", [A, B]),
+    _ = lager:warning("[Sender] [Associate] Unknown message ~p ~p", [A, B]),
     {keep_state, Data, []}.
 
 %%-------------------------------------------------------------------
@@ -190,7 +190,7 @@ associate(A, B, Data) ->
 %%-------------------------------------------------------------------
 
 send_data(enter, _Prev, SenderData) ->
-    send_command_message(SenderData),
+    ok = send_command_message(SenderData),
     #sender_data{flow = Flow, dataset = DataSet, maxpdu = MaxPDU} = SenderData,
     Encoded = wolfpacs_data_elements:encode(Flow, {explicit, little}, DataSet),
     Overhead = 6,
@@ -198,11 +198,11 @@ send_data(enter, _Prev, SenderData) ->
     {keep_state, SenderData#sender_data{data = <<>>, chunks=Chunks}, [{timeout, 0, send_more}]};
 
 send_data(timeout, send_more, SenderData=#sender_data{chunks=[]}) ->
-    lager:debug("[Sender] [SendData] No chunks to send"),
+    _ = lager:debug("[Sender] [SendData] No more chunks to send"),
     {next_state, release, SenderData};
 
 send_data(timeout, send_more, SenderData=#sender_data{chunks=[Chunk]}) ->
-    lager:debug("[Sender] [SendData] Send last chunk"),
+    _ = lager:debug("[Sender] [SendData] Send last chunk"),
     #sender_data{sock = Sock} = SenderData,
     PDVItem = #pdv_item{pr_cid=1,
 			is_last=true,
@@ -213,7 +213,7 @@ send_data(timeout, send_more, SenderData=#sender_data{chunks=[Chunk]}) ->
     {next_state, release, SenderData#sender_data{chunks=[]}};
 
 send_data(timeout, send_more, SenderData) ->
-    %% lager:debug("[Sender] [SendData] Send anouther chunk"),
+    _ = lager:debug("[Sender] [SendData] Send anouther chunk"),
     #sender_data{chunks = [Chunk|Chunks], sock = Sock} = SenderData,
     PDVItem = #pdv_item{pr_cid=1,
 			is_last=false,
@@ -227,7 +227,7 @@ send_data(info, {tcp, _, <<7, _/binary>>}, SenderData) ->
     {next_state, release, SenderData};
 
 send_data(A, B, SenderData) ->
-    lager:debug("[Sender] [SendData] Unknown message ~p ~p", [A, B]),
+    _ = lager:warning("[Sender] [SendData] Unknown message ~p ~p", [A, B]),
     {keep_state, SenderData, []}.
 
 %%-------------------------------------------------------------------
@@ -241,7 +241,7 @@ send_data(A, B, SenderData) ->
 release(enter, _Prev, SenderData) ->
     #sender_data{sock = Sock} = SenderData,
     ReleaseRQ = wolfpacs_release_rq:encode(),
-    lager:debug("[Sender] [Release] Send release request"),
+    _ = lager:debug("[Sender] [Release] Send release request"),
     ok = gen_tcp:send(Sock, ReleaseRQ),
     {keep_state, SenderData, []};
 
@@ -250,15 +250,15 @@ release(info, {tcp, _Port, DataNew}, SenderData) ->
     Data = <<DataOld/binary, DataNew/binary>>,
     case wolfpacs_p_data_tf:decode(Data) of
 	{ok, [#pdv_item{pdv_data=Payload}], Rest} ->
-	    wolfpacs_data_elements:decode(Flow, {explicit, little}, Payload),
-	    lager:debug("[Sender] [Release] Release complete"),
+	    _ = wolfpacs_data_elements:decode(Flow, {explicit, little}, Payload),
+	    _ = lager:debug("[Sender] [Release] Release complete"),
 	    {next_state, finish, SenderData#sender_data{data = Rest}};
 	_ ->
 	    {keep_state, SenderData#sender_data{data = Data}, []}
     end;
 
 release(A, B, SenderData) ->
-    lager:debug("[Sender] [Release] Unknown message ~p ~p", [A, B]),
+    _ = lager:warning("[Sender] [Release] Unknown message ~p ~p", [A, B]),
     {keep_state, SenderData, []}.
 
 %%-------------------------------------------------------------------
@@ -270,23 +270,23 @@ release(A, B, SenderData) ->
 %%-------------------------------------------------------------------
 
 finish(enter, _Prev, SenderData) ->
-    lager:debug("[Sender] [Finish] Waiting for release response"),
+    _ = lager:debug("[Sender] [Finish] Waiting for release response"),
     {keep_state, SenderData, [{timeout, 2000, close}]};
 
 finish(timeout, close, SenderData) ->
     #sender_data{sock = Sock, from = From} = SenderData,
     gen_tcp:close(Sock),
-    lager:debug("[Sender] [Finish] Closed socket due to timeout"),
+    _ = lager:debug("[Sender] [Finish] Closed socket due to timeout"),
     {keep_state, SenderData, [{reply, From, ok}]};
 
 finish(info, {tcp, _, <<6, _/binary>>}, SenderData) ->
     #sender_data{sock = Sock, from = From} = SenderData,
     gen_tcp:close(Sock),
-    lager:debug("[Sender] [Finish] Release response. Closed socket"),
+    _ = lager:debug("[Sender] [Finish] Release response. Closed socket"),
     {keep_state, SenderData, [{reply, From, ok}]};
 
 finish(A, B, SenderData) ->
-    lager:debug("[Sender] [Finish] Unknown message ~p ~p", [A, B]),
+    _ = lager:warning("[Sender] [Finish] Unknown message ~p ~p", [A, B]),
     {keep_state, SenderData, []}.
 
 %%==============================================================================
