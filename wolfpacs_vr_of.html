@@ -18,7 +18,7 @@
 <h2><a name="types">Data Types</a></h2>
 
 <h3 class="typedecl"><a name="type-flow">flow()</a></h3>
-<p><tt>flow() = pid()</tt></p>
+<p><tt>flow() = pid() | no_flow</tt></p>
 
 
 <h3 class="typedecl"><a name="type-strategy">strategy()</a></h3>
@@ -34,7 +34,7 @@
 
 <h3 class="function"><a name="decode-3">decode/3</a></h3>
 <div class="spec">
-<p><tt>decode(Flow::<a href="#type-flow">flow()</a>, Strategy::<a href="#type-strategy">strategy()</a>, Data::binary()) -&gt; list()</tt><br></p>
+<p><tt>decode(Flow::<a href="#type-flow">flow()</a>, Strategy::<a href="#type-strategy">strategy()</a>, Data::binary()) -&gt; {ok, list(), binary()} | error</tt><br></p>
 </div>
 
 <h3 class="function"><a name="encode-3">encode/3</a></h3>
