@@ -13,9 +13,13 @@
 			    limit_binary/2,
 			    trim_binary/1]).
 
+-include("wolfpacs_types.hrl").
+
+-spec encode(flow(), strategy(), binary()) -> binary().
 encode(_Flow, _Strategy, AE) ->
     encode(AE).
 
+-spec decode(flow(), strategy(), binary()) -> {ok, binary(), binary()} | error.
 decode(_Flow, _Strategy, AE) ->
     decode(AE).
 
@@ -29,9 +33,9 @@ encode(UI) when is_list(UI) ->
 encode(UI) ->
     limit_binary(pad_binary(UI), 16).
 
--spec decode(binary()) -> binary().
+-spec decode(binary()) -> {ok, binary(), binary()} | error.
 decode(<<>>) ->
-    {error, <<>>, ["empty CS"]};
+    error;
 decode(Data) ->
     {ok, trim_binary(Data), <<>>}.
 
@@ -50,7 +54,7 @@ encode_test_() ->
 encode_decode_test_() ->
     Long = [$A || _ <- lists:seq(1, 32)],
     Trimmed = list_to_binary([$A || _ <- lists:seq(1, 16)]),
-    [?_assertEqual(decode(encode("")), {error, <<>>, ["empty CS"]}),
+    [?_assertEqual(decode(encode("")), error),
      ?_assertEqual(decode(encode("A")), {ok, <<"A">>, <<>>}),
      ?_assertEqual(decode(encode("AB")), {ok, <<"AB">>, <<>>}),
      ?_assertEqual(decode(encode("ABC")), {ok, <<"ABC">>, <<>>}),

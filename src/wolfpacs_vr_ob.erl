@@ -13,7 +13,7 @@
 encode(_Flow, _, List) ->
     list_to_binary(List).
 
--spec decode(flow(), strategy(), binary()) -> list().
+-spec decode(flow(), strategy(), binary()) -> {ok, list(), binary()} | error.
 decode(_Flow, _, Data) ->
     {ok, binary_to_list(Data), <<>>}.
 

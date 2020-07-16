@@ -101,7 +101,7 @@ handle_new_data(State=#state{data=Data, fsm=FSM}) ->
 	{ok, PDUType, PDU, Rest} ->
 	    wolfpacs_upper_layer_fsm:pdu(FSM, PDUType, PDU),
 	    handle_new_data(State#state{data=Rest});
-	{error, Data, _Error} ->
+	_ ->
 	    %% PDU not finished
 	    {noreply, State#state{data=Data}}
     end.
@@ -110,11 +110,11 @@ protocol_data_unit_complete(Data = <<PDUType, _, PDUSize:32, _/binary>>) ->
     case wolfpacs_utils:split(Data, PDUSize + 6) of
 	{ok, PDU, Rest} ->
 	    {ok, PDUType, PDU, Rest};
-	{error, Data, Error} ->
-	    {error, Data, Error}
+	error ->
+	    error
     end;
-protocol_data_unit_complete(Data) ->
-    {error, Data, ["not enough data"]}.
+protocol_data_unit_complete(_) ->
+    error.
 
 send_response(Payload, #state{socket=Socket, transport=Transport}) ->
     Transport:send(Socket, Payload).
@@ -124,5 +124,5 @@ send_response(Payload, #state{socket=Socket, transport=Transport}) ->
 %%------------------------------------------------------------------------------
 
 protocol_data_unit_complete_test_() ->
-    [ ?_assertEqual(protocol_data_unit_complete(<<>>),  {error, <<>>, ["not enough data"]}),
-      ?_assertEqual(protocol_data_unit_complete(<<1, 5, 2:32, 42, 43, 44, 45, 46>>), {ok, 1, <<1, 5, 2:32, 42, 43>>, <<44, 45, 46>>})].
+    [ ?_assertEqual(protocol_data_unit_complete(<<>>), error)
+    , ?_assertEqual(protocol_data_unit_complete(<<1, 5, 2:32, 42, 43, 44, 45, 46>>), {ok, 1, <<1, 5, 2:32, 42, 43>>, <<44, 45, 46>>})].

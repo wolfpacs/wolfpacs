@@ -7,14 +7,18 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_st).
--export([encode/3,  decode/3]).
+-export([encode/3, decode/3]).
 -import(wolfpacs_vr_utils, [pad_binary/1,
 			    limit_binary/2,
 			    trim_binary/1]).
 
+-include("wolfpacs_types.hrl").
+
+-spec encode(flow(), strategy(), binary()) -> binary().
 encode(_Flow, _Strategy, AE) ->
     encode(AE).
 
+-spec decode(flow(), strategy(), binary()) -> {ok, any(), binary()} | error.
 decode(_Flow, _Strategy, AE) ->
     decode(AE).
 
@@ -28,7 +32,7 @@ encode(UI) when is_list(UI) ->
 encode(UI) ->
     limit_binary(pad_binary(UI), 1024).
 
--spec decode(binary()) -> binary() | error.
+-spec decode(binary()) -> {ok, binary(), binary()} | error.
 decode(<<>>) ->
     error;
 decode(Data) ->
