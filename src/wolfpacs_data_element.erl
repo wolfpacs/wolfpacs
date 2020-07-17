@@ -169,6 +169,8 @@ encode_common({explicit, Endian}, G, E, "OW", Data) ->
     encode_common_long({explicit, Endian}, G, E, "OW", Data);
 encode_common({explicit, Endian}, G, E, "OF", Data) ->
     encode_common_long({explicit, Endian}, G, E, "OF", Data);
+encode_common({explicit, Endian}, G, E, "UN", Data) ->
+    encode_common_long({explicit, Endian}, G, E, "UN", Data);
 encode_common({explicit, Endian}, G, E, "SQ", Data) ->
     encode_common_long({explicit, Endian}, G, E, "SQ", Data);
 
@@ -222,6 +224,10 @@ decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"OW", _:16, Data/binary>
 decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"OF", _:16, Data/binary>>, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
     decode_with_vr_32bit_length(Flow, Strategy, G, E, "OF", Data);
+
+decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"UN", _:16, Data/binary>>, _Extra) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
+    decode_with_vr_32bit_length(Flow, Strategy, G, E, "UN", Data);
 
 decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"SQ", _:16, Data/binary>>, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
