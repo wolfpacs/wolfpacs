@@ -3,6 +3,7 @@
 -define(SERVER, ?MODULE).
 
 -export([start_link/0,
+	 empty/0,
 	 store/1,
 	 retreive/0]).
 
@@ -16,6 +17,9 @@
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
+empty() ->
+    gen_server:cast(?MODULE, empty).
+
 store(Items) ->
     gen_server:cast(?MODULE, {store, Items}).
 
@@ -27,6 +31,9 @@ init(_) ->
 
 handle_call(retreive, _From, State=#{last := Last}) ->
     {reply, {ok, Last}, State}.
+
+handle_cast(empty, State) ->
+    {noreply, State#{last => #{}}};
 
 handle_cast({store, Items}, State) ->
     {noreply, State#{last => Items}};
