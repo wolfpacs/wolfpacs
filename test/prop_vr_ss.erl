@@ -7,11 +7,10 @@
 prop_random_clear_test() ->
     ?FORALL(Info, integer(),
 	    begin
-		{ok, Flow} = wolfpacs_flow:start_link(),
 		Strategy = {explicit, little},
-		Encoded = wolfpacs_vr_ss:encode(Flow, Strategy, Info),
+		Encoded = wolfpacs_vr_ss:encode(no_flow, Strategy, Info),
 		Corrupt = wolfpacs_utils:random_clear(Encoded, 0.2),
-		case wolfpacs_vr_ss:decode(Flow, Strategy, Corrupt) of
+		case wolfpacs_vr_ss:decode(no_flow, Strategy, Corrupt) of
 		    {ok, _, _} ->
 			true;
 		    error ->
@@ -24,9 +23,8 @@ prop_random_clear_test() ->
 prop_decode_test() ->
     ?FORALL(Data, integer(),
 	    begin
-		{ok, Flow} = wolfpacs_flow:start_link(),
 		Strategy = wolfpacs_test_generators:valid_strategy(),
-		case wolfpacs_vr_ss:decode(Flow, Strategy, Data) of
+		case wolfpacs_vr_ss:decode(no_flow, Strategy, Data) of
 		    {ok, _, _} ->
 			true;
 		    error ->
