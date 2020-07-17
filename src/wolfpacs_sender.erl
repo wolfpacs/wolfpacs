@@ -127,7 +127,7 @@ idle({call, From}, {send, DataSet, AbstractSyntax, InstanceUID}, SenderData) ->
 						  },
 	    {next_state, associate, NewSenderData};
 	{error, Error} ->
-	    _ = lager:warning("[Sender] [Idle] Unable to connect: ~p", [Error]),
+	    _ = lager:warning("[Sender] [Idle] Unable to connect to ~p: ~p", [Host, Error]),
 	    {keep_state, SenderData, [{reply, From, {error, Error}}]}
     end;
 idle(A, B, SenderData) ->

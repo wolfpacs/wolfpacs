@@ -106,9 +106,7 @@ priv_route(_DataSet, CalledAE, CallingAE, missing) ->
     _ = lager:warning("[InsideRouter] Host not mapped for ~p ~p", [CalledAE, CallingAE]),
     ok;
 priv_route(DataSet, CalledAE, CallingAE, {Host, Port}) ->
-    {ok, Sender} = wolfpacs_sender:start_link(Host, Port, CalledAE, CallingAE),
-    wolfpacs_sender:send(Sender, DataSet),
-    wolfpacs_sender:stop(Sender).
+    wolfpacs_sender_pool:send(Host, Port, CalledAE, CallingAE, DataSet).
 
 trim(Item) when is_binary(Item) ->
     trim(binary_to_list(Item));
