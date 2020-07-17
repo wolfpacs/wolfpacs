@@ -17,7 +17,8 @@
 	 callback_mode/0,
 	 terminate/3,
 	 code_change/4]).
--export([idle/3]).
+-export([idle/3,
+	 abort/3]).
 
 %%=============================================================================
 %% API
@@ -66,7 +67,7 @@ init([UpperLayer, RouteTag]) ->
     {ok, State, Data}.
 
 callback_mode() ->
-    state_functions.
+    [state_functions, state_enter].
 
 terminate(_Reason, _State, Data) ->
     #wolfpacs_upper_layer_fsm_data{flow = Flow} = Data,
@@ -79,6 +80,15 @@ code_change(_Vsn, State, Data, _Extra) ->
 %%=============================================================================
 %% States
 %%=============================================================================
+
+%%-------------------------------------------------------------------
+%% @doc Idle state.
+%%
+%% @end
+%%-------------------------------------------------------------------
+
+idle(enter, _Prev, Data) ->
+    {keep_state, Data, []};
 
 idle(cast, {pdu, 1, PDU}, Data) ->
     MaybeAssociateRQ = wolfpacs_associate_rq:decode(PDU),
@@ -108,6 +118,28 @@ idle(cast, What, Data) ->
 
 idle(Type, What, Data) ->
     _ = lager:warning("unhandle ~p ~p", [Type, What]),
+    {keep_state, Data, []}.
+
+%%-------------------------------------------------------------------
+%% @doc Abort state.
+%%
+%% @end
+%%-------------------------------------------------------------------
+
+abort(enter, _Prev, Data) ->
+    _ = lager:warning("[UpperLayer] [Abort] Send abort"),
+    #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
+    Abort = wolfpacs_abort:encode(2, 0),
+    wolfpacs_upper_layer:responde(UpperLayer, Abort),
+    {keep_state, Data, [{timeout, 500, close}]};
+
+abort(timeout, close, Data) ->
+    #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
+    wolfpacs_upper_layer:stop(UpperLayer),
+    {keep_state, Data, []};
+
+abort(A, B, Data) ->
+    lager:warning("[UpperLayer] [Abort] Received ~p ~p", [A, B]),
     {keep_state, Data, []}.
 
 %%=============================================================================
@@ -200,26 +232,43 @@ handle_pdv_item({_AbstractSyntrax, Strategy}, PrCID, true, false, Fragment, Data
 				   request_uid=UID,
 				   request_id=RQID,
 				   affected_uid=AffectedUID} = Data,
+
+    %% We have received the "last" fragment. It is time to decode the dataset
+
     NewBlob = <<OldBlob/binary, Fragment/binary>>,
 
-    %% Very important section of the code.
-    %% We have received a complete payload, NewBlob.
-    %% For maximum flexibility in WolfPACS, we route
-    %% The payload deeper into the framework.
-    Decoded = wolfpacs_data_elements:decode(Flow, Strategy, NewBlob),
-    case route_payload(Flow, RouteTag, CalledAE, CallingAE, Decoded) of
-	ok ->
-	    StoreResp = wolfpacs_c_store_scp:encode(Flow, Strategy, UID, RQID, AffectedUID),
-	    PDVItem = #pdv_item{pr_cid=PrCID,
-				is_last=true,
-				is_command=true,
-				pdv_data=StoreResp},
-	    StoreRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
-	    wolfpacs_upper_layer:responde(UpperLayer, StoreRespPDataTF),
-	    {keep_state, Data#wolfpacs_upper_layer_fsm_data{blob = <<>>}, [hibernate]};
+    case wolfpacs_data_elements:decode(Flow, Strategy, NewBlob) of
+	{ok, DataSet, Rest} ->
+
+	    %% Very important section of the code.
+	    %% We have received a complete payload, NewBlob.
+	    %% For maximum flexibility in WolfPACS, we route
+	    %% The payload deeper into the framework.
+
+	    case route_payload(Flow, RouteTag, CalledAE, CallingAE, DataSet) of
+		ok ->
+		    StoreResp = wolfpacs_c_store_scp:encode(Flow, Strategy, UID, RQID, AffectedUID),
+		    PDVItem = #pdv_item{pr_cid=PrCID,
+					is_last=true,
+					is_command=true,
+					pdv_data=StoreResp},
+		    StoreRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+		    wolfpacs_upper_layer:responde(UpperLayer, StoreRespPDataTF),
+		    {keep_state, Data#wolfpacs_upper_layer_fsm_data{blob = Rest}, [hibernate]};
+		_ ->
+		    %% As we couldn't route the blob, we need to signal to the
+		    %% client that we haven't taken care of the payload.
+
+		    wolfpacs_flow:failed(Flow, ?MODULE, "Failed to route payload"),
+		    {next_state, abort1, Data#wolfpacs_upper_layer_fsm_data{blob = NewBlob}}
+	    end;
 	_ ->
-	    wolfpacs_flow:failed(Flow, ?MODULE, "route_payload failed"),
-	    {keep_state, Data#wolfpacs_upper_layer_fsm_data{blob = NewBlob}, [stop]}
+
+	    %% Unable to decode the dataset. We need to send an abort
+	    %% to the clint
+
+	    wolfpacs_flow:failed(Flow, ?MODULE, "Failed to decode payload"),
+	    {next_state, abort, Data#wolfpacs_upper_layer_fsm_data{blob = NewBlob}}
     end;
 
 handle_pdv_item({_AbstractSyntrax, Strategy}, _, true, true, Fragment, Data) ->
@@ -243,7 +292,7 @@ handle_pdv_item(Tag, PrCID, A, B, _, Data) ->
 %%
 %%
 
-route_payload(Flow, RouteTag, CalledAE, CallingAE, {ok, DataSet, <<>>}) ->
+route_payload(Flow, RouteTag, CalledAE, CallingAE, DataSet) ->
     wolfpacs_flow:good(Flow, ?MODULE, "pass on payload to storage"),
     StudyUID = maps:get({16#0020, 16#000d}, DataSet, missing),
     case RouteTag of
@@ -254,10 +303,7 @@ route_payload(Flow, RouteTag, CalledAE, CallingAE, {ok, DataSet, <<>>}) ->
 	    wolfpacs_inside_router:route(StudyUID, DataSet);
 	_ ->
 	    lager:warning("[UpperLayerFSM] Critical error. Incorrect RouteTag: ~p", [RouteTag])
-    end;
-route_payload(Flow, _, _, _, _) ->
-    wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode payload"),
-    error.
+    end.
 
 %%==============================================================================
 %% Test
