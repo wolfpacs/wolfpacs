@@ -1,19 +1,17 @@
-
 %%%-------------------------------------------------------------------
-%% @doc Value Representation Signed Short (SS).
+%% @doc Value Representation Signed Long (SL).
 %%
-%% Signed binary integer 16 bits long in 2's complement form.
-%% Represents an integer n in the range: n in [-128, 127]
+%% Signed binary integer ?BIT_SIZE bits long in 2's complement form.
 %%
 %% @end
 %%%-------------------------------------------------------------------
 
--module(wolfpacs_vr_ss).
+-module(wolfpacs_vr_sl).
 -export([encode/3, decode/3]).
 
 -include("wolfpacs_types.hrl").
 
--define(BYTE_SIZE, 2).
+-define(BYTE_SIZE, 4).
 -define(BIT_SIZE, (?BYTE_SIZE * 8)).
 
 encode(Flow, Strategy, Values) when is_list(Values) ->
@@ -38,7 +36,7 @@ decode(Flow, {_, big}, <<X:?BIT_SIZE/big-signed>>) ->
     wolfpacs_flow:consumed(Flow, ?MODULE, ?BYTE_SIZE),
     {ok, X, <<>>};
 decode(Flow, _, _) ->
-    wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode SS"),
+    wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode SL"),
     error.
 
 %%==============================================================================
@@ -70,7 +68,7 @@ encode_decode_test_() ->
 
 encode_decode_vm_test_() ->
     S = {explicit, little},
-    Values = [1, 16, 256, 1024],
+    Values = [-1, 1, 32, 256, 1024, -1232131],
     Encoded = encode(no_flow, S, Values),
     Result = decode(no_flow, S, Encoded),
     [ ?_assertEqual(Result, {ok, Values, <<>>})

@@ -1,44 +1,49 @@
 
 %%%-------------------------------------------------------------------
-%% @doc Value Representation Signed Short (SS).
+%% @doc Value Representation Float Double (FD).
 %%
-%% Signed binary integer 16 bits long in 2's complement form.
-%% Represents an integer n in the range: n in [-128, 127]
+%% Double precision binary floating point number represented in
+%% IEEE 754:1985 64-bit Floating Point Number Format.
 %%
 %% @end
 %%%-------------------------------------------------------------------
 
--module(wolfpacs_vr_ss).
+-module(wolfpacs_vr_fd).
 -export([encode/3, decode/3]).
 
 -include("wolfpacs_types.hrl").
 
--define(BYTE_SIZE, 2).
+-define(BYTE_SIZE, 8).
 -define(BIT_SIZE, (?BYTE_SIZE * 8)).
 
 encode(Flow, Strategy, Values) when is_list(Values) ->
     Parts = [ encode(Flow, Strategy, Value) || Value <- Values ],
     F = fun(Part, Acc) -> <<Acc/binary, Part/binary>> end,
     lists:foldl(F, <<>>, Parts);
+
 encode(Flow, {_, little}, X) ->
     wolfpacs_flow:generated(Flow, ?MODULE, ?BYTE_SIZE),
-    <<X:?BIT_SIZE/little-signed>>;
+    <<X:?BIT_SIZE/float-little>>;
+
 encode(Flow, {_, big}, X) ->
     wolfpacs_flow:generated(Flow, ?MODULE, ?BYTE_SIZE),
-    <<X:?BIT_SIZE/big-signed>>.
+    <<X:?BIT_SIZE/float-big>>.
 
 decode(Flow, Strategy, Data) when byte_size(Data) > ?BYTE_SIZE ->
     Parts = wolfpacs_utils:chunk(Data, ?BYTE_SIZE),
     F = fun(Part) -> decode(Flow, Strategy, Part) end,
     wolfpacs_utils:flatten_decoded(lists:map(F, Parts));
-decode(Flow, {_, little}, <<X:?BIT_SIZE/little-signed>>) ->
+
+decode(Flow, {_, little}, <<X:?BIT_SIZE/float-little>>) ->
     wolfpacs_flow:consumed(Flow, ?MODULE, ?BYTE_SIZE),
     {ok, X, <<>>};
-decode(Flow, {_, big}, <<X:?BIT_SIZE/big-signed>>) ->
+
+decode(Flow, {_, big}, <<X:?BIT_SIZE/float-big>>) ->
     wolfpacs_flow:consumed(Flow, ?MODULE, ?BYTE_SIZE),
     {ok, X, <<>>};
+
 decode(Flow, _, _) ->
-    wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode SS"),
+    wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode"),
     error.
 
 %%==============================================================================
@@ -62,15 +67,15 @@ encode_decode_all_strategies(Flow, Value) ->
 encode_decode_test_() ->
     {ok, Flow} = wolfpacs_flow:start_link(),
     lists:flatten(
-      [ encode_decode_all_strategies(Flow, 0)
-      , encode_decode_all_strategies(Flow, -128)
-      , encode_decode_all_strategies(Flow, 127)
+      [ encode_decode_all_strategies(Flow, 1.0)
+      , encode_decode_all_strategies(Flow, -1.0)
+      , encode_decode_all_strategies(Flow, 12.12)
       ]
      ).
 
 encode_decode_vm_test_() ->
     S = {explicit, little},
-    Values = [1, 16, 256, 1024],
+    Values = [1.0, -1.0, 1024.0],
     Encoded = encode(no_flow, S, Values),
     Result = decode(no_flow, S, Encoded),
     [ ?_assertEqual(Result, {ok, Values, <<>>})

@@ -82,7 +82,10 @@ vr_to_example_group_element("ST") -> {16#0008, 16#0081};
 vr_to_example_group_element("IS") -> {16#0008, 16#1160};
 vr_to_example_group_element("AS") -> {16#0010, 16#1010};
 vr_to_example_group_element("DS") -> {16#0010, 16#1020};
+vr_to_example_group_element("FD") -> {16#0008, 16#1163};
+vr_to_example_group_element("FL") -> {16#0008, 16#9459};
 vr_to_example_group_element("SS") -> {16#0018, 16#9219};
+vr_to_example_group_element("SL") -> {16#0018, 16#6020};
 vr_to_example_group_element(VR) -> {error, VR, ["No example found"]}.
 
 %%==============================================================================
@@ -112,3 +115,34 @@ vr_found_test_() ->
       ?_assertEqual(vr(?CMD, ?RPID), "US"),
       ?_assertEqual(vr(?CMD, ?SET), "US"),
       ?_assertEqual(vr(?CMD, ?STU), "US") ].
+
+verify_example(VR) ->
+    {G, E} = vr_to_example_group_element(VR),
+    ?_assertEqual(VR, vr(G, E)).
+
+verify_examples_test_() ->
+    VRS = [ "OB",
+	    "OW",
+	    "OF",
+	    "PN",
+	    "AE",
+	    "UI",
+	    "US",
+	    "UL",
+	    "LO",
+	    "UN",
+	    "CS",
+	    "DA",
+	    "AT",
+	    "SH",
+	    "TM",
+	    "DT",
+	    "ST",
+	    "IS",
+	    "AS",
+	    "DS",
+	    "FD",
+	    "FL",
+	    "SS",
+	    "SL"],
+    lists:map(fun verify_example/1, VRS).
