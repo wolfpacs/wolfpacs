@@ -103,9 +103,7 @@ code_change(_Vsn, State, _Extra) ->
 
 priv_send(DataSet, {Host, Port, CalledAE}) ->
     CallingAE = <<"WolfPACS">>,
-    {ok, Sender} = wolfpacs_sender:start_link(Host, Port, CalledAE, CallingAE),
-    wolfpacs_sender:send(Sender, DataSet),
-    wolfpacs_sender:stop(Sender).
+    wolfpacs_sender_pool:send(Host, Port, CalledAE, CallingAE, DataSet).
 
 round_robin_and_note_studyuid(State, StudyUID, SendInfo) ->
     #{next_worker := I, nb_workers := N, study_workers := StudyMap} = State,
