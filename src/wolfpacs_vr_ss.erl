@@ -13,27 +13,30 @@
 
 -include("wolfpacs_types.hrl").
 
+-define(BYTE_SIZE, 2).
+-define(BIT_SIZE, (?BYTE_SIZE * 8)).
+
 encode(Flow, Strategy, Values) when is_list(Values) ->
     Parts = [ encode(Flow, Strategy, Value) || Value <- Values ],
     F = fun(Part, Acc) -> <<Acc/binary, Part/binary>> end,
     lists:foldl(F, <<>>, Parts);
-encode(Flow, {_, little}, SS) ->
-    wolfpacs_flow:generated(Flow, ?MODULE, 4),
-    <<SS:16/little-signed>>;
-encode(Flow, {_, big}, SS) ->
-    wolfpacs_flow:generated(Flow, ?MODULE, 4),
-    <<SS:16/big-signed>>.
+encode(Flow, {_, little}, X) ->
+    wolfpacs_flow:generated(Flow, ?MODULE, ?BYTE_SIZE),
+    <<X:?BIT_SIZE/little-signed>>;
+encode(Flow, {_, big}, X) ->
+    wolfpacs_flow:generated(Flow, ?MODULE, ?BYTE_SIZE),
+    <<X:?BIT_SIZE/big-signed>>.
 
-decode(Flow, Strategy, Data) when byte_size(Data) > 2 ->
-    Parts = wolfpacs_utils:chunk(Data, 2),
+decode(Flow, Strategy, Data) when byte_size(Data) > ?BYTE_SIZE ->
+    Parts = wolfpacs_utils:chunk(Data, ?BYTE_SIZE),
     F = fun(Part) -> decode(Flow, Strategy, Part) end,
     wolfpacs_utils:flatten_decoded(lists:map(F, Parts));
-decode(Flow, {_, little}, <<SS:16/little-signed>>) ->
-    wolfpacs_flow:consumed(Flow, ?MODULE, 4),
-    {ok, SS, <<>>};
-decode(Flow, {_, big}, <<SS:16/big-signed>>) ->
-    wolfpacs_flow:consumed(Flow, ?MODULE, 4),
-    {ok, SS, <<>>};
+decode(Flow, {_, little}, <<X:?BIT_SIZE/little-signed>>) ->
+    wolfpacs_flow:consumed(Flow, ?MODULE, ?BYTE_SIZE),
+    {ok, X, <<>>};
+decode(Flow, {_, big}, <<X:?BIT_SIZE/big-signed>>) ->
+    wolfpacs_flow:consumed(Flow, ?MODULE, ?BYTE_SIZE),
+    {ok, X, <<>>};
 decode(Flow, _, _) ->
     wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode SS"),
     error.
