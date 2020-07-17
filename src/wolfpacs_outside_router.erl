@@ -60,8 +60,8 @@ handle_call(number_of_workers, _From, State=#{nb_workers := N}) ->
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
 
-handle_cast({route, _CalledAE, _CallingAE, DataSet},  State=#{nb_workers := 0}) ->
-    _ = lager:warning("[OutsideRouter] Drop dataset. No workers. Saving"),
+handle_cast({route, _CalledAE, _CallingAE, DataSet, _StudyUID},  State=#{nb_workers := 0}) ->
+    _ = lager:warning("[OutsideRouter] No workers. Save dataset"),
     wolfpacs_storage:store(DataSet),
     {noreply, State};
 handle_cast({route, _CalledAE, _CallingAE, DataSet, StudyUID}, State) ->
