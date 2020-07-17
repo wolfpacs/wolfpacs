@@ -12,6 +12,7 @@
 
 %% API
 -export([start_link/4,
+	 stop/1,
 	 responde/2]).
 
 %% Behaviour
@@ -28,6 +29,9 @@
 
 start_link(Ref, Socket, Transport, Opts) ->
     gen_server:start_link(?MODULE, [Ref, Socket, Transport, Opts], []).
+
+stop(UpperLayer) ->
+    gen_server:stop(UpperLayer).
 
 responde(UpperLayer, Payload) ->
     gen_server:cast(UpperLayer, {responde, Payload}).

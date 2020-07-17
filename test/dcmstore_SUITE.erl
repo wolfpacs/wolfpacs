@@ -29,25 +29,23 @@ receive_presentation_state(Config) ->
 send_receive_test_file(Config, TestFile) ->
     {ok, Flow} = wolfpacs_flow:start_link(),
 
+    wolfpacs_storage:empty(),
     Filename = filename:join([?config(data_dir, Config), TestFile]),
-    Dataset1 = dataset_from_file(Flow, Filename),
+    Dataset1 = testutils:read_dataset(Flow, Filename),
     Dataset2 = dataset_using_dcmtk_storescu(Flow, Filename),
+
+    compare_length(Dataset1, Dataset2),
 
     F = fun(DS) -> lists:sort(maps:to_list(DS)) end,
 
     compare(F(Dataset1), F(Dataset2)).
-
-dataset_from_file(Flow, Filename) ->
-    {ok, Content} = file:read_file(Filename),
-    Strategy = {explicit, little},
-    {ok, {_Meta, Info}, <<>>} = wolfpacs_file_format:decode(Flow, Strategy, Content),
-    Info.
 
 dataset_using_dcmtk_storescu(_Flow, Filename) ->
     {ok, U} = dcmtk_storescu:start_link(),
     timer:sleep(1000),
     dcmtk_storescu:send(U, "localhost", "11112", Filename),
 
+    ct:sleep(500),
     {ok, Stored} = wolfpacs_storage:retreive(),
     dcmtk_storescu:stop(U),
 
@@ -57,8 +55,17 @@ compare([], []) ->
     ok;
 compare([H|T1], [H|T2]) ->
     compare(T1, T2);
-compare([H1|_], [H2|_]) ->
-    lager:warning("H1 ~p", [H1]),
-    lager:warning("H2 ~p", [H2]),
-    %% fail test
-    H1 = H2.
+compare([{Header, Value1}|_], [{Header, Value2}|_]) ->
+    ct:fail("Header is correct, value differ ~p ~p", [Value1, Value2]);
+compare([{H1, _}|_], [{H2, _}|_]) ->
+    ct:fail("Headers differ ~p ~p", [H1, H2]).
+
+compare_length(M1, M2) ->
+    L1 = maps:size(M1),
+    L2 = maps:size(M2),
+    case L1 == L2 of
+	true ->
+	    ok;
+	false ->
+	    ct:fail("Lengths differ, ~p != ~p", [L1, L2])
+    end.
