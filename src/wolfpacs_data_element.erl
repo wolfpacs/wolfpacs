@@ -106,6 +106,12 @@ encode(Flow, Strategy, G, E, "DS", Name, _Extra) ->
 encode(Flow, Strategy, G, E, "SS", Name, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode SS"),
     encode_common(Strategy, G, E, "SS", wolfpacs_vr_ss:encode(Flow, Strategy, Name));
+encode(Flow, Strategy, G, E, "FD", Name, _Extra) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "encode FD"),
+    encode_common(Strategy, G, E, "FD", wolfpacs_vr_fd:encode(Flow, Strategy, Name));
+encode(Flow, Strategy, G, E, "FL", Name, _Extra) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "encode FL"),
+    encode_common(Strategy, G, E, "FL", wolfpacs_vr_fl:encode(Flow, Strategy, Name));
 encode(Flow, Strategy, G, E, "SQ", Bytes, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode OB"),
     encode_common(Strategy, G, E, "SQ", wolfpacs_vr_sq:encode(Flow, Strategy, Bytes));
@@ -396,6 +402,14 @@ decode_common(Flow, Strategy, G, E, "SS", Len, Data) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_common SS"),
     decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_ss);
 
+decode_common(Flow, Strategy, G, E, "FD", Len, Data) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "decode_common FD"),
+    decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_fd);
+
+decode_common(Flow, Strategy, G, E, "FL", Len, Data) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "decode_common FL"),
+    decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_fl);
+
 decode_common(Flow, Strategy, G, E, "SQ", Len, Data) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_common SQ"),
     decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_sq);
@@ -561,6 +575,12 @@ encode_decode_ds_test_() ->
 
 encode_decode_ss_test_() ->
     encode_decode_common("SS", -128).
+
+encode_decode_fl_test_() ->
+    encode_decode_common("FL", -12000.0).
+
+encode_decode_fd_test_() ->
+    encode_decode_common("FD", -12000.0).
 
 encode_decode_common(VR, Data) ->
     lists:flatten(
