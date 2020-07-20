@@ -231,22 +231,27 @@ decode_correct_vr(Flow, Strategy={implicit, _}, G, E, Data, Extra) ->
 
 decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"OB", _:16, Data/binary>>, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
+    wolfpacs_group_elements_cache:add(G, E, "OB"),
     decode_with_vr_32bit_length(Flow, Strategy, G, E, "OB", Data);
 
 decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"OW", _:16, Data/binary>>, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
+    wolfpacs_group_elements_cache:add(G, E, "OW"),
     decode_with_vr_32bit_length(Flow, Strategy, G, E, "OW", Data);
 
 decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"OF", _:16, Data/binary>>, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
+    wolfpacs_group_elements_cache:add(G, E, "OF"),
     decode_with_vr_32bit_length(Flow, Strategy, G, E, "OF", Data);
 
 decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"UN", _:16, Data/binary>>, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
+    wolfpacs_group_elements_cache:add(G, E, "UN"),
     decode_with_vr_32bit_length(Flow, Strategy, G, E, "UN", Data);
 
 decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"SQ", _:16, Data/binary>>, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
+    wolfpacs_group_elements_cache:add(G, E, "SQ"),
     decode_with_vr_32bit_length(Flow, Strategy, G, E, "SQ", Data);
 
 decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<VRTag:16/bitstring, Data/binary>>, Extra) ->
@@ -257,6 +262,7 @@ decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<VRTag:16/bitstring, Data
 		 FoundVR
 	 end,
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
+    wolfpacs_group_elements_cache:add(G, E, VR),
     decode_with_vr_16bit_length(Flow, Strategy, G, E, VR, Data);
 
 decode_correct_vr(Flow, _Strategy, G, E, _Data, _Extra) ->
