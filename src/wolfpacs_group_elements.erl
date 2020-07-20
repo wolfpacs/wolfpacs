@@ -46,8 +46,13 @@ vr(Group, Element) ->
     vr_lookup(Group, Element, maps:get({Group, Element}, DB, missing)).
 
 vr_lookup(Group, Element, missing) ->
-    _ = lager:warning("[group_elements] Unknown (~p, ~p)", [Group, Element]),
-    "UN";
+    case wolfpacs_group_elements_cache:get(Group, Element) of
+	{ok, VR} ->
+	    VR;
+	_ ->
+	    _ = lager:debug("[group_elements] Unknown (~p, ~p)", [Group, Element]),
+	    "UN"
+    end;
 vr_lookup(_, _, VR) ->
     VR.
 
@@ -86,6 +91,7 @@ vr_to_example_group_element("FD") -> {16#0008, 16#1163};
 vr_to_example_group_element("FL") -> {16#0008, 16#9459};
 vr_to_example_group_element("SS") -> {16#0018, 16#9219};
 vr_to_example_group_element("SL") -> {16#0018, 16#6020};
+vr_to_example_group_element("LT") -> {16#0008, 16#0108};
 vr_to_example_group_element(VR) -> {error, VR, ["No example found"]}.
 
 %%==============================================================================

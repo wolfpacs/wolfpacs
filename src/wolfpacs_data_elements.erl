@@ -36,10 +36,6 @@ encode(Flow, Strategy, Extra, [{{G, E, VR}, Data}|Rest], Acc) ->
     encode(Flow, Strategy, Extra, Rest, <<Acc/binary, Encoded/binary>>).
 
 -spec decode(pid(), strategy(), binary(), list(), map()) -> {ok, map(), binary()} | {error, binary(), list(string())}.
-decode(Flow, _, <<>>, [], _) ->
-    wolfpacs_flow:failed(Flow, ?MODULE, "no data to decode"),
-    error;
-
 decode(_Flow, _, <<>>, Acc, _) ->
     {ok, maps:from_list(Acc), <<>>};
 decode(Flow, _, Rest, [{{16#fffe, 16#e00d}, _}|Acc], _) ->
@@ -102,13 +98,11 @@ encode_decode_common(Strategy) ->
     Incorrect1 = wolfpacs_utils:drop_first_byte(Encoded0),
     Incorrect2 = wolfpacs_utils:drop_last_byte(Encoded0),
     Incorrect3 = <<1, 2, 3, 4, 5>>,
-    Incorrect4 = <<>>,
 
     [ ?_assertEqual(decode(Flow, Strategy, Encoded0), {ok, Items, <<>>})
     , ?_assertEqual(decode(Flow, Strategy, Incorrect1), error)
     , ?_assertEqual(decode(Flow, Strategy, Incorrect2), error)
     , ?_assertEqual(decode(Flow, Strategy, Incorrect3), error)
-    , ?_assertEqual(decode(Flow, Strategy, Incorrect4), error)
     ].
 
 
@@ -127,10 +121,3 @@ encode_decode_implicit_little_test_() ->
 encode_decode_implicit_big_test_() ->
     Strategy = {implicit, big},
     encode_decode_common(Strategy).
-
-encode_decode_empty_test() ->
-    {ok, Flow} = wolfpacs_flow:start_link(),
-    Strategy = {explicit, little},
-    Items = #{},
-    Encoded0 = encode(Flow, Strategy, Items),
-    ?assertEqual(decode(Flow, Strategy, Encoded0), error).
