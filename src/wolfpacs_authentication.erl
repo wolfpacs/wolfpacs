@@ -141,7 +141,7 @@ binary_env_var(Name, Default) ->
 reshape(AE) when is_list(AE) ->
     reshape(list_to_binary(AE));
 reshape(AE) ->
-    wolfpacs_vr_utils:trim_binary(AE).
+    wolfpacs_vr_utils:trim(AE).
 
 %%==============================================================================
 %% Test

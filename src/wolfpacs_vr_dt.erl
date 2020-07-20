@@ -25,29 +25,19 @@
 -module(wolfpacs_vr_dt).
 -export([encode/3,
 	 decode/3]).
--import(wolfpacs_vr_utils, [pad_binary/1,
-			    trim_binary/1]).
 
-encode(Flow, _Strategy, DT) ->
-    priv_encode(Flow, DT).
+-include("wolfpacs_types.hrl").
 
-decode(Flow, _Strategy, DT) ->
-    priv_decode(Flow, DT).
+-define(LIMIT, 26).
+-define(PAD, " ").
 
-%%==============================================================================
-%% Private
-%%==============================================================================
+-spec encode(flow(), strategy(), binary()) -> binary().
+encode(Flow, _Strategy, X) ->
+    wolfpacs_vr_common:encode_limit(Flow, ?MODULE, X, ?LIMIT, ?PAD).
 
-priv_encode(Flow, DT) when is_list(DT) ->
-    priv_encode(Flow, list_to_binary(DT));
-priv_encode(_Flow, DT) ->
-    pad_binary(DT).
-
-priv_decode(Flow, <<>>) ->
-    wolfpacs_flow:failed(Flow, ?MODULE, "empty DT"),
-    error;
-priv_decode(_Flow, Data) ->
-    {ok, trim_binary(Data), <<>>}.
+-spec decode(flow(), strategy(), binary()) -> {ok, binary(), binary()} | error.
+decode(Flow, _Strategy, X) ->
+    wolfpacs_vr_common:decode(Flow, ?MODULE, X).
 
 %%==============================================================================
 %% Test

@@ -17,7 +17,6 @@
 -module(wolfpacs_vr_as).
 -export([encode/3, decode/3]).
 -include("wolfpacs_types.hrl").
--import(wolfpacs_vr_utils, [limit_binary/2]).
 
 -spec encode(flow(), strategy(), list() | binary()) -> binary().
 encode(_Flow, _Strategy, AE) ->
@@ -35,7 +34,7 @@ decode(_Flow, _Strategy, Data) ->
 encode(AS) when is_list(AS) ->
     encode(list_to_binary(AS));
 encode(AS) ->
-    limit_binary(AS, 4).
+    wolfpacs_vr_utils:limit(AS, 4).
 
 -spec decode(binary()) -> {ok, binary(), binary()} | error.
 decode(<<>>) ->
@@ -72,9 +71,9 @@ decode_test_() ->
     ].
 
 encode_decode_test_() ->
-    [ ?_assertEqual(decode(encode("123D")), {ok, <<"123D">>, <<>>})
-    , ?_assertEqual(decode(encode("123W")), {ok, <<"123W">>, <<>>})
-    , ?_assertEqual(decode(encode("123M")), {ok, <<"123M">>, <<>>})
-    , ?_assertEqual(decode(encode("123Y")), {ok, <<"123Y">>, <<>>})
-    , ?_assertEqual(decode(encode("123Y")), {ok, <<"123Y">>, <<>>})
+    [ ?_assertEqual(decode(encode(<<"123D">>)), {ok, <<"123D">>, <<>>})
+    , ?_assertEqual(decode(encode(<<"123W">>)), {ok, <<"123W">>, <<>>})
+    , ?_assertEqual(decode(encode(<<"123M">>)), {ok, <<"123M">>, <<>>})
+    , ?_assertEqual(decode(encode(<<"123Y">>)), {ok, <<"123Y">>, <<>>})
+    , ?_assertEqual(decode(encode(<<"123Y">>)), {ok, <<"123Y">>, <<>>})
     ].

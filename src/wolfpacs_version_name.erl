@@ -7,7 +7,6 @@
 -module(wolfpacs_version_name).
 -export([encode/1,
 	 decode/1]).
--import(wolfpacs_utils, [split/2]).
 
 -spec encode(binary()) -> binary().
 encode(VersionName) ->
@@ -18,7 +17,7 @@ encode(VersionName) ->
 decode(<<16#55, _, Length:16, Data/binary>>) ->
     %% We are lenient, we will accept the Version Names
     %% even if they are longer than 16.
-    split(Data, Length);
+    wolfpacs_utils:split(Data, Length);
 decode(Data) ->
     {error, Data}.
 
@@ -27,7 +26,7 @@ decode(Data) ->
 %%==============================================================================
 
 encode_with_length(VersionName_, Length) ->
-    VersionName = wolfpacs_vr_utils:trim_binary(VersionName_),
+    VersionName = wolfpacs_vr_utils:trim(VersionName_),
     <<16#55,
       0,
       Length:16,

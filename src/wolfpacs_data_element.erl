@@ -127,7 +127,7 @@ encode(Flow, Strategy, G, E, "xs", Name, _Extra) ->
 encode(Flow, Strategy, G, E, VR, Bytes, Extra) ->
     case maps:get({G, E}, Extra, missing) of
 	missing ->
-	    lager:warning("[DataElement] Unable to encode (~p, ~p): ~p", [G, E, VR]),
+	    _ = lager:warning("[DataElement] Unable to encode (~p, ~p): ~p", [G, E, VR]),
 	    wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("unable to pick encoder ~p ~p ~p", [G, E, VR])),
 	    <<>>;
 	RecoveredVR ->
@@ -455,14 +455,14 @@ encode_book_explicit_little_example_test() ->
     %% Page 51
     {ok, Flow} = wolfpacs_flow:start_link(),
     Strategy = {explicit, little},
-    TestData = <<16, 0, 16, 0, "PN", 10, 0, "Smith^Joe", 0>>,
-    ?assertEqual(encode(Flow, Strategy, 16, 16, "PN", "Smith^Joe"), TestData).
+    TestData = <<16, 0, 16, 0, "PN", 10, 0, "Smith^Joe", 32>>,
+    ?assertEqual(encode(Flow, Strategy, 16, 16, "PN", <<"Smith^Joe">>), TestData).
 
 decode_book_explicit_little_example_test() ->
     %% Page 51
     {ok, Flow} = wolfpacs_flow:start_link(),
     Strategy = {explicit, little},
-    TestData = <<16, 0, 16, 0, "PN", 10, 0, "Smith^Joe", 0>>,
+    TestData = <<16, 0, 16, 0, "PN", 10, 0, "Smith^Joe", 32>>,
     Correct = {{16, 16}, <<"Smith^Joe">>},
     ?assertEqual(decode(Flow, Strategy, TestData), {ok, Correct, <<>>}).
 
@@ -470,14 +470,14 @@ encode_book_implicit_little_example_test() ->
     %% Page 51
     {ok, Flow} = wolfpacs_flow:start_link(),
     Strategy = {implicit, little},
-    TestData = <<16, 0, 16, 0, 10, 0, 0, 0, "Smith^Joe", 0>>,
-    ?assertEqual(encode(Flow, Strategy, 16, 16, "PN", "Smith^Joe"), TestData).
+    TestData = <<16, 0, 16, 0, 10, 0, 0, 0, "Smith^Joe", 32>>,
+    ?assertEqual(encode(Flow, Strategy, 16, 16, "PN", <<"Smith^Joe">>), TestData).
 
 decode_book_implicit_little_example_test() ->
     %% Page 51
     {ok, Flow} = wolfpacs_flow:start_link(),
     Strategy = {implicit, little},
-    TestData = <<16, 0, 16, 0, 10, 0, 0, 0, "Smith^Joe", 0>>,
+    TestData = <<16, 0, 16, 0, 10, 0, 0, 0, "Smith^Joe", 32>>,
     Correct = {{16, 16}, <<"Smith^Joe">>},
     ?assertEqual(decode(Flow, Strategy, TestData), {ok, Correct, <<>>}).
 
@@ -573,7 +573,7 @@ encode_decode_ul_test_() ->
     encode_decode_common("UL", 1024).
 
 encode_decode_da_test_() ->
-    encode_decode_common("DA", "20201011A").
+    encode_decode_common("DA", <<"20201011A">>).
 
 encode_decode_tm_test_() ->
     encode_decode_common("TM", <<"20201011B">>).
@@ -591,7 +591,7 @@ encode_decode_as_test_() ->
     encode_decode_common("AS", <<"123D">>).
 
 encode_decode_ds_test_() ->
-    encode_decode_common("DS", "20201011G").
+    encode_decode_common("DS", <<"20201011G">>).
 
 encode_decode_ss_test_() ->
     encode_decode_common("SS", -128).

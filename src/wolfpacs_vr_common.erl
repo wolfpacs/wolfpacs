@@ -1,40 +1,28 @@
 -module(wolfpacs_vr_common).
--export([encode/3,
-	 decode/3,
-	 encode_with_limit/4,
-	 encode_binary/3,
-	 decode_binary/3,
-	 encode_binary_with_limit/4
+-export([encode/4,
+	 encode_exact/5,
+	 encode_limit/5,
+	 decode/3
 	]).
-
--import(wolfpacs_vr_utils, [pad/1,
-			    limit/2,
-			    trim/1,
-			    pad_binary/1,
-			    limit_binary/2,
-			    trim_binary/1]).
 
 %%------------------------------------------------------------------------------
 %% @doc Encode
 %%
 %% @end
 %%------------------------------------------------------------------------------
-encode(Flow, Module, Data) when is_binary(Data) ->
-    encode(Flow, Module, binary_to_list(Data));
-encode(Flow, Module, Data) ->
-    Bytes = list_to_binary(pad(Data)),
+encode(Flow, Module, Data, PadChar) ->
+    Bytes = wolfpacs_vr_utils:pad(Data, PadChar),
     wolfpacs_flow:generated(Flow, Module, byte_size(Bytes)),
     Bytes.
 
-%%------------------------------------------------------------------------------
-%% @doc Encode Binary
-%%
-%% @end
-%%------------------------------------------------------------------------------
-encode_binary(Flow, Module, Data) when is_list(Data) ->
-    encode_binary(Flow, Module, list_to_binary(Data));
-encode_binary(Flow, Module, Data) ->
-    Bytes = pad_binary(Data),
+encode_exact(Flow, Module, Data, Length, PadChar) ->
+    Bytes = wolfpacs_vr_utils:exact(Data, Length, PadChar),
+    wolfpacs_flow:generated(Flow, Module, byte_size(Bytes)),
+    Bytes.
+
+encode_limit(Flow, Module, Data, Length, PadChar) ->
+    Padded = wolfpacs_vr_utils:pad(Data, PadChar),
+    Bytes = wolfpacs_vr_utils:limit(Padded, Length),
     wolfpacs_flow:generated(Flow, Module, byte_size(Bytes)),
     Bytes.
 
@@ -44,43 +32,9 @@ encode_binary(Flow, Module, Data) ->
 %% @end
 %%------------------------------------------------------------------------------
 decode(Flow, Module, Data) ->
-    Bytes = trim(Data),
+    Bytes = wolfpacs_vr_utils:trim(Data),
     wolfpacs_flow:consumed(Flow, Module, byte_size(Data)),
     {ok, Bytes, <<>>}.
-
-%%------------------------------------------------------------------------------
-%% @doc Decode Binary
-%%
-%% @end
-%%------------------------------------------------------------------------------
-decode_binary(Flow, Module, Data) ->
-    Bytes = trim_binary(Data),
-    wolfpacs_flow:consumed(Flow, Module, byte_size(Bytes)),
-    {ok, Bytes, <<>>}.
-
-%%------------------------------------------------------------------------------
-%% @doc Encode with limit
-%%
-%% @end
-%%------------------------------------------------------------------------------
-encode_with_limit(Flow, Module, Limit, Data) when is_binary(Data) ->
-    encode_with_limit(Flow, Module, Limit, binary_to_list(Data));
-encode_with_limit(Flow, Module, Limit, Data) ->
-    Bytes = list_to_binary(limit(pad(Data), Limit)),
-    wolfpacs_flow:generated(Flow, Module, byte_size(Bytes)),
-    Bytes.
-
-%%------------------------------------------------------------------------------
-%% @doc Encode with limit
-%%
-%% @end
-%%------------------------------------------------------------------------------
-encode_binary_with_limit(Flow, Module, Limit, Data) when is_list(Data) ->
-    encode_binary_with_limit(Flow, Module, Limit, list_to_binary(Data));
-encode_binary_with_limit(Flow, Module, Limit, Data) ->
-    Bytes = limit_binary(pad_binary(Data), Limit),
-    wolfpacs_flow:generated(Flow, Module, byte_size(Bytes)),
-    Bytes.
 
 %%==============================================================================
 %% Test
@@ -88,30 +42,17 @@ encode_binary_with_limit(Flow, Module, Limit, Data) ->
 
 -include_lib("eunit/include/eunit.hrl").
 
-encode_decode_test() ->
-    Data = "WolfPACS",
-    {ok, Flow} = wolfpacs_flow:start_link(),
-    Encoded0 = encode(Flow, ?MODULE, Data),
-    {ok, Decoded0, <<>>} = decode(Flow, ?MODULE, Encoded0),
-    ?assertEqual(Data, Decoded0).
+encode_test() ->
+    Encoded = encode(no_flow, ?MODULE, <<"abc">>, " "),
+    ?assertEqual(Encoded, <<"abc ">>).
 
-encode_decode_with_limit_test() ->
-    Data = "WolfPACS",
-    {ok, Flow} = wolfpacs_flow:start_link(),
-    Encoded0 = encode_with_limit(Flow, ?MODULE, 4, Data),
-    {ok, Decoded0, <<>>} = decode(Flow, ?MODULE, Encoded0),
-    ?assertEqual("Wolf", Decoded0).
-
-encode_decode_binary_test() ->
-    Data = <<"WolfPACS">>,
-    {ok, Flow} = wolfpacs_flow:start_link(),
-    Encoded0 = encode_binary(Flow, ?MODULE, Data),
-    {ok, Decoded0, <<>>} = decode_binary(Flow, ?MODULE, Encoded0),
-    ?assertEqual(Data, Decoded0).
-
-encode_decode_binary_with_limit_test() ->
-    Data = <<"WolfPACS">>,
-    {ok, Flow} = wolfpacs_flow:start_link(),
-    Encoded0 = encode_binary_with_limit(Flow, ?MODULE, 4, Data),
-    {ok, Decoded0, <<>>} = decode_binary(Flow, ?MODULE, Encoded0),
-    ?assertEqual(<<"Wolf">>, Decoded0).
+encode_exact_test_() ->
+    Encoded0 = encode_exact(no_flow, ?MODULE, <<"abc">>, 0, " "),
+    Encoded1 = encode_exact(no_flow, ?MODULE, <<"abc">>, 2, " "),
+    Encoded2 = encode_exact(no_flow, ?MODULE, <<"abc">>, 4, " "),
+    Encoded3 = encode_exact(no_flow, ?MODULE, <<"abc">>, 6, " "),
+    [ ?_assertEqual(Encoded0, <<"">>)
+    , ?_assertEqual(Encoded1, <<"ab">>)
+    , ?_assertEqual(Encoded2, <<"abc ">>)
+    , ?_assertEqual(Encoded3, <<"abc   ">>)
+    ].

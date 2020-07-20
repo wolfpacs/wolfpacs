@@ -8,55 +8,28 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_vr_cs).
--export([encode/3,  decode/3]).
--import(wolfpacs_vr_utils, [pad_binary/1,
-			    limit_binary/2,
-			    trim_binary/1]).
+-export([encode/3, decode/3]).
 
 -include("wolfpacs_types.hrl").
 
+-define(LIMIT, 16).
+-define(PAD, " ").
+
 -spec encode(flow(), strategy(), binary()) -> binary().
-encode(_Flow, _Strategy, AE) ->
-    encode(AE).
+encode(Flow, _Strategy, X) ->
+    wolfpacs_vr_common:encode_limit(Flow, ?MODULE, X, ?LIMIT, ?PAD).
 
 -spec decode(flow(), strategy(), binary()) -> {ok, binary(), binary()} | error.
-decode(_Flow, _Strategy, AE) ->
-    decode(AE).
+decode(Flow, _Strategy, X) ->
+    wolfpacs_vr_common:decode(Flow, ?MODULE, X).
 
 %%==============================================================================
 %% Private
 %%==============================================================================
 
--spec encode(list() | binary()) -> binary().
-encode(UI) when is_list(UI) ->
-    encode(list_to_binary(UI));
-encode(UI) ->
-    limit_binary(pad_binary(UI), 16).
-
--spec decode(binary()) -> {ok, binary(), binary()} | error.
-decode(<<>>) ->
-    error;
-decode(Data) ->
-    {ok, trim_binary(Data), <<>>}.
 
 %%==============================================================================
 %% Test
 %%==============================================================================
 
 -include_lib("eunit/include/eunit.hrl").
-
-encode_test_() ->
-    [?_assertEqual(encode(""),     <<"">>),
-     ?_assertEqual(encode("A"),    <<"A", 0>>),
-     ?_assertEqual(encode("AB"),   <<"AB">>),
-     ?_assertEqual(encode("12345678901234567890"),   <<"1234567890123456">>) ].
-
-encode_decode_test_() ->
-    Long = [$A || _ <- lists:seq(1, 32)],
-    Trimmed = list_to_binary([$A || _ <- lists:seq(1, 16)]),
-    [?_assertEqual(decode(encode("")), error),
-     ?_assertEqual(decode(encode("A")), {ok, <<"A">>, <<>>}),
-     ?_assertEqual(decode(encode("AB")), {ok, <<"AB">>, <<>>}),
-     ?_assertEqual(decode(encode("ABC")), {ok, <<"ABC">>, <<>>}),
-     ?_assertEqual(decode(encode("ABCD")), {ok, <<"ABCD">>, <<>>}),
-     ?_assertEqual(decode(encode(Long)), {ok, Trimmed, <<>>}) ].
