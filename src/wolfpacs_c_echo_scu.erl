@@ -98,7 +98,7 @@ handle_data(Data = <<16#6, _/binary>>, State=#{from := From, sock := Sock}) ->
 	    gen_server:reply(From, {ok, success}),
 	    gen_tcp:close(Sock),
 	    {noreply, State#{sock => none, from => none, data => Rest}};
-	{error, Data} ->
+	_ ->
 	    _ = lager:warning("[c_echo_scu] release_rp decode error"),
 	    {stop, normal, State}
     end;
