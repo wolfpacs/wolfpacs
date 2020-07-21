@@ -19,7 +19,7 @@ encode(Flow, PDVItems) ->
 decode(Flow, <<16#4, _, Length:32, Data/binary>>) ->
     case wolfpacs_utils:split(Data, Length) of
 	{ok, PDVItemsData, Rest} ->
-	    case decode_items(PDVItemsData, []) of
+	    case decode_items(Flow, PDVItemsData, []) of
 		{ok, PDVItems} ->
 		    {ok, PDVItems, Rest};
 		_ ->
@@ -41,7 +41,7 @@ decode(Flow, _Data) ->
 priv_encode(_Flow, [], Acc) ->
     encode_payload(lists:reverse(Acc), <<>>);
 priv_encode(Flow, [PDVItem|PDVItems], Acc) ->
-    Data = wolfpacs_pdv_item:encode(PDVItem),
+    Data = wolfpacs_pdv_item:encode(Flow, PDVItem),
     priv_encode(Flow, PDVItems, [Data|Acc]).
 
 encode_payload([], Acc) ->
@@ -49,12 +49,12 @@ encode_payload([], Acc) ->
 encode_payload([H|T], Acc) ->
     encode_payload(T, <<Acc/binary, H/binary>>).
 
-decode_items(<<>>, Acc) ->
+decode_items(_Flow, <<>>, Acc) ->
     {ok, lists:reverse(Acc)};
-decode_items(Data, Acc) ->
-    case wolfpacs_pdv_item:decode(Data) of
+decode_items(Flow, Data, Acc) ->
+    case wolfpacs_pdv_item:decode(Flow, Data) of
 	{ok, PDVItem, Rest} ->
-	    decode_items(Rest, [PDVItem|Acc]);
+	    decode_items(Flow, Rest, [PDVItem|Acc]);
 	_ ->
 	    error
     end.
