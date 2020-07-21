@@ -5,29 +5,28 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_user_information).
--export([encode/3,
-	 decode/1]).
+-export([encode/4,
+	 decode/2]).
 
--spec encode(non_neg_integer(), binary(), binary()) -> binary().
-encode(MaxPDUSize, Class, VersionName) ->
+-include("wolfpacs_types.hrl").
+
+-spec encode(flow(), non_neg_integer(), binary(), binary()) -> binary().
+encode(_Flow, MaxPDUSize, Class, VersionName) ->
     A = wolfpacs_max_length:encode(MaxPDUSize),
     B = wolfpacs_implementation_class:encode(Class),
     C = wolfpacs_version_name:encode(VersionName),
     encode(<<A/binary, B/binary, C/binary>>).
 
--spec decode(binary()) -> {ok, non_neg_integer(), binary(), binary(), binary()} | {error, binary()}.
-decode(Data = <<16#50, _, _Length:16, UserInformation/binary>>) ->
+-spec decode(flow(), binary()) -> {ok, non_neg_integer(), binary(), binary(), binary()} | error.
+decode(Flow, <<16#50, _, _Length:16, UserInformation/binary>>) ->
     MaybeMaxLength = wolfpacs_max_length:decode(UserInformation),
-    case decode_with_max_length(MaybeMaxLength) of
-	{error, Error} ->
-	    {error, Data, Error};
-	Succes ->
-	    Succes
-    end;
-decode(Data = <<H, _/binary>>) ->
-    {error, Data, ["incorrect header", H]};
-decode(<<>>) ->
-    {error, <<>>, ["no data"]}.
+    decode_with_max_length(Flow, MaybeMaxLength);
+decode(Flow, <<_H, _/binary>>) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "incorrect header"),
+    error;
+decode(Flow, <<>>) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "no data"),
+    error.
 
 %%==============================================================================
 %% Private
@@ -40,22 +39,26 @@ encode(UserInformation) ->
       Length:16,
       UserInformation/binary>>.
 
-decode_with_max_length({ok, MaxSize, Rest}) ->
+decode_with_max_length(Flow, {ok, MaxSize, Rest}) ->
     MaybeImplementationClass = wolfpacs_implementation_class:decode(Rest),
-    decode_with_implementation_class(MaxSize, MaybeImplementationClass);
-decode_with_max_length(_) ->
-    {error, ["error with_max length"]}.
+    decode_with_implementation_class(Flow, MaxSize, MaybeImplementationClass);
+decode_with_max_length(Flow, _) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "error with_max length"),
+    error.
 
-decode_with_implementation_class(MaxSize, {ok, ImplementationClass, Rest}) ->
+decode_with_implementation_class(Flow, MaxSize, {ok, ImplementationClass, Rest}) ->
     MaybeVersionName = wolfpacs_version_name:decode(Rest),
-    decode_with_version_name(MaxSize, ImplementationClass, MaybeVersionName);
-decode_with_implementation_class(_, _) ->
-    {error, ["error with implimentation class"]}.
+    decode_with_version_name(Flow, MaxSize, ImplementationClass, MaybeVersionName);
+decode_with_implementation_class(Flow, _, _) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "error with implimentation class"),
+    error.
 
-decode_with_version_name(MaxSize, ImplementationClass, {ok, VersionName, Rest}) ->
+decode_with_version_name(Flow, MaxSize, ImplementationClass, {ok, VersionName, Rest}) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "found all parts"),
     {ok, MaxSize, ImplementationClass, VersionName, Rest};
-decode_with_version_name(_, _, _) ->
-    {error, ["error with version name"]}.
+decode_with_version_name(Flow, _, _, _) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "error with version name"),
+    error.
 
 %%==============================================================================
 %% Test
@@ -67,7 +70,7 @@ encode_echoscu_test() ->
     MaxSize = 16384,
     Class = <<"1.2.276.0.7230010.3.0.3.6.4">>,
     VersionName = <<"OFFIS_DCMTK_364">>,
-    Encoded = encode(MaxSize, Class, VersionName),
+    Encoded = encode(no_flow, MaxSize, Class, VersionName),
     Correct = <<80,0,0,58,
 
 		81,0,0,4,
@@ -84,7 +87,7 @@ encode_decode_test_() ->
     MaxSize = 16384,
     Class = <<"1">>,
     VersionName = <<"A">>,
-    Encoded0 = encode(MaxSize, Class, VersionName),
+    Encoded0 = encode(no_flow, MaxSize, Class, VersionName),
     Encoded1 = <<Encoded0/binary, 42>>,
     Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
     Incorrect1 = <<1,2,3,4>>,
@@ -92,10 +95,11 @@ encode_decode_test_() ->
     {ok, Incorrect3} = wolfpacs_utils:clear_byte(Encoded0, 12),
     {ok, Incorrect4} = wolfpacs_utils:clear_byte(Encoded0, 17),
 
-    [ ?_assertEqual(decode(Encoded0), {ok, MaxSize, Class, VersionName, <<>>}),
-      ?_assertEqual(decode(Encoded1), {ok, MaxSize, Class, VersionName, <<42>>}),
-      ?_assertEqual(decode(Incorrect0), {error, Incorrect0, ["error with version name"]}),
-      ?_assertEqual(decode(Incorrect1), {error, Incorrect1, ["incorrect header", 1]}),
-      ?_assertEqual(decode(Incorrect2), {error, Incorrect2, ["error with_max length"]}),
-      ?_assertEqual(decode(Incorrect3), {error, Incorrect3, ["error with implimentation class"]}),
-      ?_assertEqual(decode(Incorrect4), {error, Incorrect4, ["error with version name"]}) ].
+    [ ?_assertEqual(decode(no_flow, Encoded0), {ok, MaxSize, Class, VersionName, <<>>}),
+      ?_assertEqual(decode(no_flow, Encoded1), {ok, MaxSize, Class, VersionName, <<42>>}),
+      ?_assertEqual(decode(no_flow, Incorrect0), error),
+      ?_assertEqual(decode(no_flow, Incorrect1), error),
+      ?_assertEqual(decode(no_flow, Incorrect2), error),
+      ?_assertEqual(decode(no_flow, Incorrect3), error),
+      ?_assertEqual(decode(no_flow, Incorrect4), error)
+    ].
