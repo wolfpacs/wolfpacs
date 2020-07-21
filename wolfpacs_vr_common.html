@@ -15,11 +15,9 @@
 
 <h2><a name="index">Function Index</a></h2>
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#decode-3">decode/3</a></td><td>Decode Binary.</td></tr>
-<tr><td valign="top"><a href="#decode_binary-3">decode_binary/3</a></td><td>Decode Binary.</td></tr>
-<tr><td valign="top"><a href="#encode-3">encode/3</a></td><td>Encode.</td></tr>
-<tr><td valign="top"><a href="#encode_binary-3">encode_binary/3</a></td><td>Encode Binary.</td></tr>
-<tr><td valign="top"><a href="#encode_binary_with_limit-4">encode_binary_with_limit/4</a></td><td>Encode with limit.</td></tr>
-<tr><td valign="top"><a href="#encode_with_limit-4">encode_with_limit/4</a></td><td>Encode with limit.</td></tr>
+<tr><td valign="top"><a href="#encode-4">encode/4</a></td><td>Encode.</td></tr>
+<tr><td valign="top"><a href="#encode_exact-5">encode_exact/5</a></td><td></td></tr>
+<tr><td valign="top"><a href="#encode_limit-5">encode_limit/5</a></td><td></td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
@@ -30,35 +28,21 @@
 </div><p>Decode Binary
  </p>
 
-<h3 class="function"><a name="decode_binary-3">decode_binary/3</a></h3>
+<h3 class="function"><a name="encode-4">encode/4</a></h3>
 <div class="spec">
-<p><tt>decode_binary(Flow, Module, Data) -&gt; any()</tt></p>
-</div><p>Decode Binary
- </p>
-
-<h3 class="function"><a name="encode-3">encode/3</a></h3>
-<div class="spec">
-<p><tt>encode(Flow, Module, Data) -&gt; any()</tt></p>
+<p><tt>encode(Flow, Module, Data, PadChar) -&gt; any()</tt></p>
 </div><p>Encode
  </p>
 
-<h3 class="function"><a name="encode_binary-3">encode_binary/3</a></h3>
+<h3 class="function"><a name="encode_exact-5">encode_exact/5</a></h3>
 <div class="spec">
-<p><tt>encode_binary(Flow, Module, Data) -&gt; any()</tt></p>
-</div><p>Encode Binary
- </p>
+<p><tt>encode_exact(Flow, Module, Data, Length, PadChar) -&gt; any()</tt></p>
+</div>
 
-<h3 class="function"><a name="encode_binary_with_limit-4">encode_binary_with_limit/4</a></h3>
+<h3 class="function"><a name="encode_limit-5">encode_limit/5</a></h3>
 <div class="spec">
-<p><tt>encode_binary_with_limit(Flow, Module, Limit, Data) -&gt; any()</tt></p>
-</div><p>Encode with limit
- </p>
-
-<h3 class="function"><a name="encode_with_limit-4">encode_with_limit/4</a></h3>
-<div class="spec">
-<p><tt>encode_with_limit(Flow, Module, Limit, Data) -&gt; any()</tt></p>
-</div><p>Encode with limit
- </p>
+<p><tt>encode_limit(Flow, Module, Data, Length, PadChar) -&gt; any()</tt></p>
+</div>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
