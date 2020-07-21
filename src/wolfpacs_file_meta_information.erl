@@ -19,7 +19,7 @@
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec encode(pid(), strategy(), map()) -> binary().
+-spec encode(flow(), strategy(), map()) -> binary().
 encode(Flow, _Strategy, Info) ->
     Strategy = {explicit, little},
     Data = wolfpacs_data_elements:encode(Flow, Strategy, Info),
@@ -37,7 +37,7 @@ encode(Flow, _Strategy, Info) ->
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec decode(pid(), strategy(), binary()) -> {ok, map(), binary()} | {error, binary(), list(string())}.
+-spec decode(flow(), strategy(), binary()) -> {ok, map(), binary()} | error.
 decode(Flow, _Strategy, <<_:1024, "DICM", Data/binary>>) ->
     Strategy = {explicit, little},
     case wolfpacs_data_element:decode(Flow, Strategy, Data) of

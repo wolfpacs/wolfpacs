@@ -28,7 +28,7 @@ encode(Flow, Strategy, Data) ->
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec decode(pid(), strategy(), binary()) -> {ok, {map(), map()}, binary()} | {error, binary(), list(string())}.
+-spec decode(pid(), strategy(), binary()) -> {ok, {map(), map()}, binary()} | error.
 decode(Flow, Strategy, Data) ->
     case wolfpacs_file_meta_information:decode(Flow, Strategy, Data) of
 	{ok, Meta, Rest} ->
