@@ -135,11 +135,11 @@ abort(enter, _Prev, Data) ->
 
 abort(timeout, close, Data) ->
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
-    wolfpacs_upper_layer:stop(UpperLayer),
+    _ = wolfpacs_upper_layer:stop(UpperLayer),
     {keep_state, Data, []};
 
 abort(A, B, Data) ->
-    lager:warning("[UpperLayer] [Abort] Received ~p ~p", [A, B]),
+    _ = lager:warning("[UpperLayer] [Abort] Received ~p ~p", [A, B]),
     {keep_state, Data, []}.
 
 %%=============================================================================
