@@ -203,23 +203,23 @@ send_data(timeout, send_more, SenderData=#sender_data{chunks=[]}) ->
 
 send_data(timeout, send_more, SenderData=#sender_data{chunks=[Chunk]}) ->
     _ = lager:debug("[Sender] [SendData] Send last chunk"),
-    #sender_data{sock = Sock} = SenderData,
+    #sender_data{flow = Flow, sock = Sock} = SenderData,
     PDVItem = #pdv_item{pr_cid=1,
 			is_last=true,
 			is_command=false,
 			pdv_data=Chunk},
-    PDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+    PDataTF = wolfpacs_p_data_tf:encode(Flow, [PDVItem]),
     ok = gen_tcp:send(Sock, PDataTF),
     {next_state, release, SenderData#sender_data{chunks=[]}};
 
 send_data(timeout, send_more, SenderData) ->
     _ = lager:debug("[Sender] [SendData] Send anouther chunk"),
-    #sender_data{chunks = [Chunk|Chunks], sock = Sock} = SenderData,
+    #sender_data{flow = Flow, chunks = [Chunk|Chunks], sock = Sock} = SenderData,
     PDVItem = #pdv_item{pr_cid=1,
 			is_last=false,
 			is_command=false,
 			pdv_data=Chunk},
-    PDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+    PDataTF = wolfpacs_p_data_tf:encode(Flow, [PDVItem]),
     ok = gen_tcp:send(Sock, PDataTF),
     {keep_state, SenderData#sender_data{chunks=Chunks}, [{timeout, 0, send_more}]};
 
@@ -248,7 +248,7 @@ release(enter, _Prev, SenderData) ->
 release(info, {tcp, _Port, DataNew}, SenderData) ->
     #sender_data{flow = Flow, data = DataOld} = SenderData,
     Data = <<DataOld/binary, DataNew/binary>>,
-    case wolfpacs_p_data_tf:decode(Data) of
+    case wolfpacs_p_data_tf:decode(Flow, Data) of
 	{ok, [#pdv_item{pdv_data=Payload}], Rest} ->
 	    _ = wolfpacs_data_elements:decode(Flow, {explicit, little}, Payload),
 	    _ = lager:debug("[Sender] [Release] Release complete"),
@@ -304,7 +304,7 @@ send_command_message(SenderData) ->
 			is_last=true,
 			is_command=true,
 			pdv_data=Encoded},
-    PDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+    PDataTF = wolfpacs_p_data_tf:encode(Flow, [PDVItem]),
     gen_tcp:send(Sock, PDataTF).
 
 int(Value) when is_list(Value) ->

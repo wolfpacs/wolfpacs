@@ -9,12 +9,12 @@ prop_test() ->
     ?FORALL(_, term(),
 	    begin
 		PDVItems = test_items(),
-		Encoded = wolfpacs_p_data_tf:encode(PDVItems),
+		Encoded = wolfpacs_p_data_tf:encode(no_flow, PDVItems),
 		Corrupt = wolfpacs_utils:random_clear(Encoded, 0.2),
-		case wolfpacs_p_data_tf:decode(Corrupt) of
+		case wolfpacs_p_data_tf:decode(no_flow, Corrupt) of
 		    {ok, _Items, _Rest} ->
 			true;
-		    {error, _Corrupt, _Error} ->
+		    error ->
 			true;
 		    _ ->
 			false

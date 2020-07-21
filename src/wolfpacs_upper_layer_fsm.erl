@@ -95,7 +95,8 @@ idle(cast, {pdu, 1, PDU}, Data) ->
     handle_associate_rq(MaybeAssociateRQ, Data);
 
 idle(cast, {pdu, 4, PDU}, Data) ->
-    MaybePDataTF = wolfpacs_p_data_tf:decode(PDU),
+    #wolfpacs_upper_layer_fsm_data{flow = Flow} = Data,
+    MaybePDataTF = wolfpacs_p_data_tf:decode(Flow, PDU),
     handle_p_data_tf(MaybePDataTF, Data);
 
 idle(cast, {pdu, 5, PDU}, Data) ->
@@ -211,7 +212,7 @@ handle_pdv_item({verification, Strategy}, PrCID, _IsLast, _IsCommand, Raw, Data)
 			is_command=true,
 			pdv_data=EchoResp},
 
-    EchoRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+    EchoRespPDataTF = wolfpacs_p_data_tf:encode(Flow, [PDVItem]),
     wolfpacs_upper_layer:responde(UpperLayer, EchoRespPDataTF),
 
     {keep_state, Data, []};
@@ -252,7 +253,7 @@ handle_pdv_item({_AbstractSyntrax, Strategy}, PrCID, true, false, Fragment, Data
 					is_last=true,
 					is_command=true,
 					pdv_data=StoreResp},
-		    StoreRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+		    StoreRespPDataTF = wolfpacs_p_data_tf:encode(Flow, [PDVItem]),
 		    wolfpacs_upper_layer:responde(UpperLayer, StoreRespPDataTF),
 		    {keep_state, Data#wolfpacs_upper_layer_fsm_data{blob = Rest}, [hibernate]};
 		_ ->
