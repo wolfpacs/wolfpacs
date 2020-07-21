@@ -17,11 +17,18 @@
 -export([encode/3,
 	 decode/3]).
 
-encode(Flow, _Strategy, DS) ->
-    wolfpacs_vr_common:encode_with_limit(Flow, ?MODULE, 64, DS).
+-include("wolfpacs_types.hrl").
 
-decode(Flow, _Strategy, Data) ->
-    wolfpacs_vr_common:decode(Flow, ?MODULE, Data).
+-define(LIMIT, 64).
+-define(PAD, " ").
+
+-spec encode(flow(), strategy(), binary()) -> binary().
+encode(Flow, _Strategy, X) ->
+    wolfpacs_vr_common:encode_limit(Flow, ?MODULE, X, ?LIMIT, ?PAD).
+
+-spec decode(flow(), strategy(), binary()) -> {ok, binary(), binary()} | error.
+decode(Flow, _Strategy, X) ->
+    wolfpacs_vr_common:decode(Flow, ?MODULE, X).
 
 %%==============================================================================
 %% Test
@@ -30,14 +37,14 @@ decode(Flow, _Strategy, Data) ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_decode_test() ->
-    Data = "-1.197656e02",
+    Data = <<"-1.197656e02">>,
     {ok, Flow} = wolfpacs_flow:start_link(),
     Encoded0 = encode(Flow, {explicit, little}, Data),
     {ok, Decoded0, <<>>} = decode(Flow, {explicit, little}, Encoded0),
     ?assertEqual(Data, Decoded0).
 
 encode_decode_vm_test() ->
-    Data = "-1.197656e02\-3.997656e02\-2.800000e02",
+    Data = <<"-1.197656e02\-3.997656e02\-2.800000e02">>,
     {ok, Flow} = wolfpacs_flow:start_link(),
     Encoded0 = encode(Flow, {explicit, little}, Data),
     {ok, Decoded0, <<>>} = decode(Flow, {explicit, little}, Encoded0),

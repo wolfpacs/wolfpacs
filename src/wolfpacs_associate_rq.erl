@@ -72,8 +72,8 @@ encode(CalledAE, CallingAE, Contexts, MaxPDUSize, Class, VersionName) ->
 							   MaxPDUSize,
 							   Class,
 							   VersionName),
-    CalledAE16 = wolfpacs_vr_utils:exact_binary(CalledAE, 16),
-    CallingAE16 = wolfpacs_vr_utils:exact_binary(CallingAE, 16),
+    CalledAE16 = wolfpacs_vr_utils:exact(CalledAE, 16, " "),
+    CallingAE16 = wolfpacs_vr_utils:exact(CallingAE, 16, " "),
 
     Data = <<1:16,  %% Protocol Version
 	     0:16,  %% Reserved

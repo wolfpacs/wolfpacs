@@ -12,11 +12,22 @@
 -module(wolfpacs_vr_da).
 -export([encode/3, decode/3]).
 
-encode(Flow, _Strategy, DA) ->
-    wolfpacs_vr_common:encode_with_limit(Flow, ?MODULE, 64, DA).
+-include("wolfpacs_types.hrl").
 
-decode(Flow, _Strategy, Data) ->
-    wolfpacs_vr_common:decode(Flow, ?MODULE, Data).
+-define(LIMIT, 64).
+-define(PAD, " ").
+
+-spec encode(flow(), strategy(), binary()) -> binary().
+encode(Flow, _Strategy, X) ->
+    wolfpacs_vr_common:encode_limit(Flow, ?MODULE, X, ?LIMIT, ?PAD).
+
+-spec decode(flow(), strategy(), binary()) -> {ok, binary(), binary()} | error.
+decode(Flow, _Strategy, X) ->
+    wolfpacs_vr_common:decode(Flow, ?MODULE, X).
+
+%%==============================================================================
+%% Private
+%%==============================================================================
 
 
 %%==============================================================================
@@ -24,12 +35,3 @@ decode(Flow, _Strategy, Data) ->
 %%==============================================================================
 
 -include_lib("eunit/include/eunit.hrl").
-
-encode_test_() ->
-    {ok, Flow} = wolfpacs_flow:start_link(),
-    DA0 = "20070102",
-    DAL = "20070102",
-    S = {implicit, little},
-    [ ?_assertEqual(decode(Flow, S, encode(Flow, S, DA0)), {ok, DA0, <<>>})
-    , ?_assertEqual(decode(Flow, S, encode(Flow, S, DAL)), {ok, DA0, <<>>})
-    ].
