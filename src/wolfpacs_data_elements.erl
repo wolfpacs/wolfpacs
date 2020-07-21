@@ -17,7 +17,7 @@ encode(Flow, Strategy, UnsortedElements) ->
     Extra = priv_extract_extra(Elements, #{}),
     encode(Flow, Strategy, Extra, Elements, <<>>).
 
--spec decode(pid(), strategy(), binary()) -> {ok, map(), binary()} | {error, binary(), list(string())}.
+-spec decode(pid(), strategy(), binary()) -> {ok, map(), binary()} | error.
 decode(Flow, Strategy, Data) ->
     decode(Flow, Strategy, Data, [], #{}).
 
@@ -35,7 +35,7 @@ encode(Flow, Strategy, Extra, [{{G, E, VR}, Data}|Rest], Acc) ->
     Encoded = wolfpacs_data_element:encode(Flow, Strategy, G, E, VR, Data, Extra),
     encode(Flow, Strategy, Extra, Rest, <<Acc/binary, Encoded/binary>>).
 
--spec decode(pid(), strategy(), binary(), list(), map()) -> {ok, map(), binary()} | {error, binary(), list(string())}.
+-spec decode(pid(), strategy(), binary(), list(), map()) -> {ok, map(), binary()} | error.
 decode(_Flow, _, <<>>, Acc, _) ->
     {ok, maps:from_list(Acc), <<>>};
 decode(Flow, _, Rest, [{{16#fffe, 16#e00d}, _}|Acc], _) ->
