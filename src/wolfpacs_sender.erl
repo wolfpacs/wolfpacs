@@ -63,7 +63,7 @@ send_with_class_and_instance_uid(Sender, DataSet, ClassUID, InstanceUID) ->
 		      abstract_syntax :: binary(),
 		      instance_uid :: binary(),
 		      data :: binary(),
-		      maxpdu :: pos_integer(),
+		      maxpdu :: non_neg_integer(),
 		      chunks :: list(binary())}).
 
 %% @hidden
