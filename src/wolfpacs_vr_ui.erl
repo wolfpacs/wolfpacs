@@ -32,5 +32,5 @@ decode(Flow, _Strategy, X) ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_test() ->
-    Encoded = encode(no_flow, {explict, little}, <<"1.2.3">>),
+    Encoded = encode(no_flow, {explicit, little}, <<"1.2.3">>),
     ?assertEqual(Encoded, <<"1.2.3", 0>>).

@@ -18,7 +18,7 @@
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec encode(pid(), strategy(), binary()) -> binary().
+-spec encode(flow(), strategy(), binary()) -> binary().
 encode(Flow, Strategy, Data) ->
     MetaInformation = wolfpacs_file_meta_information:encode(Flow, Strategy, meta_info()),
     <<MetaInformation/binary, Data/binary>>.
@@ -28,7 +28,7 @@ encode(Flow, Strategy, Data) ->
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec decode(pid(), strategy(), binary()) -> {ok, {map(), map()}, binary()} | error.
+-spec decode(flow(), strategy(), binary()) -> {ok, {map(), map()}, binary()} | error.
 decode(Flow, Strategy, Data) ->
     case wolfpacs_file_meta_information:decode(Flow, Strategy, Data) of
 	{ok, Meta, Rest} ->

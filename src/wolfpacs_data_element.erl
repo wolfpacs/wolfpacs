@@ -27,7 +27,7 @@
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec encode(pid(), strategy(), integer(), integer(), string(), any()) -> binary().
+-spec encode(flow(), strategy(), integer(), integer(), string(), any()) -> binary().
 encode(Flow, Strategy, G, E, VR, Bytes) ->
     encode(Flow, Strategy, G, E, VR, Bytes, #{}).
 
@@ -36,7 +36,7 @@ encode(Flow, Strategy, G, E, VR, Bytes) ->
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec encode(pid(), strategy(), integer(), integer(), string(), any(), map()) -> binary().
+-spec encode(flow(), strategy(), integer(), integer(), string(), any(), map()) -> binary().
 encode(Flow, {explicit, _Endian}, 0, E, VR, Bytes, Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "command group is always implicit little"),
     wolfpacs_data_element:encode(Flow, {implicit, little}, 0, E, VR, Bytes, Extra);
