@@ -10,7 +10,15 @@
 <hr>
 
 <h1>Module wolfpacs_vr_common</h1>
-<ul class="index"><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Value Representation - Common Helper functions.
+
+
+<h2><a name="description">Description</a></h2>Value Representation - Common Helper functions.
+ 
+<h2><a name="types">Data Types</a></h2>
+
+<h3 class="typedecl"><a name="type-flow">flow()</a></h3>
+<p><tt>flow() = pid() | no_flow</tt></p>
 
 
 <h2><a name="index">Function Index</a></h2>
@@ -24,7 +32,7 @@
 
 <h3 class="function"><a name="decode-3">decode/3</a></h3>
 <div class="spec">
-<p><tt>decode(Flow, Module, Data) -&gt; any()</tt></p>
+<p><tt>decode(Flow::<a href="#type-flow">flow()</a>, Module::module(), Data::binary()) -&gt; {ok, binary(), binary()}</tt><br></p>
 </div><p>Decode Binary
  </p>
 
