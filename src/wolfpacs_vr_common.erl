@@ -1,9 +1,17 @@
+%%%-------------------------------------------------------------------
+%% @doc Value Representation - Common Helper functions.
+%%
+%% @end
+%%%-------------------------------------------------------------------
+
 -module(wolfpacs_vr_common).
 -export([encode/4,
 	 encode_exact/5,
 	 encode_limit/5,
 	 decode/3
 	]).
+
+-include("wolfpacs_types.hrl").
 
 %%------------------------------------------------------------------------------
 %% @doc Encode
@@ -31,6 +39,7 @@ encode_limit(Flow, Module, Data, Length, PadChar) ->
 %%
 %% @end
 %%------------------------------------------------------------------------------
+-spec decode(flow(), module(), binary()) -> {ok, binary(), binary()}.
 decode(Flow, Module, Data) ->
     Bytes = wolfpacs_vr_utils:trim(Data),
     wolfpacs_flow:consumed(Flow, Module, byte_size(Data)),
