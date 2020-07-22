@@ -11,10 +11,10 @@
 -include("wolfpacs_types.hrl").
 
 -spec encode(flow(), non_neg_integer(), binary(), binary()) -> binary().
-encode(_Flow, MaxPDUSize, Class, VersionName) ->
+encode(Flow, MaxPDUSize, Class, VersionName) ->
     A = wolfpacs_max_length:encode(MaxPDUSize),
     B = wolfpacs_implementation_class:encode(Class),
-    C = wolfpacs_version_name:encode(VersionName),
+    C = wolfpacs_version_name:encode(Flow, VersionName),
     encode(<<A/binary, B/binary, C/binary>>).
 
 -spec decode(flow(), binary()) -> {ok, non_neg_integer(), binary(), binary(), binary()} | error.
@@ -47,7 +47,7 @@ decode_with_max_length(Flow, _) ->
     error.
 
 decode_with_implementation_class(Flow, MaxSize, {ok, ImplementationClass, Rest}) ->
-    MaybeVersionName = wolfpacs_version_name:decode(Rest),
+    MaybeVersionName = wolfpacs_version_name:decode(Flow, Rest),
     decode_with_version_name(Flow, MaxSize, ImplementationClass, MaybeVersionName);
 decode_with_implementation_class(Flow, _, _) ->
     wolfpacs_flow:failed(Flow, ?MODULE, "error with implimentation class"),
