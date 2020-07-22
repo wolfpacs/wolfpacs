@@ -144,7 +144,8 @@ idle(A, B, SenderData) ->
 
 associate(enter, _Prev, SenderData) ->
     _ = lager:debug("[Sender] [Associate] Send Associate RQ"),
-    #sender_data{sock = Sock,
+    #sender_data{flow = Flow,
+		 sock = Sock,
 		 called = CalledAE,
 		 calling = CallingAE,
 		 abstract_syntax = AbstractSyntax} = SenderData,
@@ -154,7 +155,8 @@ associate(enter, _Prev, SenderData) ->
     Class = <<"1.2.276.0.7230010.3.0.3.6.4">>,
     VersionName = <<"WolfPACS_000">>,
 
-    AssociateRQ = wolfpacs_associate_rq:encode(CalledAE,
+    AssociateRQ = wolfpacs_associate_rq:encode(Flow,
+					       CalledAE,
 					       CallingAE,
 					       Contexts,
 					       MaxPDUSize,

@@ -125,7 +125,8 @@ send_associate_rq(State=#{flow := Flow, sock := Sock, calledae := CalledAE_, str
     Class = <<"1.2.276.0.7230010.3.0.3.6.4">>, %% TODO Change
     VersionName = <<"WolfPACS_000">>,
 
-    AssociateRQ = wolfpacs_associate_rq:encode(CalledAE, CallingAE,
+    AssociateRQ = wolfpacs_associate_rq:encode(Flow,
+					       CalledAE, CallingAE,
 					       Contexts,
 					       MaxPDUSize, Class, VersionName),
 

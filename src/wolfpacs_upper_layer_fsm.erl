@@ -91,7 +91,8 @@ idle(enter, _Prev, Data) ->
     {keep_state, Data, []};
 
 idle(cast, {pdu, 1, PDU}, Data) ->
-    MaybeAssociateRQ = wolfpacs_associate_rq:decode(PDU),
+    #wolfpacs_upper_layer_fsm_data{flow = Flow} = Data,
+    MaybeAssociateRQ = wolfpacs_associate_rq:decode(Flow, PDU),
     handle_associate_rq(MaybeAssociateRQ, Data);
 
 idle(cast, {pdu, 4, PDU}, Data) ->
@@ -147,7 +148,7 @@ abort(A, B, Data) ->
 %% Private
 %%==============================================================================
 
-handle_associate_rq({error, _}, Data) ->
+handle_associate_rq(error, Data) ->
     _ = lager:warning("associate rq decode error"),
     {keep_state, Data, []};
 
@@ -182,7 +183,7 @@ handle_abort({ok, _Source, _Reason, _}, Data) ->
     _ = lager:debug("[upper_layer_fsm] received abort"),
     {keep_state, Data, []}.
 
-handle_p_data_tf({error, _}, Data) ->
+handle_p_data_tf(error, Data) ->
     {keep_state, Data, []};
 
 handle_p_data_tf({ok, PDataTF, _Rest}, Data) ->
@@ -192,7 +193,7 @@ handle_p_data_tf({ok, PDataTF, _Rest}, Data) ->
     ConformanceTag = maps:get(PrCID, ContextMap, missing),
     handle_pdv_item(ConformanceTag, PrCID, IsLast, IsCommand, Raw, Data).
 
-handle_release_rq({error, _}, Data) ->
+handle_release_rq(error, Data) ->
     {keep_state, Data, []};
 handle_release_rq({ok, R, _}, Data) ->
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
