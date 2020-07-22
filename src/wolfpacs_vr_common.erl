@@ -30,7 +30,8 @@ encode_exact(Flow, Module, Data, Length, PadChar) ->
 
 encode_limit(Flow, Module, Data, Length, PadChar) ->
     Padded = wolfpacs_vr_utils:pad(Data, PadChar),
-    Bytes = wolfpacs_vr_utils:limit(Padded, Length),
+    Limit = Length * value_multiplicity(Data),
+    Bytes = wolfpacs_vr_utils:limit(Padded, Limit),
     wolfpacs_flow:generated(Flow, Module, byte_size(Bytes)),
     Bytes.
 
@@ -44,6 +45,19 @@ decode(Flow, Module, Data) ->
     Bytes = wolfpacs_vr_utils:trim(Data),
     wolfpacs_flow:consumed(Flow, Module, byte_size(Data)),
     {ok, Bytes, <<>>}.
+
+%%==============================================================================
+%% Private
+%%==============================================================================
+
+backslash(92, Acc) ->
+    Acc + 1;
+backslash(_, Acc) ->
+    Acc.
+
+value_multiplicity(Data) ->
+    Str = binary_to_list(Data),
+    lists:foldl(fun backslash/2, 1, Str).
 
 %%==============================================================================
 %% Test
@@ -64,4 +78,10 @@ encode_exact_test_() ->
     , ?_assertEqual(Encoded1, <<"ab">>)
     , ?_assertEqual(Encoded2, <<"abc ">>)
     , ?_assertEqual(Encoded3, <<"abc   ">>)
+    ].
+
+value_multiplicity_test_() ->
+    [ ?_assertEqual(value_multiplicity(<<"A">>), 1)
+    , ?_assertEqual(value_multiplicity(<<"A\\B">>), 2)
+    , ?_assertEqual(value_multiplicity(<<"A\\B\\C">>), 3)
     ].
