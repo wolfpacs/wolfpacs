@@ -16,7 +16,7 @@
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec encode(AbstractSyntaxUID :: binary()) -> binary().
+-spec encode(AbstractSyntaxUID :: binary()) -> <<_:32,_:_*8>>.
 encode(AbstractSyntaxUID) ->
     Length = byte_size(AbstractSyntaxUID),
     <<16#30,

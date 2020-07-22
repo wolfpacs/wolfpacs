@@ -8,6 +8,8 @@
 -export([encode/3,
 	 decode/3]).
 
+-include("wolfpacs_types.hrl").
+
 encode(Flow, _Strategy, UN) ->
     wolfpacs_vr_common:encode(Flow, ?MODULE, UN, 0).
 

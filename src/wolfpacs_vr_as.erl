@@ -18,9 +18,11 @@
 -export([encode/3, decode/3]).
 -include("wolfpacs_types.hrl").
 
--spec encode(flow(), strategy(), list() | binary()) -> binary().
-encode(_Flow, _Strategy, AE) ->
-    encode(AE).
+-define(LIMIT, 4).
+-define(PAD, " ").
+
+encode(Flow, _Strategy, X) ->
+    wolfpacs_vr_common:encode_exact(Flow, ?MODULE, X, ?LIMIT, ?PAD).
 
 -spec decode(flow(), strategy(), binary()) -> {ok, binary(), binary()} | error.
 decode(_Flow, _Strategy, Data) ->
@@ -29,12 +31,6 @@ decode(_Flow, _Strategy, Data) ->
 %%==============================================================================
 %% Private
 %%==============================================================================
-
--spec encode(list() | binary()) -> binary().
-encode(AS) when is_list(AS) ->
-    encode(list_to_binary(AS));
-encode(AS) ->
-    wolfpacs_vr_utils:limit(AS, 4).
 
 -spec decode(binary()) -> {ok, binary(), binary()} | error.
 decode(<<>>) ->
@@ -58,8 +54,7 @@ decode(_Data) ->
 
 encode_test_() ->
     {ok, Flow} = wolfpacs_flow:start_link(),
-    [ ?_assertEqual(encode("018M"), <<"018M">>)
-    , ?_assertEqual(encode(Flow, {explicit, little}, "018M"), <<"018M">>)
+    [ ?_assertEqual(encode(Flow, {explicit, little}, <<"018M">>), <<"018M">>)
     ].
 
 decode_test_() ->
@@ -71,9 +66,9 @@ decode_test_() ->
     ].
 
 encode_decode_test_() ->
-    [ ?_assertEqual(decode(encode(<<"123D">>)), {ok, <<"123D">>, <<>>})
-    , ?_assertEqual(decode(encode(<<"123W">>)), {ok, <<"123W">>, <<>>})
-    , ?_assertEqual(decode(encode(<<"123M">>)), {ok, <<"123M">>, <<>>})
-    , ?_assertEqual(decode(encode(<<"123Y">>)), {ok, <<"123Y">>, <<>>})
-    , ?_assertEqual(decode(encode(<<"123Y">>)), {ok, <<"123Y">>, <<>>})
+    [ ?_assertEqual(decode(encode(no_flow, {explicit, little}, <<"123D">>)), {ok, <<"123D">>, <<>>})
+    , ?_assertEqual(decode(encode(no_flow, {explicit, little}, <<"123W">>)), {ok, <<"123W">>, <<>>})
+    , ?_assertEqual(decode(encode(no_flow, {explicit, little}, <<"123M">>)), {ok, <<"123M">>, <<>>})
+    , ?_assertEqual(decode(encode(no_flow, {explicit, little}, <<"123Y">>)), {ok, <<"123Y">>, <<>>})
+    , ?_assertEqual(decode(encode(no_flow, {explicit, little}, <<"123Y">>)), {ok, <<"123Y">>, <<>>})
     ].
