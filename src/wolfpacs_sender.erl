@@ -216,14 +216,20 @@ send_data(timeout, send_more, SenderData=#sender_data{chunks=[Chunk]}) ->
 
 send_data(timeout, send_more, SenderData) ->
     _ = lager:debug("[Sender] [SendData] Send anouther chunk"),
-    #sender_data{flow = Flow, chunks = [Chunk|Chunks], sock = Sock} = SenderData,
+    #sender_data{flow = Flow, from = From, chunks = [Chunk|Chunks], sock = Sock} = SenderData,
     PDVItem = #pdv_item{pr_cid=1,
 			is_last=false,
 			is_command=false,
 			pdv_data=Chunk},
     PDataTF = wolfpacs_p_data_tf:encode(Flow, [PDVItem]),
-    ok = gen_tcp:send(Sock, PDataTF),
-    {keep_state, SenderData#sender_data{chunks=Chunks}, [{timeout, 0, send_more}]};
+    case gen_tcp:send(Sock, PDataTF) of
+	ok ->
+	    {keep_state, SenderData#sender_data{chunks=Chunks}, [{timeout, 0, send_more}]};
+	Error ->
+	    %% TODO - We need to figure out what to do here
+	    wolfpacs_flow:failed(Flow, ?MODULE, "unable to send"),
+	    {keep_state, SenderData, [{reply, From, Error}]}
+    end;
 
 send_data(info, {tcp, _, <<7, _/binary>>}, SenderData) ->
     {next_state, release, SenderData};
@@ -286,6 +292,10 @@ finish(info, {tcp, _, <<6, _/binary>>}, SenderData) ->
     gen_tcp:close(Sock),
     _ = lager:debug("[Sender] [Finish] Release response. Closed socket"),
     {keep_state, SenderData, [{reply, From, ok}]};
+
+finish(info, {tcp_closed, _Port}, SenderData) ->
+    _ = lager:debug("[Sender] [Finish] Received TCP closed"),
+    {keep_state, SenderData, []};
 
 finish(A, B, SenderData) ->
     _ = lager:warning("[Sender] [Finish] Unknown message ~p ~p", [A, B]),
