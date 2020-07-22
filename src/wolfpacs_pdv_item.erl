@@ -6,8 +6,8 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_pdv_item).
--export([encode/1,
-	 decode/1]).
+-export([encode/2,
+	 decode/2]).
 -include("wolfpacs_types.hrl").
 
 %%-------------------------------------------------------------------
@@ -16,8 +16,8 @@
 %% @see wolfpacs_pdv_item_fragment:encode/3
 %% @end
 %%-------------------------------------------------------------------
--spec encode(#pdv_item{}) -> binary().
-encode(PDVItem) ->
+-spec encode(flow(), #pdv_item{}) -> binary().
+encode(_Flow, PDVItem) ->
     #pdv_item{pr_cid=PrCID,
 	      is_last=IsLast,
 	      is_command=IsCommand,
@@ -35,8 +35,8 @@ encode(PDVItem) ->
 %% @see wolfpacs_pdv_item_fragment:decode/1
 %% @end
 %%-------------------------------------------------------------------
--spec decode(binary()) -> {ok, #pdv_item{}, Rest :: binary()} | {error, binary()}.
-decode(AllData = <<Length:32, Data/binary>>) ->
+-spec decode(flow(), binary()) -> {ok, #pdv_item{}, Rest :: binary()} | error.
+decode(Flow, <<Length:32, Data/binary>>) ->
     case wolfpacs_utils:split(Data, Length) of
 	{ok, <<PrCID, FragmentData/binary>>, Rest} ->
 	    case wolfpacs_pdv_item_fragement:decode(FragmentData) of
@@ -47,14 +47,16 @@ decode(AllData = <<Length:32, Data/binary>>) ->
 					pdv_data=PDVData},
 		    {ok, PDVItem, Rest};
 		_ ->
-		    {error, AllData, ["unable to decode fragement"]}
+		    wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode fragement"),
+		    error
 	    end;
 	_ ->
-	    {error, AllData, ["unable to split"]}
+	    wolfpacs_flow:failed(Flow, ?MODULE, "unable to split"),
+	    error
     end;
-decode(AllData) ->
-    {error, AllData, ["incorrect header"]}.
-
+decode(Flow, _Data) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "incorrect header"),
+    error.
 
 %%==============================================================================
 %% Test
@@ -69,7 +71,7 @@ encode_decode_test_() ->
 			is_command=true,
 			pdv_data=PDVData},
 
-    Encoded0 = encode(PDVItem),
+    Encoded0 = encode(no_flow, PDVItem),
     Encoded1 = <<Encoded0/binary, 42>>,
 
     Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
@@ -77,10 +79,10 @@ encode_decode_test_() ->
     Incorrect2 = <<1, 2, 3, 4>>,
     Incorrect3 = <<>>,
 
-    [ ?_assertEqual(decode(Encoded0), {ok, PDVItem, <<>>})
-    , ?_assertEqual(decode(Encoded1), {ok, PDVItem, <<42>>})
-    , ?_assertEqual(decode(Incorrect0), {error, Incorrect0, ["unable to split"]})
-    , ?_assertEqual(decode(Incorrect1), {error, Incorrect1, ["unable to split"]})
-    , ?_assertEqual(decode(Incorrect2), {error, Incorrect2, ["unable to split"]})
-    , ?_assertEqual(decode(Incorrect3), {error, Incorrect3, ["incorrect header"]})
+    [ ?_assertEqual(decode(no_flow, Encoded0), {ok, PDVItem, <<>>})
+    , ?_assertEqual(decode(no_flow, Encoded1), {ok, PDVItem, <<42>>})
+    , ?_assertEqual(decode(no_flow, Incorrect0), error)
+    , ?_assertEqual(decode(no_flow, Incorrect1), error)
+    , ?_assertEqual(decode(no_flow, Incorrect2), error)
+    , ?_assertEqual(decode(no_flow, Incorrect3), error)
     ].

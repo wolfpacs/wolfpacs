@@ -13,7 +13,7 @@ encode(SupportedContexts, MaxPDUSize, Class, VersionName) ->
     Fixed = <<"1.2.840.10008.3.1.1.1">>,
     ApplicationContextName = wolfpacs_application_context_name:encode(no_flow, Fixed),
     PresentationContexts = wolfpacs_presentation_contexts_accept:encode(SupportedContexts),
-    UserInformation = wolfpacs_user_information:encode(MaxPDUSize, Class, VersionName),
+    UserInformation = wolfpacs_user_information:encode(no_flow, MaxPDUSize, Class, VersionName),
     Payload = <<ApplicationContextName/binary,
 		PresentationContexts/binary,
 		UserInformation/binary>>,
@@ -32,7 +32,7 @@ decode_with_name(OrgData, _) ->
     {error, OrgData, ["unable to decode context name"]}.
 
 decode_with_accept(OrgData, Name, {ok, Contexts, Rest}) ->
-    MaybeUserInformation = wolfpacs_user_information:decode(Rest),
+    MaybeUserInformation = wolfpacs_user_information:decode(no_flow, Rest),
     decode_with_user_information(OrgData, Name, Contexts, MaybeUserInformation);
 decode_with_accept(OrgData, _, _) ->
     {error, OrgData, ["unable to decode accept"]}.

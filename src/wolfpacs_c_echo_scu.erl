@@ -98,7 +98,7 @@ handle_data(Data = <<16#6, _/binary>>, State=#{from := From, sock := Sock}) ->
 	    gen_server:reply(From, {ok, success}),
 	    gen_tcp:close(Sock),
 	    {noreply, State#{sock => none, from => none, data => Rest}};
-	{error, Data} ->
+	_ ->
 	    _ = lager:warning("[c_echo_scu] release_rp decode error"),
 	    {stop, normal, State}
     end;
@@ -125,7 +125,8 @@ send_associate_rq(State=#{flow := Flow, sock := Sock, calledae := CalledAE_, str
     Class = <<"1.2.276.0.7230010.3.0.3.6.4">>, %% TODO Change
     VersionName = <<"WolfPACS_000">>,
 
-    AssociateRQ = wolfpacs_associate_rq:encode(CalledAE, CallingAE,
+    AssociateRQ = wolfpacs_associate_rq:encode(Flow,
+					       CalledAE, CallingAE,
 					       Contexts,
 					       MaxPDUSize, Class, VersionName),
 

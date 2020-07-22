@@ -91,11 +91,13 @@ idle(enter, _Prev, Data) ->
     {keep_state, Data, []};
 
 idle(cast, {pdu, 1, PDU}, Data) ->
-    MaybeAssociateRQ = wolfpacs_associate_rq:decode(PDU),
+    #wolfpacs_upper_layer_fsm_data{flow = Flow} = Data,
+    MaybeAssociateRQ = wolfpacs_associate_rq:decode(Flow, PDU),
     handle_associate_rq(MaybeAssociateRQ, Data);
 
 idle(cast, {pdu, 4, PDU}, Data) ->
-    MaybePDataTF = wolfpacs_p_data_tf:decode(PDU),
+    #wolfpacs_upper_layer_fsm_data{flow = Flow} = Data,
+    MaybePDataTF = wolfpacs_p_data_tf:decode(Flow, PDU),
     handle_p_data_tf(MaybePDataTF, Data);
 
 idle(cast, {pdu, 5, PDU}, Data) ->
@@ -135,18 +137,18 @@ abort(enter, _Prev, Data) ->
 
 abort(timeout, close, Data) ->
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
-    wolfpacs_upper_layer:stop(UpperLayer),
+    _ = wolfpacs_upper_layer:stop(UpperLayer),
     {keep_state, Data, []};
 
 abort(A, B, Data) ->
-    lager:warning("[UpperLayer] [Abort] Received ~p ~p", [A, B]),
+    _ = lager:warning("[UpperLayer] [Abort] Received ~p ~p", [A, B]),
     {keep_state, Data, []}.
 
 %%=============================================================================
 %% Private
 %%==============================================================================
 
-handle_associate_rq({error, _}, Data) ->
+handle_associate_rq(error, Data) ->
     _ = lager:warning("associate rq decode error"),
     {keep_state, Data, []};
 
@@ -181,7 +183,7 @@ handle_abort({ok, _Source, _Reason, _}, Data) ->
     _ = lager:debug("[upper_layer_fsm] received abort"),
     {keep_state, Data, []}.
 
-handle_p_data_tf({error, _}, Data) ->
+handle_p_data_tf(error, Data) ->
     {keep_state, Data, []};
 
 handle_p_data_tf({ok, PDataTF, _Rest}, Data) ->
@@ -191,7 +193,7 @@ handle_p_data_tf({ok, PDataTF, _Rest}, Data) ->
     ConformanceTag = maps:get(PrCID, ContextMap, missing),
     handle_pdv_item(ConformanceTag, PrCID, IsLast, IsCommand, Raw, Data).
 
-handle_release_rq({error, _}, Data) ->
+handle_release_rq(error, Data) ->
     {keep_state, Data, []};
 handle_release_rq({ok, R, _}, Data) ->
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
@@ -211,7 +213,7 @@ handle_pdv_item({verification, Strategy}, PrCID, _IsLast, _IsCommand, Raw, Data)
 			is_command=true,
 			pdv_data=EchoResp},
 
-    EchoRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+    EchoRespPDataTF = wolfpacs_p_data_tf:encode(Flow, [PDVItem]),
     wolfpacs_upper_layer:responde(UpperLayer, EchoRespPDataTF),
 
     {keep_state, Data, []};
@@ -252,7 +254,7 @@ handle_pdv_item({_AbstractSyntrax, Strategy}, PrCID, true, false, Fragment, Data
 					is_last=true,
 					is_command=true,
 					pdv_data=StoreResp},
-		    StoreRespPDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+		    StoreRespPDataTF = wolfpacs_p_data_tf:encode(Flow, [PDVItem]),
 		    wolfpacs_upper_layer:responde(UpperLayer, StoreRespPDataTF),
 		    {keep_state, Data#wolfpacs_upper_layer_fsm_data{blob = Rest}, [hibernate]};
 		_ ->

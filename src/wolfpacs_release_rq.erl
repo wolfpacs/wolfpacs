@@ -17,11 +17,11 @@ encode() ->
 encode(R) ->
     <<16#5, 0, 4:32, R:32/bitstring>>.
 
--spec decode(binary()) -> {ok, binary(), binary()} | {error, binary()}.
+-spec decode(binary()) -> {ok, binary(), binary()} | error.
 decode(<<16#5, _, 4:32, R:32/bitstring, Rest/binary>>) ->
     {ok, R, Rest};
-decode(Data) ->
-    {error, Data}.
+decode(_Data) ->
+    error.
 
 %%==============================================================================
 %% Test
@@ -39,6 +39,6 @@ encode_decode_test_() ->
 
     [?_assertEqual(decode(Encoded0), {ok, R, <<>>}),
      ?_assertEqual(decode(Encoded1), {ok, R, <<42>>}),
-     ?_assertEqual(decode(Incorrect0), {error, Incorrect0}),
-     ?_assertEqual(decode(Incorrect1), {error, Incorrect1})
+     ?_assertEqual(decode(Incorrect0), error),
+     ?_assertEqual(decode(Incorrect1), error)
     ].

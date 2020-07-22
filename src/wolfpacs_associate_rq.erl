@@ -62,12 +62,13 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_associate_rq).
--export([encode/6,
-	 decode/1]).
+-export([encode/7,
+	 decode/2]).
 -include("abstract_syntax.hrl").
 -include("transfer_syntax.hrl").
+-include("wolfpacs_types.hrl").
 
-encode(CalledAE, CallingAE, Contexts, MaxPDUSize, Class, VersionName) ->
+encode(_Flow, CalledAE, CallingAE, Contexts, MaxPDUSize, Class, VersionName) ->
     VariableItems = wolfpacs_variable_items_request:encode(Contexts,
 							   MaxPDUSize,
 							   Class,
@@ -86,29 +87,33 @@ encode(CalledAE, CallingAE, Contexts, MaxPDUSize, Class, VersionName) ->
 
     <<16#1, 0, Length:32, Data/binary>>.
 
-decode(OrgData = <<16#1, _, _Length:32, Data/binary>>) ->
-    decode_called_and_calling(OrgData, Data);
-decode(OrgData = <<PV, _/binary>>) ->
-    {error, OrgData, ["incorrect header", PV]};
-decode(OrgData) ->
-    {error, OrgData, ["no data"]}.
+decode(Flow, <<16#1, _, _Length:32, Data/binary>>) ->
+    decode_called_and_calling(Flow, Data);
+decode(Flow, <<_PV, _/binary>>) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "incorrect header"),
+    error;
+decode(Flow, _Data) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "no data"),
+    error.
 
 %%==============================================================================
 %% Private
 %%==============================================================================
 
-decode_called_and_calling(OrgData, <<_:16, _:16, CalledAE:128/bitstring, CallingAE:128/bitstring, R:256/bitstring, Data/binary>>) ->
+decode_called_and_calling(Flow, <<_:16, _:16, CalledAE:128/bitstring, CallingAE:128/bitstring, R:256/bitstring, Data/binary>>) ->
     MaybeVariableItems = wolfpacs_variable_items_request:decode(Data),
-    decode_variable_items(OrgData, CalledAE, CallingAE, R, MaybeVariableItems);
-decode_called_and_calling(OrgData, _) ->
-    {error, OrgData, ["unable to decode called and calling"]}.
+    decode_variable_items(Flow, CalledAE, CallingAE, R, MaybeVariableItems);
+decode_called_and_calling(Flow, _) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode called and calling"),
+    error.
 
-decode_variable_items(_OrgData, CalledAE, CallingAE, R, {ok,
-							 Contexts,
-							 MaxSize, Class, VersionName, Rest}) ->
+decode_variable_items(_Flow, CalledAE, CallingAE, R, {ok,
+						      Contexts,
+						      MaxSize, Class, VersionName, Rest}) ->
     {ok, CalledAE, CallingAE, R, Contexts, MaxSize, Class, VersionName, Rest};
-decode_variable_items(OrgData, _, _, _, _) ->
-    {error, OrgData, ["unable to decode variable items"]}.
+decode_variable_items(Flow, _, _, _, _) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode variable items"),
+    error.
 
 %%==============================================================================
 %% Test
@@ -144,7 +149,7 @@ decode_test_() ->
      MaxSize,
      Class,
      VersionName,
-     Rest} = decode(Encoded),
+     Rest} = decode(no_flow, Encoded),
 
     [ ?_assertEqual(CalledAE, <<"CALLING8AB123456">>)
     , ?_assertEqual(CallingAE, <<"1234567890123456">>)
@@ -170,6 +175,6 @@ encode_test() ->
     VersionName = <<"OFFIS_DCMTK_364">>,
 
     Correct = example_encoded(),
-    Encoded = encode(CalledAE, CallingAE, Contexts, MaxSize, Class, VersionName),
+    Encoded = encode(no_flow, CalledAE, CallingAE, Contexts, MaxSize, Class, VersionName),
 
     ?_assertEqual(Encoded, Correct).

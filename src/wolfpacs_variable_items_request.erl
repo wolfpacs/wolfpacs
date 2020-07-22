@@ -14,7 +14,7 @@ encode(Contexts, MaxPDUSize, Class, VersionName) ->
     Fixed = <<"1.2.840.10008.3.1.1.1">>,
     ApplicationContext = wolfpacs_application_context_name:encode(no_flow, Fixed),
     PresentationContext = wolfpacs_presentation_contexts_request:encode(Contexts),
-    UserInformation = wolfpacs_user_information:encode(MaxPDUSize, Class, VersionName),
+    UserInformation = wolfpacs_user_information:encode(no_flow, MaxPDUSize, Class, VersionName),
     <<ApplicationContext/binary,
       PresentationContext/binary,
       UserInformation/binary>>.
@@ -36,7 +36,7 @@ decode_context(Data) ->
     decode_presentation_context(MaybePresentationContext).
 
 decode_presentation_context({ok, Contexts, Data}) ->
-    MaybeUserInformation = wolfpacs_user_information:decode(Data),
+    MaybeUserInformation = wolfpacs_user_information:decode(no_flow, Data),
     decode_user_information(Contexts, MaybeUserInformation);
 decode_presentation_context(_) ->
     error.

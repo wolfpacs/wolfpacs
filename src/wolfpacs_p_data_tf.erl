@@ -5,52 +5,56 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_p_data_tf).
--export([encode/1,
-	 decode/1]).
+-export([encode/2,
+	 decode/2]).
 -include("wolfpacs_types.hrl").
 
--spec encode(list(#pdv_item{})) -> binary().
-encode(PDVItems) ->
-    Data = encode(PDVItems, []),
+-spec encode(flow(), list(#pdv_item{})) -> binary().
+encode(Flow, PDVItems) ->
+    Data = priv_encode(Flow, PDVItems, []),
     Length = byte_size(Data),
     <<16#4, 0, Length:32, Data/binary>>.
 
-decode(AllData = <<16#4, _, Length:32, Data/binary>>) ->
+-spec decode(flow(), binary()) -> {ok, list(#pdv_item{}), binary()} | error.
+decode(Flow, <<16#4, _, Length:32, Data/binary>>) ->
     case wolfpacs_utils:split(Data, Length) of
 	{ok, PDVItemsData, Rest} ->
-	    case decode_items(PDVItemsData, []) of
+	    case decode_items(Flow, PDVItemsData, []) of
 		{ok, PDVItems} ->
 		    {ok, PDVItems, Rest};
 		_ ->
-		    {error, AllData, ["unable to decode items"]}
+		    wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode items"),
+		    error
 		end;
 	_ ->
-	    {error, AllData, ["unable to split"]}
+	    wolfpacs_flow:failed(Flow, ?MODULE, "unable to split"),
+	    error
     end;
-decode(AllData) ->
-    {error, AllData, ["incorrect header"]}.
+decode(Flow, _Data) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "incorrect header"),
+    error.
 
 %%============================================================================
 %% Private
 %%============================================================================
 
-encode([], Acc) ->
+priv_encode(_Flow, [], Acc) ->
     encode_payload(lists:reverse(Acc), <<>>);
-encode([PDVItem|PDVItems], Acc) ->
-    Data = wolfpacs_pdv_item:encode(PDVItem),
-    encode(PDVItems, [Data|Acc]).
+priv_encode(Flow, [PDVItem|PDVItems], Acc) ->
+    Data = wolfpacs_pdv_item:encode(Flow, PDVItem),
+    priv_encode(Flow, PDVItems, [Data|Acc]).
 
 encode_payload([], Acc) ->
     Acc;
 encode_payload([H|T], Acc) ->
     encode_payload(T, <<Acc/binary, H/binary>>).
 
-decode_items(<<>>, Acc) ->
+decode_items(_Flow, <<>>, Acc) ->
     {ok, lists:reverse(Acc)};
-decode_items(Data, Acc) ->
-    case wolfpacs_pdv_item:decode(Data) of
+decode_items(Flow, Data, Acc) ->
+    case wolfpacs_pdv_item:decode(Flow, Data) of
 	{ok, PDVItem, Rest} ->
-	    decode_items(Rest, [PDVItem|Acc]);
+	    decode_items(Flow, Rest, [PDVItem|Acc]);
 	_ ->
 	    error
     end.
@@ -77,14 +81,14 @@ test_items() ->
 
 encode_test() ->
     PDVItems = test_items(),
-    Encoded = encode(PDVItems),
+    Encoded = encode(no_flow, PDVItems),
     LastByte = lists:last(binary_to_list(Encoded)),
     ?assertEqual(LastByte, ?LAST_BYTE).
 
 encode_decode_test_() ->
     PDVItems = test_items(),
 
-    Encoded0 = encode(PDVItems),
+    Encoded0 = encode(no_flow, PDVItems),
     Encoded1 = <<Encoded0/binary, 42>>,
 
     Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
@@ -93,13 +97,13 @@ encode_decode_test_() ->
     Incorrect3 = <<12, 13, 14, 15>>,
     Incorrect4 = <<>>,
 
-    [ ?_assertEqual(decode(Encoded0), {ok, PDVItems, <<>>})
-    , ?_assertEqual(decode(Encoded1), {ok, PDVItems, <<42>>})
-    , ?_assertEqual(decode(Incorrect0), {error, Incorrect0, ["unable to split"]})
-    , ?_assertEqual(decode(Incorrect1), {error, Incorrect1, ["incorrect header"]})
-    , ?_assertEqual(decode(Incorrect2), {error, Incorrect2, ["incorrect header"]})
-    , ?_assertEqual(decode(Incorrect3), {error, Incorrect3, ["incorrect header"]})
-    , ?_assertEqual(decode(Incorrect4), {error, Incorrect4, ["incorrect header"]})
+    [ ?_assertEqual(decode(no_flow, Encoded0), {ok, PDVItems, <<>>})
+    , ?_assertEqual(decode(no_flow, Encoded1), {ok, PDVItems, <<42>>})
+    , ?_assertEqual(decode(no_flow, Incorrect0), error)
+    , ?_assertEqual(decode(no_flow, Incorrect1), error)
+    , ?_assertEqual(decode(no_flow, Incorrect2), error)
+    , ?_assertEqual(decode(no_flow, Incorrect3), error)
+    , ?_assertEqual(decode(no_flow, Incorrect4), error)
     ].
 
 decode_pdu_4_test_() ->
@@ -124,7 +128,7 @@ decode_pdu_4_test_() ->
          6e6f 7461 7469 6f6e 7320",
     Encoded = wolfpacs_utils:hexl_log_to_binary(HexlData),
     282 = byte_size(Encoded),
-    {ok, [PDVItem], <<>>} = decode(Encoded),
+    {ok, [PDVItem], <<>>} = decode(no_flow, Encoded),
     #pdv_item{pr_cid = 1, is_last = true, is_command = false, pdv_data = PDVData} = PDVItem,
     {ok, DataSet, <<>>} = wolfpacs_data_elements:decode(no_flow, {explicit, little}, PDVData),
     Get = fun(H) -> maps:get(H, DataSet) end,

@@ -63,7 +63,7 @@ send_with_class_and_instance_uid(Sender, DataSet, ClassUID, InstanceUID) ->
 		      abstract_syntax :: binary(),
 		      instance_uid :: binary(),
 		      data :: binary(),
-		      maxpdu :: pos_integer(),
+		      maxpdu :: non_neg_integer(),
 		      chunks :: list(binary())}).
 
 %% @hidden
@@ -144,7 +144,8 @@ idle(A, B, SenderData) ->
 
 associate(enter, _Prev, SenderData) ->
     _ = lager:debug("[Sender] [Associate] Send Associate RQ"),
-    #sender_data{sock = Sock,
+    #sender_data{flow = Flow,
+		 sock = Sock,
 		 called = CalledAE,
 		 calling = CallingAE,
 		 abstract_syntax = AbstractSyntax} = SenderData,
@@ -154,7 +155,8 @@ associate(enter, _Prev, SenderData) ->
     Class = <<"1.2.276.0.7230010.3.0.3.6.4">>,
     VersionName = <<"WolfPACS_000">>,
 
-    AssociateRQ = wolfpacs_associate_rq:encode(CalledAE,
+    AssociateRQ = wolfpacs_associate_rq:encode(Flow,
+					       CalledAE,
 					       CallingAE,
 					       Contexts,
 					       MaxPDUSize,
@@ -203,25 +205,31 @@ send_data(timeout, send_more, SenderData=#sender_data{chunks=[]}) ->
 
 send_data(timeout, send_more, SenderData=#sender_data{chunks=[Chunk]}) ->
     _ = lager:debug("[Sender] [SendData] Send last chunk"),
-    #sender_data{sock = Sock} = SenderData,
+    #sender_data{flow = Flow, sock = Sock} = SenderData,
     PDVItem = #pdv_item{pr_cid=1,
 			is_last=true,
 			is_command=false,
 			pdv_data=Chunk},
-    PDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+    PDataTF = wolfpacs_p_data_tf:encode(Flow, [PDVItem]),
     ok = gen_tcp:send(Sock, PDataTF),
     {next_state, release, SenderData#sender_data{chunks=[]}};
 
 send_data(timeout, send_more, SenderData) ->
     _ = lager:debug("[Sender] [SendData] Send anouther chunk"),
-    #sender_data{chunks = [Chunk|Chunks], sock = Sock} = SenderData,
+    #sender_data{flow = Flow, from = From, chunks = [Chunk|Chunks], sock = Sock} = SenderData,
     PDVItem = #pdv_item{pr_cid=1,
 			is_last=false,
 			is_command=false,
 			pdv_data=Chunk},
-    PDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
-    ok = gen_tcp:send(Sock, PDataTF),
-    {keep_state, SenderData#sender_data{chunks=Chunks}, [{timeout, 0, send_more}]};
+    PDataTF = wolfpacs_p_data_tf:encode(Flow, [PDVItem]),
+    case gen_tcp:send(Sock, PDataTF) of
+	ok ->
+	    {keep_state, SenderData#sender_data{chunks=Chunks}, [{timeout, 0, send_more}]};
+	Error ->
+	    %% TODO - We need to figure out what to do here
+	    wolfpacs_flow:failed(Flow, ?MODULE, "unable to send"),
+	    {keep_state, SenderData, [{reply, From, Error}]}
+    end;
 
 send_data(info, {tcp, _, <<7, _/binary>>}, SenderData) ->
     {next_state, release, SenderData};
@@ -248,7 +256,7 @@ release(enter, _Prev, SenderData) ->
 release(info, {tcp, _Port, DataNew}, SenderData) ->
     #sender_data{flow = Flow, data = DataOld} = SenderData,
     Data = <<DataOld/binary, DataNew/binary>>,
-    case wolfpacs_p_data_tf:decode(Data) of
+    case wolfpacs_p_data_tf:decode(Flow, Data) of
 	{ok, [#pdv_item{pdv_data=Payload}], Rest} ->
 	    _ = wolfpacs_data_elements:decode(Flow, {explicit, little}, Payload),
 	    _ = lager:debug("[Sender] [Release] Release complete"),
@@ -285,6 +293,10 @@ finish(info, {tcp, _, <<6, _/binary>>}, SenderData) ->
     _ = lager:debug("[Sender] [Finish] Release response. Closed socket"),
     {keep_state, SenderData, [{reply, From, ok}]};
 
+finish(info, {tcp_closed, _Port}, SenderData) ->
+    _ = lager:debug("[Sender] [Finish] Received TCP closed"),
+    {keep_state, SenderData, []};
+
 finish(A, B, SenderData) ->
     _ = lager:warning("[Sender] [Finish] Unknown message ~p ~p", [A, B]),
     {keep_state, SenderData, []}.
@@ -304,7 +316,7 @@ send_command_message(SenderData) ->
 			is_last=true,
 			is_command=true,
 			pdv_data=Encoded},
-    PDataTF = wolfpacs_p_data_tf:encode([PDVItem]),
+    PDataTF = wolfpacs_p_data_tf:encode(Flow, [PDVItem]),
     gen_tcp:send(Sock, PDataTF).
 
 int(Value) when is_list(Value) ->

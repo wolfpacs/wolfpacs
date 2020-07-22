@@ -139,7 +139,7 @@ encode(Flow, Strategy, G, E, VR, Bytes, Extra) ->
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec decode(pid(), strategy(), binary()) -> {ok, {{integer(), integer()}, any()}, binary()} | {error, binary(), list(string())}.
+-spec decode(flow(), strategy(), binary()) -> {ok, {{integer(), integer()}, any()}, binary()} | error.
 decode(Flow, Strategy, Data) ->
     decode(Flow, Strategy, Data, #{}).
 
@@ -148,7 +148,7 @@ decode(Flow, Strategy, Data) ->
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec decode(pid(), strategy(), binary(), map()) -> {ok, {{integer(), integer()}, any()}, binary()} | {error, binary(), list(string())}.
+-spec decode(flow(), strategy(), binary(), map()) -> {ok, {{integer(), integer()}, any()}, binary()} | error.
 decode(Flow, {explicit, _Endian}, Data = <<0:16, _/binary>>, Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "command group is always implicit little"),
     decode(Flow, {implicit, little}, Data, Extra);
