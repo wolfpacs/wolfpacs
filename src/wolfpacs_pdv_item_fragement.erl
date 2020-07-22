@@ -24,7 +24,7 @@
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec encode(IsLast :: boolean(), IsCommand :: boolean(), DVData :: binary()) -> binary().
+-spec encode(IsLast :: boolean(), IsCommand :: boolean(), DVData :: binary()) -> <<_:8, _:_*8>>.
 encode(false, false, Data) ->
     <<0:6, 0:1, 0:1, Data/binary>>;
 encode(false, true, Data) ->
