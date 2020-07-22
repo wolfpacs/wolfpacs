@@ -1,0 +1,9 @@
+# Ignore everything
+**
+
+!Dockerfile
+
+!rebar.config
+!rebar.lock
+!src/
+!include/
