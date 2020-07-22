@@ -28,6 +28,10 @@ http://dicom.nema.org/dicom/2013/output/chtml/part07/sect_6.3.html</p>
  
 <h2><a name="types">Data Types</a></h2>
 
+<h3 class="typedecl"><a name="type-flow">flow()</a></h3>
+<p><tt>flow() = pid() | no_flow</tt></p>
+
+
 <h3 class="typedecl"><a name="type-strategy">strategy()</a></h3>
 <p><tt>strategy() = {explicit, little} | {explicit, big} | {implicit, little} | {implicit, big}</tt></p>
 
@@ -43,13 +47,13 @@ http://dicom.nema.org/dicom/2013/output/chtml/part07/sect_6.3.html</p>
 
 <h3 class="function"><a name="decode-3">decode/3</a></h3>
 <div class="spec">
-<p><tt>decode(Flow::pid(), Strategy::<a href="#type-strategy">strategy()</a>, Data::binary()) -&gt; {ok, {{integer(), integer()}, any()}, binary()} | {error, binary(), [string()]}</tt><br></p>
+<p><tt>decode(Flow::<a href="#type-flow">flow()</a>, Strategy::<a href="#type-strategy">strategy()</a>, Data::binary()) -&gt; {ok, {{integer(), integer()}, any()}, binary()} | error</tt><br></p>
 </div><p>Decode a Data Element without extra information
  </p>
 
 <h3 class="function"><a name="decode-4">decode/4</a></h3>
 <div class="spec">
-<p><tt>decode(Flow::pid(), X2::<a href="#type-strategy">strategy()</a>, Data::binary(), Extra::map()) -&gt; {ok, {{integer(), integer()}, any()}, binary()} | {error, binary(), [string()]}</tt><br></p>
+<p><tt>decode(Flow::<a href="#type-flow">flow()</a>, X2::<a href="#type-strategy">strategy()</a>, Data::binary(), Extra::map()) -&gt; {ok, {{integer(), integer()}, any()}, binary()} | error</tt><br></p>
 </div><p>Decode a Data Element
  </p>
 
