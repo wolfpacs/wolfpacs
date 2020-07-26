@@ -3,6 +3,7 @@
 -define(SERVER, ?MODULE).
 
 -export([start_link/0,
+	 stop/0,
 	 empty/0,
 	 store/1,
 	 retreive/0]).
@@ -16,6 +17,9 @@
 
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+
+stop() ->
+    gen_server:stop(?MODULE).
 
 empty() ->
     gen_server:cast(?MODULE, empty).
@@ -49,3 +53,23 @@ terminate(_Reason, _State) ->
 
 code_change(_Vsn, State, _Extra) ->
     {ok, State}.
+
+%%==============================================================================
+%% Test
+%%==============================================================================
+
+-include_lib("eunit/include/eunit.hrl").
+
+start_stop_test() ->
+    start_link(),
+    ?assertEqual(stop(), ok).
+
+cast_test() ->
+    start_link(),
+    gen_server:cast(?MODULE, this_should_not_crash),
+    ?assertEqual(stop(), ok).
+
+info_test() ->
+    start_link(),
+    ?MODULE ! this_should_not_crash,
+    ?assertEqual(stop(), ok).
