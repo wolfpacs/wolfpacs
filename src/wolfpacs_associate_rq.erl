@@ -178,3 +178,38 @@ encode_test() ->
     Encoded = encode(no_flow, CalledAE, CallingAE, Contexts, MaxSize, Class, VersionName),
 
     ?_assertEqual(Encoded, Correct).
+
+incorrect_headers_test_() ->
+    [ ?_assertEqual(decode(no_flow, <<2, 3, 4, 5>>), error)
+    , ?_assertEqual(decode(no_flow, <<2>>), error)
+    , ?_assertEqual(decode(no_flow, <<>>), error)
+    ].
+
+encode_decode_test_() ->
+    CalledAE = <<"CALLING8AB123456">>,
+    CallingAE = <<"1234567890123456">>,
+    Contexts = [{1,
+		 <<"1.2.840.10008.1.1">>,
+		 [<<"1.2.840.10008.1.2">>]}],
+    MaxSize = 16384,
+    Class = <<"1.2.276.0.7230010.3.0.3.6.4">>,
+    VersionName = <<"OFFIS_DCMTK_364">>,
+    R = <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>,
+
+    Encoded0 = encode(no_flow, CalledAE, CallingAE, Contexts, MaxSize, Class, VersionName),
+    Encoded1 = <<Encoded0/binary, 42>>,
+
+    Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
+    Incorrect1 = wolfpacs_utils:drop_first_byte(Encoded0),
+    Incorrect2 = wolfpacs_utils:clear_byte(Encoded0, 20),
+    Incorrect3 = wolfpacs_utils:clear_odd(Encoded0),
+
+    [ ?_assertEqual(decode(no_flow, Encoded0),
+		    {ok, CalledAE, CallingAE, R, Contexts, MaxSize, Class, VersionName, <<>>})
+    , ?_assertEqual(decode(no_flow, Encoded1),
+		    {ok, CalledAE, CallingAE, R, Contexts, MaxSize, Class, VersionName, <<42>>})
+    , ?_assertEqual(decode(no_flow, Incorrect0), error)
+    , ?_assertEqual(decode(no_flow, Incorrect1), error)
+    , ?_assertEqual(decode(no_flow, Incorrect2), error)
+    , ?_assertEqual(decode(no_flow, Incorrect3), error)
+    ].
