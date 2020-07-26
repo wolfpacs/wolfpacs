@@ -41,7 +41,7 @@ If bit 1 is set to 0, the following fragment does not contain the last fragment.
 
 <h3 class="function"><a name="encode-3">encode/3</a></h3>
 <div class="spec">
-<p><tt>encode(IsLast::boolean(), IsCommand::boolean(), DVData::binary()) -&gt; binary()</tt><br></p>
+<p><tt>encode(IsLast::boolean(), IsCommand::boolean(), DVData::binary()) -&gt; &lt;&lt;_:8, _:_*8&gt;&gt;</tt><br></p>
 </div><p>Encodes ad PDV Fragment Item.
  </p>
 <hr>
