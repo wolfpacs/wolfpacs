@@ -19,7 +19,7 @@
 	 chunk/2,
 	 flatten_decoded/1]).
 
--spec drop_first_byte(binary()) -> binary().
+-spec drop_first_byte(<<_:8, _:_*8>>) -> binary().
 drop_first_byte(<<_, Data/binary>>) ->
     Data.
 

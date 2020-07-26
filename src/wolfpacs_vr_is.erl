@@ -39,12 +39,17 @@ decode(Flow, _Strategy, Data) ->
 
 -include_lib("eunit/include/eunit.hrl").
 
-encode_decode_test() ->
-    Data = -23,
-    {ok, Flow} = wolfpacs_flow:start_link(),
-    Encoded0 = encode(Flow, {explicit, little}, Data),
-    {ok, Decoded0, <<>>} = decode(Flow, {explicit, little}, Encoded0),
-    ?assertEqual(Data, Decoded0).
+encode_decode_test_() ->
+    Strategy = {explicit, little},
+
+    Encoded0 = encode(no_flow, Strategy, -23),
+    Encoded1 = encode(no_flow, Strategy, <<"-23">>),
+    Encoded2 = encode(no_flow, Strategy, <<"-2foo3">>),
+
+    [ ?_assertEqual(decode(no_flow, Strategy, Encoded0), {ok, -23, <<>>})
+    , ?_assertEqual(decode(no_flow, Strategy, Encoded1), {ok, -23, <<>>})
+    , ?_assertEqual(decode(no_flow, Strategy, Encoded2), error)
+    ].
 
 encode_decode_error_test() ->
     Data = <<"Banana">>,

@@ -9,11 +9,10 @@
 	 encode/1,
 	 decode/1]).
 
--spec encode() -> binary().
 encode() ->
     encode(<<0, 0, 0, 0>>).
 
--spec encode(binary()) -> binary().
+-spec encode(binary()) -> <<_:80>>.
 encode(R) ->
     <<16#5, 0, 4:32, R:32/bitstring>>.
 

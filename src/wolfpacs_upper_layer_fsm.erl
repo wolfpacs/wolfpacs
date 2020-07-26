@@ -105,7 +105,8 @@ idle(cast, {pdu, 5, PDU}, Data) ->
     handle_release_rq(MaybeReleaseRQ, Data);
 
 idle(cast, {pdu, 7, PDU}, Data) ->
-    MaybeAbort = wolfpacs_abort:decode(PDU),
+    #wolfpacs_upper_layer_fsm_data{flow = Flow} = Data,
+    MaybeAbort = wolfpacs_abort:decode(Flow, PDU),
     handle_abort(MaybeAbort, Data);
 
 idle(cast, {pdu, N, _PDU}, Data) ->
@@ -130,8 +131,8 @@ idle(Type, What, Data) ->
 
 abort(enter, _Prev, Data) ->
     _ = lager:warning("[UpperLayer] [Abort] Send abort"),
-    #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
-    Abort = wolfpacs_abort:encode(2, 0),
+    #wolfpacs_upper_layer_fsm_data{flow = Flow, upper_layer=UpperLayer} = Data,
+    Abort = wolfpacs_abort:encode(Flow, 2, 0),
     wolfpacs_upper_layer:responde(UpperLayer, Abort),
     {keep_state, Data, [{timeout, 500, close}]};
 
@@ -177,7 +178,7 @@ handle_associate_rq(AssociateRQ, Data) ->
 						},
     {keep_state, NewData, []}.
 
-handle_abort({error, _}, Data) ->
+handle_abort(error, Data) ->
     {keep_state, Data, []};
 handle_abort({ok, _Source, _Reason, _}, Data) ->
     _ = lager:debug("[upper_layer_fsm] received abort"),
