@@ -1,5 +1,10 @@
 %%%-------------------------------------------------------------------
-%% @doc Value Representation OW.
+%% @doc Value Representation OF.
+%%
+%% A string of 32-bit IEEE 754:1985 floating point words.
+%% OF is a VR that requires byte swapping within each 32-bit word
+%% when changing between Little Endian and Big Endian byte ordering
+%% (see Section 7.3).
 %%
 %% @end
 %%%-------------------------------------------------------------------
@@ -9,11 +14,11 @@
 	 decode/3]).
 -include("wolfpacs_types.hrl").
 
--spec encode(flow(), strategy(), list()) -> binary().
+-spec encode(flow(), strategy(), list(float())) -> binary().
 encode(_Flow, Strategy, List) ->
     priv_encode(Strategy, List, <<>>).
 
--spec decode(flow(), strategy(), binary()) -> {ok, list(), binary()} | error.
+-spec decode(flow(), strategy(), binary()) -> {ok, list(float()), binary()} | error.
 decode(_Flow, Strategy, Data) ->
     case priv_decode(Strategy, Data, []) of
 	error ->
@@ -29,15 +34,15 @@ decode(_Flow, Strategy, Data) ->
 priv_encode(_, [], Acc) ->
     Acc;
 priv_encode(Strategy = {_, little}, [Head|Tail], Acc) ->
-    priv_encode(Strategy, Tail, <<Acc/binary, Head:32/little>>);
+    priv_encode(Strategy, Tail, <<Acc/binary, Head:32/float-little>>);
 priv_encode(Strategy = {_, big}, [Head|Tail], Acc) ->
-    priv_encode(Strategy, Tail, <<Acc/binary, Head:32/big>>).
+    priv_encode(Strategy, Tail, <<Acc/binary, Head:32/float-big>>).
 
 priv_decode(_, <<>>, Acc) ->
     lists:reverse(Acc);
-priv_decode(Strategy = {_, little}, <<Val:32/little, Rest/bitstring>>, Acc) ->
+priv_decode(Strategy = {_, little}, <<Val:32/float-little, Rest/bitstring>>, Acc) ->
     priv_decode(Strategy, Rest, [Val|Acc]);
-priv_decode(Strategy = {_, big}, <<Val:32/big, Rest/bitstring>>, Acc) ->
+priv_decode(Strategy = {_, big}, <<Val:32/float-big, Rest/bitstring>>, Acc) ->
     priv_decode(Strategy, Rest, [Val|Acc]);
 priv_decode(_, _, _) ->
     error.
@@ -49,17 +54,16 @@ priv_decode(_, _, _) ->
 
 -include_lib("eunit/include/eunit.hrl").
 
-encode_decode_common(Strategy, Data) ->
+encode_decode_common(Strategy) ->
+    Data = [1.0, 2.0, 3.0, 4.0, 5.0],
     {ok, Flow} = wolfpacs_flow:start_link(),
     Encoded = encode(Flow, Strategy, Data),
     [ ?_assertEqual(decode(Flow, Strategy, Encoded), {ok, Data, <<>>}) ].
 
 encode_decode_little_test_() ->
-    Data = [1, 2, 3, 4, 5],
     Strategy = {explicit, little},
-    encode_decode_common(Strategy, Data).
+    encode_decode_common(Strategy).
 
 encode_decode_big_test_() ->
-    Data = [1, 2, 3, 4, 5],
     Strategy = {explicit, big},
-    encode_decode_common(Strategy, Data).
+    encode_decode_common(Strategy).

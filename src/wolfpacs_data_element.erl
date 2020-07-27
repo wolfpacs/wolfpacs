@@ -540,7 +540,7 @@ encode_decode_ow_test_() ->
     encode_decode_common("OW", [1, 2, 3, 4, 5]).
 
 encode_decode_of_test_() ->
-    encode_decode_common("OF", [1, 2, 3, 4, 5]).
+    encode_decode_common("OF", [1.0, 2.0, 3.0, 4.0, 5.0]).
 
 encode_decode_pn_test_() ->
     encode_decode_common("PN", <<"Smith^Joe">>).
