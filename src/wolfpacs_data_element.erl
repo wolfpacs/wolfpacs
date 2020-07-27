@@ -52,6 +52,9 @@ encode(Flow, Strategy, G, E, "OW", Bytes, _Extra) ->
 encode(Flow, Strategy, G, E, "OF", Bytes, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode OF"),
     encode_common(Strategy, G, E, "OF", wolfpacs_vr_of:encode(Flow, Strategy, Bytes));
+encode(Flow, Strategy, G, E, "OD", Bytes, _Extra) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "encode OD"),
+    encode_common(Strategy, G, E, "OD", wolfpacs_vr_od:encode(Flow, Strategy, Bytes));
 encode(Flow, Strategy, G, E, "AE", Title, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode AE"),
     encode_common(Strategy, G, E, "AE", wolfpacs_vr_ae:encode(Flow, Strategy, Title));
@@ -185,6 +188,8 @@ encode_common({explicit, Endian}, G, E, "OW", Data) ->
     encode_common_long({explicit, Endian}, G, E, "OW", Data);
 encode_common({explicit, Endian}, G, E, "OF", Data) ->
     encode_common_long({explicit, Endian}, G, E, "OF", Data);
+encode_common({explicit, Endian}, G, E, "OD", Data) ->
+    encode_common_long({explicit, Endian}, G, E, "OD", Data);
 encode_common({explicit, Endian}, G, E, "UN", Data) ->
     encode_common_long({explicit, Endian}, G, E, "UN", Data);
 encode_common({explicit, Endian}, G, E, "SQ", Data) ->
@@ -243,6 +248,11 @@ decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"OF", _:16, Data/binary>
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
     wolfpacs_group_elements_cache:add(G, E, "OF"),
     decode_with_vr_32bit_length(Flow, Strategy, G, E, "OF", Data);
+
+decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"OD", _:16, Data/binary>>, _Extra) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
+    wolfpacs_group_elements_cache:add(G, E, "OD"),
+    decode_with_vr_32bit_length(Flow, Strategy, G, E, "OD", Data);
 
 decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"UN", _:16, Data/binary>>, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
@@ -341,6 +351,10 @@ decode_common(Flow, Strategy, G, E, "OW", Len, Data) ->
 decode_common(Flow, Strategy, G, E, "OF", Len, Data) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_common OF"),
     decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_of);
+
+decode_common(Flow, Strategy, G, E, "OD", Len, Data) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "decode_common OD"),
+    decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_od);
 
 decode_common(Flow, Strategy, G, E, "PN", Len, Data) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_common PN"),
@@ -541,6 +555,9 @@ encode_decode_ow_test_() ->
 
 encode_decode_of_test_() ->
     encode_decode_common("OF", [1.0, 2.0, 3.0, 4.0, 5.0]).
+
+encode_decode_od_test_() ->
+    encode_decode_common("OD", [1.0, 2.0, 3.0, 4.0, 5.0]).
 
 encode_decode_pn_test_() ->
     encode_decode_common("PN", <<"Smith^Joe">>).
