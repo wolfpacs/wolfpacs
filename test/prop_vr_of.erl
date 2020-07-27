@@ -5,10 +5,9 @@
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
 prop_random_clear_test() ->
-    ?FORALL(_, term(),
+    ?FORALL(Info, list(float()),
 	    begin
 		Strategy = {explicit, little},
-		Info = [1, 2, 3, 4],
 		Encoded = wolfpacs_vr_of:encode(no_flow, Strategy, Info),
 		Corrupt = wolfpacs_utils:random_clear(Encoded, 0.2),
 		case wolfpacs_vr_of:decode(no_flow, Strategy, Corrupt) of
