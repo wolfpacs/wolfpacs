@@ -146,3 +146,21 @@ minimal_destinations_test() ->
     ok = remove_destination({"fooy", "bary"}),
     {ok, 0} = number_of_destinations(),
     ok = stop().
+
+start_stop_test() ->
+    start_link(),
+    ?assertEqual(stop(), ok).
+
+cast_test() ->
+    start_link(),
+    gen_server:cast(?MODULE, this_should_not_crash),
+    ?assertEqual(stop(), ok).
+
+info_test() ->
+    start_link(),
+    ?MODULE ! this_should_not_crash,
+    ?assertEqual(stop(), ok).
+
+code_change_test() ->
+    start_link(),
+    ?assertEqual(code_change(1, state, extra), {ok, state}).
