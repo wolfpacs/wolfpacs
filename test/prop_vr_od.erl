@@ -1,4 +1,4 @@
--module(prop_vr_of).
+-module(prop_vr_od).
 -include_lib("proper/include/proper.hrl").
 
 %%%%%%%%%%%%%%%%%%

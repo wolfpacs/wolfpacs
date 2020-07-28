@@ -73,3 +73,7 @@ info_test() ->
     start_link(),
     ?MODULE ! this_should_not_crash,
     ?assertEqual(stop(), ok).
+
+code_change_test() ->
+    start_link(),
+    ?assertEqual(code_change(1, state, extra), {ok, state}).

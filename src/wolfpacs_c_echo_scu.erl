@@ -157,3 +157,7 @@ gen_server_test_() ->
     [ ?_assertEqual(gen_server:cast(Echo, foobar), ok),
       ?_assertEqual(gen_server:call(Echo, foobar), {error, foobar})
     ].
+
+code_change_test() ->
+    start_link(),
+    ?assertEqual(code_change(1, state, extra), {ok, state}).

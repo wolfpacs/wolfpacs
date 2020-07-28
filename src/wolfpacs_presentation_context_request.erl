@@ -47,13 +47,13 @@ encode(_Flow, PrCID, AbstractSyntax, TransferSyntax) ->
 -spec decode(flow(), binary()) -> {ok, byte(), binary(), list(binary()), binary()} | error.
 decode(Flow, <<16#20, _, Length:16, Payload/binary>>) ->
     NbBytes = byte_size(Payload),
-    <<PrCID,
-      _,
-      _,
-      _,
-      WhatHow/binary>> = Payload,
     case Length =< NbBytes of
 	true ->
+	    <<PrCID,
+	      _,
+	      _,
+	      _,
+	      WhatHow/binary>> = Payload,
 	    try_decode(Flow, PrCID, WhatHow);
 	false ->
 	    wolfpacs_flow:failed(Flow, ?MODULE, "not enough data in payload"),

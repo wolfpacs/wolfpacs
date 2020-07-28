@@ -213,3 +213,20 @@ encode_decode_test_() ->
     , ?_assertEqual(decode(no_flow, Incorrect2), error)
     , ?_assertEqual(decode(no_flow, Incorrect3), error)
     ].
+
+broken_encoded_decode_test() ->
+    CalledAE = <<"CALLING8AB123456">>,
+    CallingAE = <<"1234567890123456">>,
+    Contexts = [{1,
+		 <<"1.2.840.10008.1.1">>,
+		 [<<"1.2.840.10008.1.2">>]}],
+    MaxSize = 16384,
+    Class = <<"1.2.276.0.7230010.3.0.3.6.4">>,
+    VersionName = <<"OFFIS_DCMTK_364">>,
+
+    Encoded = encode(no_flow, CalledAE, CallingAE, Contexts, MaxSize, Class, VersionName),
+    Length = byte_size(Encoded),
+
+    {ok, Broken, _} = wolfpacs_utils:split(Encoded, Length div 2),
+
+    ?assertEqual(decode(no_flow, Broken), error).
