@@ -225,10 +225,14 @@ send_data(timeout, send_more, SenderData) ->
     case gen_tcp:send(Sock, PDataTF) of
 	ok ->
 	    {keep_state, SenderData#sender_data{chunks=Chunks}, [{timeout, 0, send_more}]};
+	{error, closed} ->
+	    wolfpacs_flow:failed(Flow, ?MODULE, "unable to send - closed"),
+	    {keep_state, SenderData, [{reply, From, {error, closed}}]};
 	Error ->
 	    %% TODO - We need to figure out what to do here
-	    wolfpacs_flow:failed(Flow, ?MODULE, "unable to send"),
-	    {keep_state, SenderData, [{reply, From, Error}]}
+	    wolfpacs_flow:failed(Flow, ?MODULE, "unable to send - retry"),
+	    wolfpacs_flow:failed(Flow, ?MODULE, Error),
+	    {keep_state, SenderData, [{timeout, 0, send_more}]}
     end;
 
 send_data(info, {tcp, _, <<7, _/binary>>}, SenderData) ->

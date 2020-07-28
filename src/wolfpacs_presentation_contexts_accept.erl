@@ -28,13 +28,13 @@ encode([], Acc) ->
     Acc;
 encode([Context|Contexts], Acc) ->
     {PrCID, TransferSyntax} = Context,
-    Data = wolfpacs_presentation_context_accept:encode(PrCID, TransferSyntax),
+    Data = wolfpacs_presentation_context_accept:encode(no_flow, PrCID, TransferSyntax),
     encode(Contexts, <<Acc/binary, Data/binary>>).
 
 decode(<<>>, Acc) ->
     {ok, lists:reverse(Acc), <<>>};
 decode(Data = <<16#21, _/binary>>, Acc) ->
-    case wolfpacs_presentation_context_accept:decode(Data) of
+    case wolfpacs_presentation_context_accept:decode(no_flow, Data) of
 	{ok, PrCID, TransferSyntax, Rest} ->
 	    Context = {PrCID, TransferSyntax},
 	    decode(Rest, [Context|Acc]);

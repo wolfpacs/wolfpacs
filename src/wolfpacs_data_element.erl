@@ -124,9 +124,12 @@ encode(Flow, Strategy, G, E, "FL", Name, _Extra) ->
 encode(Flow, Strategy, G, E, "SQ", Bytes, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode OB"),
     encode_common(Strategy, G, E, "SQ", wolfpacs_vr_sq:encode(Flow, Strategy, Bytes));
-encode(Flow, Strategy, G, E, "xs", Name, _Extra) ->
+encode(Flow, Strategy, G, E, "xs", Value, _Extra) when Value >= 0 ->
+    wolfpacs_flow:good(Flow, ?MODULE, "encode xs as US"),
+    encode_common(Strategy, G, E, "US", wolfpacs_vr_us:encode(Flow, Strategy, Value));
+encode(Flow, Strategy, G, E, "xs", Value, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode xs as SS"),
-    encode_common(Strategy, G, E, "SS", wolfpacs_vr_ss:encode(Flow, Strategy, Name));
+    encode_common(Strategy, G, E, "SS", wolfpacs_vr_ss:encode(Flow, Strategy, Value));
 encode(Flow, Strategy, G, E, VR, Bytes, Extra) ->
     case maps:get({G, E}, Extra, missing) of
 	missing ->
