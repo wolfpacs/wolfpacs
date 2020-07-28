@@ -8,13 +8,12 @@
 -export([encode/3,
 	 decode/2]).
 
--type abort_source() :: 0 | 1 | 2.
--type abort_reason() :: 0 | 2 | 3 | 4 | 5 | 6.
-
 -include("wolfpacs_types.hrl").
 
--spec encode(flow(), abort_source(), abort_reason()) -> binary().
-encode(_Flow, Source, Reason) ->
+-spec encode(Flow :: flow(), AbortSource :: byte(), AbortReason :: byte()) -> binary().
+encode(Flow, Source, Reason) ->
+    wolfpacs_flow:success(Flow, ?MODULE),
+    wolfpacs_flow:generated(Flow, ?MODULE, 10),
     <<16#7,
       0,
       4:32,
@@ -23,8 +22,10 @@ encode(_Flow, Source, Reason) ->
       Source,
       Reason>>.
 
--spec decode(flow(), binary()) -> {ok, abort_source(), abort_reason(), binary()} | error.
-decode(_Flow, <<16#7, _, 4:32, _, _, Source,  Reason, Rest/binary>>) ->
+-spec decode(flow(), binary()) -> {ok, AbortSource :: byte(), AbortReason :: byte(), binary()} | error.
+decode(Flow, <<16#7, _, 4:32, _, _, Source,  Reason, Rest/binary>>) ->
+    wolfpacs_flow:success(Flow, ?MODULE),
+    wolfpacs_flow:consumed(Flow, ?MODULE, 10),
     {ok, Source, Reason, Rest};
 decode(Flow, _Data) ->
     wolfpacs_flow:failed(Flow, ?MODULE, "incorrect header"),
