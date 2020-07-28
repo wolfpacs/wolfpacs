@@ -9,12 +9,12 @@ prop_test() ->
 	    begin
 		PrCID = 1,
 		TransferSyntax = <<"1.2.840.10008.1.2">>,
-		Encoded = wolfpacs_presentation_context_accept:encode(PrCID, TransferSyntax),
+		Encoded = wolfpacs_presentation_context_accept:encode(no_flow, PrCID, TransferSyntax),
 		Corrupt = wolfpacs_utils:random_clear(Encoded, 0.20),
-		case wolfpacs_presentation_context_accept:decode(Corrupt) of
+		case wolfpacs_presentation_context_accept:decode(no_flow, Corrupt) of
 		    {ok, _, _, _} ->
 			true;
-		    {error, Corrupt, _Error} ->
+		    error ->
 			true;
 		    _  ->
 			false

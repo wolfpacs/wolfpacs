@@ -13,7 +13,7 @@
 -include("wolfpacs_types.hrl").
 -include("transfer_syntax.hrl").
 
--spec encode(binary()) -> binary().
+-spec encode(binary()) -> <<_:32, _:_*8>>.
 encode(TransferSyntaxString) ->
     Length = byte_size(TransferSyntaxString),
     <<16#40,
@@ -21,8 +21,8 @@ encode(TransferSyntaxString) ->
       Length:16,
       TransferSyntaxString/binary>>.
 
--spec decode(binary()) -> decoded().
-decode(Payload = <<16#40, _, Length:16, Data/binary>>) ->
+-spec decode(binary()) -> {ok, binary(), binary()} | error.
+decode(<<16#40, _, Length:16, Data/binary>>) ->
     NbBytes = byte_size(Data),
     case Length =< NbBytes of
 	true ->
@@ -30,24 +30,23 @@ decode(Payload = <<16#40, _, Length:16, Data/binary>>) ->
 	    Rest = binary:part(Data, Length, NbBytes - Length),
 	    {ok, TransferSyntaxString, Rest};
 	false ->
-	    {error, Payload}
+	    error
     end;
-decode(Data) ->
-    {error, Data}.
+decode(_Data) ->
+    error.
 
 -spec encode_list(list(binary())) -> binary().
 encode_list(ListOfTransferSyntax) ->
     encode_list(ListOfTransferSyntax, <<>>).
 
--spec decode_list(binary()) -> decoded_list().
+-spec decode_list(binary()) -> {ok, list(binary()), binary()} | error.
 decode_list(ListOfTransferSyntax) ->
-    decode_list(decode(ListOfTransferSyntax), []).
+    decode_list(decode(ListOfTransferSyntax), [], <<>>).
 
 %%==============================================================================
 %% Private
 %%==============================================================================
 
--spec encode_list(list(binary()), binary()) -> binary().
 encode_list([], Acc) ->
     Acc;
 encode_list([H|T], Acc) ->
@@ -55,13 +54,12 @@ encode_list([H|T], Acc) ->
     encode_list(T, <<Acc/binary,
 		     Encoded/binary>>).
 
--spec decode_list(decoded(), list(binary())) -> decoded_list().
-decode_list({error, Data}, []) ->
-    {error, Data};
-decode_list({error, Rest}, Acc) ->
+decode_list(error, [], _Rest) ->
+    error;
+decode_list(error, Acc, Rest) ->
     {ok, lists:reverse(Acc), Rest};
-decode_list({ok, Decoded, Rest}, Acc) ->
-    decode_list(decode(Rest), [Decoded|Acc]).
+decode_list({ok, Decoded, Rest}, Acc, _PrevRest) ->
+    decode_list(decode(Rest), [Decoded|Acc], Rest).
 
 %%==============================================================================
 %% Test
@@ -77,8 +75,9 @@ test_encode_test_() ->
     I1 = <<1,2,3,4>>,
     [ ?_assertEqual(decode(E0), {ok, V0, <<>>}),
       ?_assertEqual(decode(E1), {ok, V0, <<42>>}),
-      ?_assertEqual(decode(I0), {error, I0}),
-      ?_assertEqual(decode(I1), {error, I1})].
+      ?_assertEqual(decode(I0), error),
+      ?_assertEqual(decode(I1), error)
+    ].
 
 test_encode_list_test_() ->
     Offer = [?IMPLICIT_LITTLE_ENDIAN,
@@ -87,6 +86,7 @@ test_encode_list_test_() ->
     Encoded0 = encode_list(Offer),
     Encoded1 = <<Encoded0/binary, 42>>,
     Incorrect = <<1,2,3,4>>,
-    [ ?_assert(decode_list(Encoded0) =:= {ok, Offer, <<>>}),
-      ?_assert(decode_list(Encoded1) =:= {ok, Offer, <<42>>}),
-      ?_assert(decode_list(Incorrect) =:= {error, Incorrect}) ].
+    [ ?_assertEqual(decode_list(Encoded0), {ok, Offer, <<>>}),
+      ?_assertEqual(decode_list(Encoded1), {ok, Offer, <<42>>}),
+      ?_assertEqual(decode_list(Incorrect), error)
+    ].

@@ -14,12 +14,15 @@
 %%%-------------------------------------------------------------------
 
 -module(wolfpacs_presentation_context_accept).
--export([encode/2,
-	 decode/1]).
+-export([encode/3,
+	 decode/2]).
 -import(wolfpacs_utils, [drop_last_byte/1]).
 
--spec encode(byte(), binary()) -> binary().
-encode(PrCID, TransferSyntax) ->
+-include("wolfpacs_types.hrl").
+
+-spec encode(flow(), byte(), binary()) -> binary().
+encode(Flow, PrCID, TransferSyntax) ->
+    wolfpacs_flow:success(Flow, ?MODULE),
     How = wolfpacs_transfer_syntax:encode(TransferSyntax),
     Payload = <<PrCID,
 		0,
@@ -32,8 +35,8 @@ encode(PrCID, TransferSyntax) ->
       Length:16,
       Payload/binary>>.
 
--spec decode(binary()) -> {ok, byte(), binary(), binary()} | {error, binary(), list(string())}.
-decode(AllData = <<16#21, _, Length:16, Payload/binary>>) ->
+-spec decode(flow(), binary()) -> {ok, byte(), binary(), binary()} | error.
+decode(Flow, <<16#21, _, Length:16, Payload/binary>>) ->
     NbBytes = byte_size(Payload),
     <<PrCID,
       _,
@@ -46,13 +49,16 @@ decode(AllData = <<16#21, _, Length:16, Payload/binary>>) ->
 		{ok, TransferSyntax, Rest} ->
 		    {ok, PrCID, TransferSyntax, Rest};
 		_ ->
-		    {error, AllData, ["unable to decode transfer syntax"]}
+		    wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode transfer syntax"),
+		    error
 	    end;
 	false ->
-	    {error, AllData, ["not enough data to decode transfer syntax"]}
+	    wolfpacs_flow:failed(Flow, ?MODULE, "not enough data to decode transfer syntax"),
+	    error
     end;
-decode(AllData) ->
-    {error, AllData, ["incorrect header"]}.
+decode(Flow, _Data) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, "incorrect header"),
+    error.
 
 %%------------------------------------------------------------------------------
 %% Private
@@ -73,16 +79,17 @@ storescp_echoscu_test() ->
 	     40, 00, 00, 11,
 	     31, 2e, 32, 2e, 38, 34, 30, 2e, 31, 30, 30, 30, 38, 2e, 31, 2e,
 	     32"),
-    ?assertEqual(decode(Data), {ok, PrCID, TransferSyntax , Rest}).
+    ?assertEqual(decode(no_flow, Data), {ok, PrCID, TransferSyntax , Rest}).
 
 encode_decode_test_() ->
     PrCID = 1,
     TransferSyntax = <<"1.2.840.10008.1.2">>,
-    Encoded0 = encode(PrCID, TransferSyntax),
+    Encoded0 = encode(no_flow, PrCID, TransferSyntax),
     Encoded1 = <<Encoded0/binary, 42>>,
     Incorrect0 = drop_last_byte(Encoded0),
     Incorrect1 = <<1, 2, 3, 4>>,
-    [ ?_assertEqual(decode(Encoded0), {ok, PrCID, TransferSyntax, <<>>}),
-      ?_assertEqual(decode(Encoded1), {ok, PrCID, TransferSyntax, <<42>>}),
-      ?_assertEqual(decode(Incorrect0), {error, Incorrect0, ["not enough data to decode transfer syntax"]}),
-      ?_assertEqual(decode(Incorrect1), {error, Incorrect1, ["incorrect header"]}) ].
+    [ ?_assertEqual(decode(no_flow, Encoded0), {ok, PrCID, TransferSyntax, <<>>}),
+      ?_assertEqual(decode(no_flow, Encoded1), {ok, PrCID, TransferSyntax, <<42>>}),
+      ?_assertEqual(decode(no_flow, Incorrect0), error),
+      ?_assertEqual(decode(no_flow, Incorrect1), error)
+    ].
