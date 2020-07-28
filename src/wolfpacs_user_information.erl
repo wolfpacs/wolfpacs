@@ -10,7 +10,7 @@
 
 -include("wolfpacs_types.hrl").
 
--spec encode(flow(), non_neg_integer(), binary(), binary()) -> binary().
+-spec encode(flow(), non_neg_integer(), binary(), binary()) -> <<_:32, _:_*8>>.
 encode(Flow, MaxPDUSize, Class, VersionName) ->
     A = wolfpacs_max_length:encode(MaxPDUSize),
     B = wolfpacs_implementation_class:encode(Class),
