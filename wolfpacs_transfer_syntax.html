@@ -10,21 +10,11 @@
 <hr>
 
 <h1>Module wolfpacs_transfer_syntax</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Transfer Syntax.
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Transfer Syntax.
 
 
 <h2><a name="description">Description</a></h2>Transfer Syntax.
  
-<h2><a name="types">Data Types</a></h2>
-
-<h3 class="typedecl"><a name="type-decoded">decoded()</a></h3>
-<p><tt>decoded() = {ok, binary(), binary()} | {error, binary()}</tt></p>
-
-
-<h3 class="typedecl"><a name="type-decoded_list">decoded_list()</a></h3>
-<p><tt>decoded_list() = {ok, [binary()], binary()} | {error, binary()}</tt></p>
-
-
 <h2><a name="index">Function Index</a></h2>
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#decode-1">decode/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#decode_list-1">decode_list/1</a></td><td></td></tr>
@@ -36,17 +26,17 @@
 
 <h3 class="function"><a name="decode-1">decode/1</a></h3>
 <div class="spec">
-<p><tt>decode(Payload::binary()) -&gt; <a href="#type-decoded">decoded()</a></tt><br></p>
+<p><tt>decode(Data::binary()) -&gt; {ok, binary(), binary()} | error</tt><br></p>
 </div>
 
 <h3 class="function"><a name="decode_list-1">decode_list/1</a></h3>
 <div class="spec">
-<p><tt>decode_list(ListOfTransferSyntax::binary()) -&gt; <a href="#type-decoded_list">decoded_list()</a></tt><br></p>
+<p><tt>decode_list(ListOfTransferSyntax::binary()) -&gt; {ok, [binary()], binary()} | error</tt><br></p>
 </div>
 
 <h3 class="function"><a name="encode-1">encode/1</a></h3>
 <div class="spec">
-<p><tt>encode(TransferSyntaxString::binary()) -&gt; binary()</tt><br></p>
+<p><tt>encode(TransferSyntaxString::binary()) -&gt; &lt;&lt;_:32, _:_*8&gt;&gt;</tt><br></p>
 </div>
 
 <h3 class="function"><a name="encode_list-1">encode_list/1</a></h3>
