@@ -76,4 +76,4 @@ info_test() ->
 
 code_change_test() ->
     start_link(),
-    ?assertEqual(?MODULE:code_change(1, state, extra), {ok, state}).
+    ?assertEqual(code_change(1, state, extra), {ok, state}).
