@@ -460,6 +460,11 @@ decode_common(Flow, _Strategy, G, E, _VR, 0, Rest) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_common empty"),
     {ok, {{G, E}, <<>>}, Rest};
 
+decode_common(Flow, Strategy, G, E, "xs", Len, Data) ->
+    lager:warning("[DataElement] Decoded (~.16B, ~.16B) as US", [G, E]),
+    wolfpacs_flow:good(Flow, ?MODULE, "decode_common US"),
+    decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_us);
+
 decode_common(Flow, _Strategy, G, E, VR, _Len, _Data) ->
     wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("Unable to decode (~p, ~p) ~p", [G, E, VR])),
     error.
