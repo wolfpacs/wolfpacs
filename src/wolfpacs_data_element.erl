@@ -465,9 +465,10 @@ decode_common(Flow, Strategy, G, E, "xs", Len, Data) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_common US"),
     decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_us);
 
-decode_common(Flow, _Strategy, G, E, VR, _Len, _Data) ->
-    wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("Unable to decode (~p, ~p) ~p", [G, E, VR])),
-    error.
+decode_common(Flow, Strategy, G, E, VR, Len, Data) ->
+    wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("Unable to decode (~.16B, ~16B) ~p", [G, E, VR])),
+    wolfpacs_flow:good(Flow, ?MODULE, "decode_common UN"),
+    decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_un).
 
 %%==============================================================================
 %% Test
