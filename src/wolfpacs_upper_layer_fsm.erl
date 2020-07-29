@@ -297,7 +297,11 @@ handle_pdv_item(Tag, PrCID, A, B, _, Data) ->
 
 route_payload(Flow, RouteTag, CalledAE, CallingAE, DataSet) ->
     wolfpacs_flow:good(Flow, ?MODULE, "pass on payload to storage"),
+    ImageType = maps:get({16#0008, 16#0008}, DataSet, missing),
     StudyUID = maps:get({16#0020, 16#000d}, DataSet, missing),
+    SeriesUID = maps:get({16#0020, 16#000e}, DataSet, missing),
+    wolfpacs_router_insight:note(RouteTag, CalledAE, CallingAE, ImageType, StudyUID, SeriesUID),
+
     case RouteTag of
 	wolfpacs_outside ->
 	    wolfpacs_outside_router:route(CalledAE, CallingAE, DataSet, StudyUID),
