@@ -178,6 +178,12 @@ associate(info, {tcp, _Port, DataNew}, SenderData) ->
 	    _ = lager:warning("[Sender] [Associate] Association failed ~p", [Error]),
 	    {keep_state, SenderData#sender_data{data = Data}, []}
     end;
+associate(info, {tcp_closed, _Port}, SenderData) ->
+    #sender_data{flow = Flow, from = From, abstract_syntax = AbstractSyntax} = SenderData,
+    wolfpacs_flow:failed(Flow, ?MODULE, "Server closed socket"),
+    _ = lager:warning("[Sender] [Associate] Error: Server closed socket (~p)", [AbstractSyntax]),
+    {keep_state, SenderData, [{reply, From, {error, failed_to_associate}}]};
+
 associate(A, B, Data) ->
     _ = lager:warning("[Sender] [Associate] Unknown message ~p ~p", [A, B]),
     {keep_state, Data, []}.
