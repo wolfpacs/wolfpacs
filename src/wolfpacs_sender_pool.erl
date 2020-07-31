@@ -44,6 +44,9 @@ send(Host, Port, CalledAE, CallingAE, DataSet) ->
 done() ->
     gen_server:cast(?MODULE, done).
 
+retry(SenderInfo) ->
+    gen_server:cast(?MODULE, {retry, SenderInfo}).
+
 size() ->
     gen_server:call(?MODULE, size).
 
@@ -62,6 +65,9 @@ handle_call(What, _From, Queue) ->
     {reply, {error, What}, Queue}.
 
 handle_cast({send, SenderInfo}, Queue) ->
+    {noreply, queue:in(SenderInfo, Queue), 0};
+
+handle_cast({retry, SenderInfo}, Queue) ->
     {noreply, queue:in(SenderInfo, Queue), 0};
 
 handle_cast(done, Queue) ->
@@ -99,9 +105,15 @@ handle_timeout(QueueIn, false, true) ->
 			       calling = CallingAE,
 			       dataset = DataSet} = SenderInfo,
 		  {ok, Sender} = wolfpacs_sender:start_link(Host, Port, CalledAE, CallingAE),
-		  wolfpacs_sender:send(Sender, DataSet),
-		  wolfpacs_sender:stop(Sender),
-		  done()
+		  case wolfpacs_sender:send(Sender, DataSet) of
+		      ok ->
+			  lager:debug("[SenderPool] Successfully send dataset"),
+			  wolfpacs_sender:stop(Sender),
+			  done();
+		      Error ->
+			  lager:warning("[SenderPool] Error: ~p", [Error]),
+			  retry(SenderInfo)
+		  end
 	  end),
     {noreply, QueueOut, 0};
 handle_timeout(Queue, _, _) ->
