@@ -4,9 +4,13 @@
 -export([all/0,
 	 init_per_suite/1,
 	 end_per_suite/1]).
--export([test_sq/1]).
+-export([ test_sq_explicit/1
+	, test_sq_implicit/1
+	]).
 
-all() -> [test_sq].
+all() -> [ test_sq_explicit
+	 , test_sq_implicit
+	 ].
 
 init_per_suite(Cfg) ->
     lager_common_test_backend:bounce(debug),
@@ -15,10 +19,9 @@ init_per_suite(Cfg) ->
 end_per_suite(Cfg) ->
     Cfg.
 
-test_sq(Config) ->
+test_sq_common(Filename) ->
     {ok, Flow} = wolfpacs_flow:start_link(),
     Strategy = {explicit, little},
-    Filename = filename:join([?config(data_dir, Config), "example_one.dcm"]),
     {ok, Content} = file:read_file(Filename),
     {ok, {Meta, Info}, <<>>} = wolfpacs_file_format:decode(Flow, Strategy, Content),
 
@@ -49,3 +52,11 @@ test_sq(Config) ->
 		   {8,260} => <<"Full fidelity image, uncompressed or lossless compressed">>}],
 
     CorrectSQ = GetInfo(16#0008, 16#9215).
+
+test_sq_explicit(Config) ->
+    Filename = filename:join([?config(data_dir, Config), "example_one.dcm"]),
+    test_sq_common(Filename).
+
+test_sq_implicit(Config) ->
+    Filename = filename:join([?config(data_dir, Config), "example_two.dcm"]),
+    test_sq_common(Filename).
