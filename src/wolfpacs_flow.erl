@@ -13,6 +13,7 @@
 -export([start_link/0,
 	 stop/1,
 	 reset/1,
+	 ge/4,
 	 generated/3,
 	 consumed/3,
 	 start_encode/2,
@@ -42,6 +43,9 @@ start_link() ->
 
 stop(Flow) ->
     gen_server:stop(Flow).
+
+ge(Flow, Module, Group, Element) ->
+    good(Flow, Module, io_lib:format("(~.16B, ~.16B)", [Group, Element])).
 
 generated(Flow, Module, NumberOfBytes) ->
     common_cast(Flow, {generated, Module, NumberOfBytes}).
