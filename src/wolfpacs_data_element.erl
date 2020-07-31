@@ -325,7 +325,7 @@ decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, Decoder) ->
     case wolfpacs_utils:split(Data, Len) of
 	{ok, Bytes, Rest} ->
 	    case Decoder:decode(Flow, Strategy, Bytes) of
-		{ok, Value, <<>>} ->
+		{ok, Value, _} ->
 		    wolfpacs_flow:success(Flow, ?MODULE),
 		    Tag = io_lib:format("(~.16B, ~.16B)", [G, E]),
 		    wolfpacs_flow:good(Flow, ?MODULE, Tag),
@@ -452,6 +452,10 @@ decode_common(Flow, Strategy, G, E, "FL", Len, Data) ->
 decode_common(Flow, Strategy, G, E, "SQ", Len, Data) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_common SQ"),
     decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_sq);
+
+decode_common(Flow, _Strategy, G, E, _VR, 0, Rest) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "decode_common empty"),
+    {ok, {{G, E}, <<>>}, Rest};
 
 decode_common(Flow, _Strategy, G, E, VR, _Len, _Data) ->
     wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("Unable to decode (~p, ~p) ~p", [G, E, VR])),
