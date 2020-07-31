@@ -31,20 +31,14 @@ note(RouteTag, CalledAE, CallingAE, ImageType, StudyUID, SeriesUID) ->
 %%------------------------------------------------------------------------------
 
 init(_) ->
-    {ok, #{}}.
+    {ok, []}.
 
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
 
-handle_cast({note, RouteTag, _CalledAE, _CallingAE, ImageType, StudyUID, _SeriesUID}, State) ->
-    case maps:get({RouteTag, ImageType, StudyUID}, State, missing) of
-	missing ->
-	    print(RouteTag, StudyUID, ImageType),
-	    NewState = State#{{RouteTag, ImageType, StudyUID} => found},
-	    {noreply, NewState};
-	_ ->
-	    {noreply, State}
-    end;
+handle_cast(Event={note, _, _, _, _, _, _}, Events) ->
+    print_if_unseen(Event, Events),
+    {noreply, [Event|Events]};
 
 handle_cast(_What, State) ->
     {noreply, State}.
@@ -62,13 +56,28 @@ code_change(_Vsn, State, _Extra) ->
 %% Private
 %%------------------------------------------------------------------------------
 
-print(wolfpacs_outside, _StudyUID, ImageType) ->
+print_if_unseen(Event, Events) ->
+    P = fun(E) -> E =:= Event end,
+    case lists:filter(P, Events) of
+	[] ->
+	    print(Event);
+	_ ->
+	    ok
+    end.
+
+print({note, RouteTag, _CalledAE, _CallingAE, ImageType, StudyUID, _SeriesUID}) ->
+    print_dir(RouteTag, StudyUID, ImageType);
+print(Event) ->
+    lager:warning("[RouteInsight] Unable to understand ~p", [Event]),
+    ok.
+
+print_dir(wolfpacs_outside, _StudyUID, ImageType) ->
     io:fwrite(" --> ~s~n", [human(ImageType)]);
 
-print(wolfpacs_inside, _StudyUID, ImageType) ->
+print_dir(wolfpacs_inside, _StudyUID, ImageType) ->
     io:fwrite(" <-- ~s~n", [human(ImageType)]);
 
-print(RouteTag, StudyUID, ImageType) ->
+print_dir(RouteTag, StudyUID, ImageType) ->
     io:fwrite("[RouterInsight] [~p] [~p] ~p", [RouteTag, StudyUID, ImageType]).
 
 human(BinaryText) ->
