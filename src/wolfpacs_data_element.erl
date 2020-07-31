@@ -318,19 +318,22 @@ decode_with_vr_16bit_length(Flow, _Strategy, _G, _E, _VR, _Data) ->
 decode_common_with_decoder(Flow, _Strategy, G, E, 0, Data, _Decoder) ->
     wolfpacs_flow:good(Flow, ?MODULE, io_lib:format("common_with_decoder (~.16B, ~.16B) empty", [G, E])),
     {ok, {{G, E}, <<>>}, Data};
-decode_common_with_decoder(Flow, _Strategy, G, E, 16#ffffffff, Data, _Decoder) ->
+decode_common_with_decoder(Flow, Strategy, G, E, 16#ffffffff, Data, _Decoder) ->
     Len = byte_size(Data),
-    decode_common_with_decoder(Flow, _Strategy, G, E, Len, Data, _Decoder);
+    decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, _Decoder);
 decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, Decoder) ->
+    Tag = io_lib:format("(~.16B, ~.16B)", [G, E]),
     case wolfpacs_utils:split(Data, Len) of
 	{ok, Bytes, Rest} ->
 	    case Decoder:decode(Flow, Strategy, Bytes) of
-		{ok, Value, _} ->
+		{ok, Value, <<>>} ->
 		    wolfpacs_flow:success(Flow, ?MODULE),
-		    Tag = io_lib:format("(~.16B, ~.16B)", [G, E]),
 		    wolfpacs_flow:good(Flow, ?MODULE, Tag),
-
 		    {ok, {{G, E}, Value}, Rest};
+		{ok, Value, RestFromUnlimited} ->
+		    wolfpacs_flow:success(Flow, ?MODULE),
+		    wolfpacs_flow:good(Flow, ?MODULE, Tag),
+		    {ok, {{G, E}, Value}, RestFromUnlimited};
 		_ ->
 		    wolfpacs_flow:failed(Flow, ?MODULE, "decoder failed"),
 		    error
