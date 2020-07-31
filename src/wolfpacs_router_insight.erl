@@ -81,9 +81,11 @@ print_dir(wolfpacs_inside, _StudyUID, ImageType) ->
 print_dir(RouteTag, StudyUID, ImageType) ->
     io:fwrite("[RouterInsight] [~p] [~p] ~p", [RouteTag, StudyUID, ImageType]).
 
-human(BinaryText) ->
+human(BinaryText) when is_binary(BinaryText) ->
     Text = binary_to_list(BinaryText),
-    string:join(string:tokens(Text, "\\"), " ").
+    string:join(string:tokens(Text, "\\"), " ");
+human(_Other) ->
+    ok.
 
 limit_size(Events) when length(Events) > ?MAX_NB_EVENTS ->
     {Keep, _Drop } = lists:split(?MAX_NB_EVENTS div 2, Events),
