@@ -7,6 +7,9 @@
 -module(wolfpacs_data_elements).
 -export([encode/3,
 	 decode/3]).
+-export([decode_stepwise/3,
+	 decode_stepwise/4]).
+-export([decode_and_print_file_stepwise/1]).
 -include("wolfpacs_types.hrl").
 
 -spec encode(flow(), strategy(), map() | list()) -> binary().
@@ -20,6 +23,27 @@ encode(Flow, Strategy, UnsortedElements) ->
 -spec decode(flow(), strategy(), binary()) -> {ok, map(), binary()} | error.
 decode(Flow, Strategy, Data) ->
     decode(Flow, Strategy, Data, [], #{}).
+
+decode_stepwise(Flow, Strategy, Data) ->
+    F = fun(X) -> X end,
+    decode_stepwise(Flow, Strategy, Data, F).
+
+decode_stepwise(Flow, Strategy, Data, C) ->
+    decode_stepwise(Flow, Strategy, Data, [], #{}, C).
+
+decode_and_print_file_stepwise(Filename) ->
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    P = fun(Res={ok, _DataSet, _Rest}) ->
+		Res;
+	   ({cont, Thunk, Res}) ->
+		io:fwrite("~p~n", [Res]),
+		Thunk();
+	   ({error, Data, _DataSet}) ->
+		{Flow, Data}
+	end,
+    {ok, Content} = file:read_file(Filename),
+    Strategy = {implicit, little},
+    decode_stepwise(Flow, Strategy, Content, P).
 
 %%==============================================================================
 %% Private Encoders
@@ -51,6 +75,28 @@ decode(Flow, Strategy, Data, Acc, Extra) ->
 	_ ->
 	    wolfpacs_flow:failed(Flow, ?MODULE, "failed to decode data element"),
 	    error
+    end.
+
+decode_stepwise(_Flow, _, <<>>, Acc, _, C) ->
+    C({ok, maps:from_list(Acc), <<>>});
+decode_stepwise(_Flow, _, Rest, [{{16#fffe, 16#e00d}, _}|Acc], _, C) ->
+    C({ok, maps:from_list(Acc), Rest});
+decode_stepwise(_Flow, _, Rest, [{{16#fffe, 16#e0dd}, _}|Acc], _, C) ->
+    C({ok, maps:from_list(Acc), Rest});
+decode_stepwise(Flow, Strategy, Data, Acc, Extra, C) ->
+    case wolfpacs_data_element:decode(Flow, Strategy, Data, Extra) of
+	{ok, Res, Rest} ->
+	    Thunk = fun() ->
+			   decode_stepwise(Flow,
+					   Strategy,
+					   Rest,
+					   [Res|Acc],
+					   priv_extract_extra([Res], Extra),
+					   C)
+		   end,
+	    C({cont, Thunk, Res});
+	_ ->
+	    C({error, Data, maps:from_list(Acc)})
     end.
 
 %%
