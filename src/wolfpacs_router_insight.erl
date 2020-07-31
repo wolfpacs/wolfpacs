@@ -1,6 +1,7 @@
 -module(wolfpacs_router_insight).
 -behaviour(gen_server).
 -define(SERVER, ?MODULE).
+-define(MAX_NB_EVENTS, 10000).
 
 -export([start_link/0,
 	 stop/0,
@@ -38,7 +39,7 @@ handle_call(What, _From, State) ->
 
 handle_cast(Event={note, _, _, _, _, _, _}, Events) ->
     print_if_unseen(Event, Events),
-    {noreply, [Event|Events]};
+    {noreply, limit_size([Event|Events])};
 
 handle_cast(_What, State) ->
     {noreply, State}.
@@ -83,6 +84,12 @@ print_dir(RouteTag, StudyUID, ImageType) ->
 human(BinaryText) ->
     Text = binary_to_list(BinaryText),
     string:join(string:tokens(Text, "\\"), " ").
+
+limit_size(Events) when length(Events) > ?MAX_NB_EVENTS ->
+    {Keep, _Drop } = lists:split(?MAX_NB_EVENTS div 2, Events),
+    Keep;
+limit_size(Events) ->
+    Events.
 
 %%==============================================================================
 %% Test
