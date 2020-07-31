@@ -263,7 +263,7 @@ handle_pdv_item({_AbstractSyntrax, Strategy}, PrCID, true, false, Fragment, Data
 		    %% client that we haven't taken care of the payload.
 
 		    wolfpacs_flow:failed(Flow, ?MODULE, "Failed to route payload"),
-		    {next_state, abort1, Data#wolfpacs_upper_layer_fsm_data{blob = NewBlob}}
+		    {next_state, abort, Data#wolfpacs_upper_layer_fsm_data{blob = NewBlob}}
 	    end;
 	_ ->
 
