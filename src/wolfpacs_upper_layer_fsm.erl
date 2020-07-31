@@ -263,6 +263,7 @@ handle_pdv_item({_AbstractSyntrax, Strategy}, PrCID, true, false, Fragment, Data
 		    %% client that we haven't taken care of the payload.
 
 		    wolfpacs_flow:failed(Flow, ?MODULE, "Failed to route payload"),
+		    save_broken_payload(NewBlob),
 		    {next_state, abort, Data#wolfpacs_upper_layer_fsm_data{blob = NewBlob}}
 	    end;
 	_ ->
@@ -271,6 +272,7 @@ handle_pdv_item({_AbstractSyntrax, Strategy}, PrCID, true, false, Fragment, Data
 	    %% to the clint
 
 	    wolfpacs_flow:failed(Flow, ?MODULE, "Failed to decode payload"),
+	    save_broken_payload(NewBlob),
 	    {next_state, abort, Data#wolfpacs_upper_layer_fsm_data{blob = NewBlob}}
     end;
 
@@ -311,6 +313,12 @@ route_payload(Flow, RouteTag, CalledAE, CallingAE, DataSet) ->
 	_ ->
 	    lager:warning("[UpperLayerFSM] Critical error. Incorrect RouteTag: ~p", [RouteTag])
     end.
+
+%%
+%%
+%%
+save_broken_payload(Payload) ->
+    file:write_file("broken.dcm", Payload).
 
 %%==============================================================================
 %% Test
