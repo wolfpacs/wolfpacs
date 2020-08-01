@@ -276,6 +276,13 @@ release(enter, _Prev, SenderData) ->
 release(info, {tcp, _Port, DataNew}, SenderData) ->
     #sender_data{flow = Flow, data = DataOld} = SenderData,
     Data = <<DataOld/binary, DataNew/binary>>,
+    handle_release_data(Flow, SenderData, Data);
+
+release(A, B, SenderData) ->
+    _ = lager:warning("[Sender] [Release] Unknown message ~p ~p", [A, B]),
+    {keep_state, SenderData, []}.
+
+handle_release_data(Flow, SenderData, Data = <<16#4, _/binary>>) ->
     case wolfpacs_p_data_tf:decode(Flow, Data) of
 	{ok, [#pdv_item{pdv_data=Payload}], Rest} ->
 	    _ = wolfpacs_data_elements:decode(Flow, {explicit, little}, Payload),
@@ -284,10 +291,9 @@ release(info, {tcp, _Port, DataNew}, SenderData) ->
 	_ ->
 	    {keep_state, SenderData#sender_data{data = Data}, []}
     end;
-
-release(A, B, SenderData) ->
-    _ = lager:warning("[Sender] [Release] Unknown message ~p ~p", [A, B]),
-    {keep_state, SenderData, []}.
+handle_release_data(_Flow, SenderData, Data = <<16#7, _/binary>>) ->
+    _ = lager:debug("[Sender] [Release] Abort received"),
+    {keep_state, SenderData#sender_data{data = Data}, []}.
 
 %%-------------------------------------------------------------------
 %% @doc Finish state.
