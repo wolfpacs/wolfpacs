@@ -309,13 +309,13 @@ finish(enter, _Prev, SenderData) ->
 
 finish(timeout, close, SenderData) ->
     #sender_data{sock = Sock, from = From} = SenderData,
-    gen_tcp:close(Sock),
+    gen_tcp:shutdown(Sock, read_write),
     _ = lager:debug("[Sender] [Finish] Closed socket due to timeout"),
     {keep_state, SenderData, [{reply, From, ok}]};
 
 finish(info, {tcp, _, <<6, _/binary>>}, SenderData) ->
     #sender_data{sock = Sock, from = From} = SenderData,
-    gen_tcp:close(Sock),
+    gen_tcp:shutdown(Sock, read_write),
     _ = lager:debug("[Sender] [Finish] Release response. Closed socket"),
     {keep_state, SenderData, [{reply, From, ok}]};
 
