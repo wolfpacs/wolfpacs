@@ -53,3 +53,21 @@ book_example_one_test_() ->
     Decoded = decode(Flow, Strategy, Encoded),
     [ ?_assertEqual(Decoded, {ok, Items, <<>>})
     ].
+
+nested_encode_common(Strategy) ->
+    DataSet = [#{{8,4416} => [#{{8,4432} => <<"1.2.840.10008.5.1.4.1.1.4">>,
+				{8,4437} => <<"1.2.826.0.1.3680043">>}
+			     ],
+		 {40,4176} => <<"128.5">>,
+		 {40,4177} => <<"257">>}],
+    Encoded = encode(no_flow, Strategy, DataSet),
+    ?assertEqual(decode(no_flow, Strategy, Encoded), {ok, DataSet, <<>>}).
+
+nested_encode_explicit_little_test() ->
+    nested_encode_common({explicit, little}).
+
+nested_encode_implicit_little_test() ->
+    nested_encode_common({implicit, little}).
+
+nested_encode_explicit_big_test() ->
+    nested_encode_common({explicit, big}).
