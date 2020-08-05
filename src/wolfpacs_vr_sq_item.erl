@@ -68,9 +68,14 @@ decode(Flow, _Strategy, _Data) ->
 %% Private
 %%==============================================================================
 
+%%-------------------------------------------------------------------
+%% @doc Decode length
+%%
+%% @end
+%%-------------------------------------------------------------------
 decode_length(Flow, Strategy, <<16#ffffffff:32, Data/binary>>) ->
     wolfpacs_flow:good(Flow, ?MODULE, "strip unknown length"),
-    wolfpacs_data_elements:decode(Flow, Strategy, Data);
+    decode_with_length(Flow, Strategy, Data, byte_size(Data));
 decode_length(Flow, Strategy={_, little}, <<Len:32/little, Data/binary>>) ->
     wolfpacs_flow:good(Flow, ?MODULE, io_lib:format("strip length ~4.16B", [Len])),
     decode_with_length(Flow, Strategy, Data, Len);
@@ -78,17 +83,47 @@ decode_length(Flow, Strategy={_, big}, <<Len:32/big, Data/binary>>) ->
     wolfpacs_flow:good(Flow, ?MODULE, io_lib:format("strip length ~4.16B", [Len])),
     decode_with_length(Flow, Strategy, Data, Len).
 
+%%-------------------------------------------------------------------
+%% @doc Decode with length
+%%
+%% @end
+%%-------------------------------------------------------------------
 decode_with_length(Flow, Strategy, AllData, Length) ->
     case wolfpacs_utils:split(AllData, Length) of
-	{ok, Data, Rest} ->
-	    case wolfpacs_data_elements:decode(Flow, Strategy, Data) of
-		{ok, Result, <<>>} ->
-		    {ok, Result, Rest};
+	{ok, Data, Rest2} ->
+	    case decode_headers(Flow, Strategy, Data, []) of
+		{ok, DataSet, Rest1} ->
+		    {ok, DataSet, <<Rest1/binary, Rest2/binary>>};
 		_ ->
-		    wolfpacs_flow:failed(Flow, ?MODULE, "unable to decode")
+		    error
 	    end;
 	_ ->
 	    wolfpacs_flow:failed(Flow, ?MODULE, "not enough data"),
+	    error
+    end.
+
+%%-------------------------------------------------------------------
+%% @doc Decode headers
+%%
+%% @end
+%%-------------------------------------------------------------------
+decode_headers(_Flow, _Strategy, <<>>, Acc) ->
+    {ok, maps:from_list(Acc), <<>>};
+decode_headers(_Flow, {_, little}, <<16#FFFE:16/little, 16#E00D:16/little, 0:32, Rest/binary>>, Acc) ->
+    {ok, maps:from_list(Acc), Rest};
+decode_headers(_Flow, {_, big}, <<16#FFFE:16/big, 16#E00D:16/big, 0:32, Rest/binary>>, Acc) ->
+    {ok, maps:from_list(Acc), Rest};
+decode_headers(_Flow, {_, little}, <<16#FFFE:16/little, 16#E0DD:16/little, 0:32, Rest/binary>>, Acc) ->
+    {ok, maps:from_list(Acc), Rest};
+decode_headers(_Flow, {_, big}, <<16#FFFE:16/big, 16#E0DD:16/big, 0:32, Rest/binary>>, Acc) ->
+    {ok, maps:from_list(Acc), Rest};
+decode_headers(Flow, Strategy, Data, Acc) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "next header"),
+    case wolfpacs_data_element:decode(Flow, Strategy, Data) of
+	{ok, Header, Rest} ->
+	    wolfpacs_flow:good(Flow, ?MODULE, Header),
+	    decode_headers(Flow, Strategy, Rest, [Header|Acc]);
+	_ ->
 	    error
     end.
 
@@ -136,3 +171,26 @@ encode_decode_implicit_little_test_() ->
 encode_decode_implicit_big_test_() ->
      {ok, Flow} = wolfpacs_flow:start_link(),
      encode_decode_common(Flow, {implicit, big}).
+
+
+decode_example_test_() ->
+    Correct = #{ {8,4432} => <<"1.2.840.10008.5.1.4.1.1.4">>
+	       , {8,4437} => <<"1.2.826.0.1.3680043.2.1125.1.92123297551800019460041377923358764">>
+	       },
+
+    Encoded = wolfpacs_utils:hexl_log_to_binary(
+		"" ++
+                    "                                   feff " ++
+		    "00e0 ffff ffff 0800 5011 5549 1a00 312e " ++
+		    "322e 3834 302e 3130 3030 382e 352e 312e " ++
+		    "342e 312e 312e 3400 0800 5511 5549 4000 " ++
+		    "312e 322e 3832 362e 302e 312e 3336 3830 " ++
+		    "3034 332e 322e 3131 3235 2e31 2e39 3231 " ++
+		    "3233 3239 3735 3531 3830 3030 3139 3436 " ++
+		    "3030 3431 3337 3739 3233 3335 3837 3634 " ++
+		    "feff 0de0 0000 0000 0102                "),
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    {ok, DataSet, Rest} = decode(Flow, {explicit, little}, Encoded),
+    [ ?_assertEqual(DataSet, Correct)
+    , ?_assertEqual(Rest, <<1, 2>>)
+    ].
