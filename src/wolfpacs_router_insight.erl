@@ -67,10 +67,7 @@ print_if_unseen(Event, Events) ->
     end.
 
 print({note, RouteTag, _CalledAE, _CallingAE, ImageType, StudyUID, _SeriesUID}) ->
-    print_dir(RouteTag, StudyUID, ImageType);
-print(Event) ->
-    lager:warning("[RouteInsight] Unable to understand ~p", [Event]),
-    ok.
+    print_dir(RouteTag, StudyUID, ImageType).
 
 print_dir(wolfpacs_outside, _StudyUID, ImageType) ->
     io:fwrite(" --> ~s~n", [human(ImageType)]);
