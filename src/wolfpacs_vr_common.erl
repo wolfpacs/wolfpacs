@@ -20,19 +20,19 @@
 %%------------------------------------------------------------------------------
 encode(Flow, Module, Data, PadChar) ->
     Bytes = wolfpacs_vr_utils:pad(Data, PadChar),
-    wolfpacs_flow:generated(Flow, Module, byte_size(Bytes)),
+    wolfpacs_flow:generated(Flow, Module, Bytes),
     Bytes.
 
 encode_exact(Flow, Module, Data, Length, PadChar) ->
     Bytes = wolfpacs_vr_utils:exact(Data, Length, PadChar),
-    wolfpacs_flow:generated(Flow, Module, byte_size(Bytes)),
+    wolfpacs_flow:generated(Flow, Module, Bytes),
     Bytes.
 
 encode_limit(Flow, Module, Data, Length, PadChar) ->
     Padded = wolfpacs_vr_utils:pad(Data, PadChar),
     Limit = Length * value_multiplicity(Data),
     Bytes = wolfpacs_vr_utils:limit(Padded, Limit),
-    wolfpacs_flow:generated(Flow, Module, byte_size(Bytes)),
+    wolfpacs_flow:generated(Flow, Module, Bytes),
     Bytes.
 
 %%------------------------------------------------------------------------------
