@@ -47,6 +47,12 @@ stop(Flow) ->
 ge(Flow, Module, Group, Element) ->
     good(Flow, Module, io_lib:format("(~.16B, ~.16B)", [Group, Element])).
 
+generated(Flow, Module, Data) when is_binary(Data) ->
+    generated(Flow, Module, byte_size(Data));
+
+generated(Flow, Module, List) when is_list(List) ->
+    generated(Flow, Module, length(List));
+
 generated(Flow, Module, NumberOfBytes) ->
     common_cast(Flow, {generated, Module, NumberOfBytes}).
 
