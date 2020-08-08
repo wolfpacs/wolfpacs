@@ -27,7 +27,7 @@ content_types_provided(Req, State) ->
 
 content_types_accepted(Req, State) ->
     {[
-        {<<"application/json">>, workers_from_json}
+      {<<"application/json">>, workers_from_json}
      ], Req, State}.
 
 resource_exists(Req, State) ->
@@ -43,36 +43,50 @@ workers_to_json(Req, State) ->
     workers_to_json(Req, State, Method).
 
 workers_from_json(Req1, State) ->
-    {RawBody, Req2} = cowboy_req:read_urlencoded_body(Req1),
-    lager:warning("BODY: ~p", [RawBody]),
-    Body = jiffy:decode(RawBody),
-    lager:warning("BODY: ~p", [Body]),
-    {jiffy:encode(#{}), Req2, State}.
+    {Req2, Body} = read_body_json(Req1),
+    #{<<"host">> := Host, <<"port">> := Port, <<"ae">> := AE} = Body,
+    {ok, Id} = wolfpacs_outside_router:add_worker(Host, Port, AE),
+    Encoded = jiffy:encode(#{<<"id">> => Id}),
+    Req3 = cowboy_req:set_resp_body(Encoded, Req2),
+    %% Req3 = cowboy_req:reply(201, Resp),
+    {true, Req3, State}.
 
 %%==============================================================================
 %% Private
 %%==============================================================================
 
+read_body(Req1, Acc) ->
+    case cowboy_req:read_body(Req1) of
+	{ok, Data, Req2} ->
+	    {Req2, <<Acc/binary, Data/binary>>};
+	{more, Data, Req2} ->
+	    read_body(Req2, <<Acc/binary, Data/binary>>)
+    end.
+
+read_body_json(Req) ->
+    {Req2, RawBody} = read_body(Req, <<>>),
+    {Req2, jiffy:decode(RawBody, [return_maps])}.
+
 workers_to_json(Req, State, <<"GET">>) ->
     {ok, WorkersObj} = wolfpacs_outside_router:workers(),
     Workers = reformat_workers(WorkersObj),
-    {jiffy:encode(Workers), Req, State};
-workers_to_json(Req, State, <<"POST">>) ->
-    {RawBody, Req2} = cowboy_rest:body(Req),
-    Body = jiffy:decode(RawBody),
-    lager:warning("JFOFOF ~p", [Body]),
-    {jiffy:encode(#{}), Req2, State}.
+    {jiffy:encode(Workers), Req, State}.
 
 reformat_workers(Workers) ->
     lists:map(fun reformat_worker/1, Workers).
 
 reformat_worker(#wolfpacs_worker{id=Id, host=Host, port=Port, ae=AE, state=State}) ->
     #{<<"id">> => Id,
-      <<"host">> => list_to_binary(Host),
+      <<"host">> => b(Host),
       <<"port">> => Port,
-      <<"ae">> => list_to_binary(AE),
+      <<"ae">> => b(AE),
       <<"state">> => list_to_binary(atom_to_list(State))
      }.
+
+b(Data) when is_binary(Data) ->
+    Data;
+b(List) when is_list(List) ->
+    list_to_binary(List).
 
 %%==============================================================================
 %% Test

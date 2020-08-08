@@ -100,6 +100,7 @@ code_change(_Vsn, State, _Extra) ->
 %% Private
 %%------------------------------------------------------------------------------
 
+-spec find_worker(list(tuple()), tuple() | missing) -> tuple() | missing.
 find_worker(Workers, missing) ->
     OnlineWorkers = lists:filter(fun online/1, Workers),
     random_worker(OnlineWorkers);
@@ -111,11 +112,13 @@ online(#wolfpacs_worker{state = online}) ->
 online(_) ->
     false.
 
+random_worker([]) ->
+    missing;
 random_worker(Workers) ->
     Index = rand:uniform(length(Workers)),
     lists:nth(Index, Workers).
 
-priv_send(DataSet, {Host, Port, CalledAE}) ->
+priv_send(DataSet, #wolfpacs_worker{host=Host, port=Port, ae=CalledAE}) ->
     CallingAE = <<"WolfPACS">>,
     wolfpacs_sender_pool:send(Host, Port, CalledAE, CallingAE, DataSet).
 
