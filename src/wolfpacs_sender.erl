@@ -61,7 +61,7 @@ send_with_class_and_instance_uid(Sender, DataSet, ClassUID, InstanceUID) ->
 		      from :: any(),
 		      dataset :: map(),
 		      abstract_syntax :: binary(),
-		      strategy :: binary(),
+		      strategy :: {atom(), atom()},
 		      instance_uid :: binary(),
 		      data :: binary(),
 		      maxpdu :: non_neg_integer(),
