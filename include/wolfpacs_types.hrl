@@ -11,3 +11,10 @@
 -type flow() :: pid() | no_flow.
 
 -type ui() :: list() | binary().
+
+-record(wolfpacs_worker, { id :: integer()
+			 , host :: string()
+			 , port :: integer()
+			 , ae :: string()
+			 , state :: unseen | online | paused
+			 }).
