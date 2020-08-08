@@ -28,6 +28,8 @@
 <h2><a name="index">Function Index</a></h2>
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#decode-3">decode/3</a></td><td>Decodes a File Format.</td></tr>
 <tr><td valign="top"><a href="#encode-3">encode/3</a></td><td>Encodes a File Format.</td></tr>
+<tr><td valign="top"><a href="#read_file-1">read_file/1</a></td><td>Read File.</td></tr>
+<tr><td valign="top"><a href="#write_file-2">write_file/2</a></td><td>Write File.</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
@@ -40,8 +42,20 @@
 
 <h3 class="function"><a name="encode-3">encode/3</a></h3>
 <div class="spec">
-<p><tt>encode(Flow::<a href="#type-flow">flow()</a>, Strategy::<a href="#type-strategy">strategy()</a>, Data::binary()) -&gt; binary()</tt><br></p>
+<p><tt>encode(Flow::<a href="#type-flow">flow()</a>, Strategy::<a href="#type-strategy">strategy()</a>, Data::binary() | map()) -&gt; binary()</tt><br></p>
 </div><p>Encodes a File Format.
+ </p>
+
+<h3 class="function"><a name="read_file-1">read_file/1</a></h3>
+<div class="spec">
+<p><tt>read_file(Filename) -&gt; any()</tt></p>
+</div><p>Read File
+ </p>
+
+<h3 class="function"><a name="write_file-2">write_file/2</a></h3>
+<div class="spec">
+<p><tt>write_file(Filename, Content) -&gt; any()</tt></p>
+</div><p>Write File
  </p>
 <hr>
 

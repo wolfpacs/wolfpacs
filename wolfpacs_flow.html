@@ -26,6 +26,7 @@
 <tr><td valign="top"><a href="#expected_16-3">expected_16/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#expected_32-3">expected_32/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#failed-3">failed/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#ge-4">ge/4</a></td><td></td></tr>
 <tr><td valign="top"><a href="#generated-3">generated/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#good-3">good/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td></td></tr>
@@ -38,6 +39,7 @@
 <tr><td valign="top"><a href="#stop-1">stop/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#success-2">success/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#warning-3">warning/3</a></td><td></td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
@@ -77,9 +79,14 @@
 <p><tt>failed(Flow, Module, Info) -&gt; any()</tt></p>
 </div>
 
+<h3 class="function"><a name="ge-4">ge/4</a></h3>
+<div class="spec">
+<p><tt>ge(Flow, Module, Group, Element) -&gt; any()</tt></p>
+</div>
+
 <h3 class="function"><a name="generated-3">generated/3</a></h3>
 <div class="spec">
-<p><tt>generated(Flow, Module, NumberOfBytes) -&gt; any()</tt></p>
+<p><tt>generated(Flow, Module, Data) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="good-3">good/3</a></h3>
@@ -135,6 +142,11 @@
 <h3 class="function"><a name="terminate-2">terminate/2</a></h3>
 <div class="spec">
 <p><tt>terminate(Reason, Flow) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="warning-3">warning/3</a></h3>
+<div class="spec">
+<p><tt>warning(Flow, Module, Info) -&gt; any()</tt></p>
 </div>
 <hr>
 
