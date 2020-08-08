@@ -9,9 +9,11 @@
 	 decode/3]).
 -include("wolfpacs_types.hrl").
 
--spec encode(flow(), strategy(), list()) -> binary().
-encode(_Flow, _, List) ->
-    list_to_binary(List).
+-spec encode(flow(), strategy(), list() | binary()) -> binary().
+encode(_Flow, _, List) when is_list(List) ->
+    list_to_binary(List);
+encode(_Flow, _, Data) ->
+    Data.
 
 decode(_Flow, _, Data) ->
     {ok, binary_to_list(Data), <<>>}.
