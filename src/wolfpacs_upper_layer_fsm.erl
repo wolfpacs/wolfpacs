@@ -263,7 +263,7 @@ handle_pdv_item({_AbstractSyntrax, Strategy}, PrCID, true, false, Fragment, Data
 		    %% client that we haven't taken care of the payload.
 
 		    wolfpacs_flow:failed(Flow, ?MODULE, "Failed to route payload"),
-		    {next_state, abort1, Data#wolfpacs_upper_layer_fsm_data{blob = NewBlob}}
+		    {next_state, abort, Data#wolfpacs_upper_layer_fsm_data{blob = NewBlob}}
 	    end;
 	_ ->
 
@@ -297,7 +297,11 @@ handle_pdv_item(Tag, PrCID, A, B, _, Data) ->
 
 route_payload(Flow, RouteTag, CalledAE, CallingAE, DataSet) ->
     wolfpacs_flow:good(Flow, ?MODULE, "pass on payload to storage"),
+    ImageType = maps:get({16#0008, 16#0008}, DataSet, missing),
     StudyUID = maps:get({16#0020, 16#000d}, DataSet, missing),
+    SeriesUID = maps:get({16#0020, 16#000e}, DataSet, missing),
+    wolfpacs_router_insight:note(RouteTag, CalledAE, CallingAE, ImageType, StudyUID, SeriesUID),
+
     case RouteTag of
 	wolfpacs_outside ->
 	    wolfpacs_outside_router:route(CalledAE, CallingAE, DataSet, StudyUID),

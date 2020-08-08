@@ -161,10 +161,12 @@ decode(Flow, {explicit, _Endian}, Data = <<0:16, _/binary>>, Extra) ->
 
 decode(Flow, {Type, little}, <<G:16/little, E:16/little, Data/binary>>, Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode little"),
+    wolfpacs_flow:ge(Flow, ?MODULE, G, E),
     decode_correct_vr(Flow, {Type, little}, G, E, Data, Extra);
 
 decode(Flow, {Type, big}, <<G:16/big, E:16/big, Data/binary>>, Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode big"),
+    wolfpacs_flow:ge(Flow, ?MODULE, G, E),
     decode_correct_vr(Flow, {Type, big}, G, E, Data, Extra);
 
 decode(Flow, _, _, _) ->

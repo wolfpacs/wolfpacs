@@ -71,3 +71,19 @@ nested_encode_implicit_little_test() ->
 
 nested_encode_explicit_big_test() ->
     nested_encode_common({explicit, big}).
+
+nested_test() ->
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    Strategy = {explicit, little},
+    Items = [#{{40,12560} =>
+		   [#{{8,4416} =>
+			  [#{{8,4432} => <<"1.2">>,
+			     {8,4437} =>
+				 <<"1.2.3">>}],
+		      {40,4176} => <<"128.5">>,
+		      {40,4177} => <<"257">>}]
+	       }
+	    ],
+    Encoded = encode(Flow, Strategy, Items),
+    Decoded = decode(Flow, Strategy, Encoded),
+    ?assertEqual(Decoded, {ok, Items, <<>>}).

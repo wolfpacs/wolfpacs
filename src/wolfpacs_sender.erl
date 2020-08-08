@@ -61,6 +61,7 @@ send_with_class_and_instance_uid(Sender, DataSet, ClassUID, InstanceUID) ->
 		      from :: any(),
 		      dataset :: map(),
 		      abstract_syntax :: binary(),
+		      strategy :: {atom(), atom()},
 		      instance_uid :: binary(),
 		      data :: binary(),
 		      maxpdu :: non_neg_integer(),
@@ -78,6 +79,7 @@ init([Host, Port, CalledAE, CallingAE]) ->
 			      from = none,
 			      dataset = #{},
 			      abstract_syntax = <<>>,
+			      strategy = {implicit, little},
 			      instance_uid = <<>>,
 			      data = <<>>,
 			      maxpdu = 0,
@@ -150,7 +152,9 @@ associate(enter, _Prev, SenderData) ->
 		 calling = CallingAE,
 		 abstract_syntax = AbstractSyntax} = SenderData,
 
-    Contexts = [{1, AbstractSyntax, [?EXPLICIT_LITTLE_ENDIAN]}],
+    Contexts = [{1, AbstractSyntax, [?EXPLICIT_LITTLE_ENDIAN,
+				     ?IMPLICIT_LITTLE_ENDIAN,
+				     ?EXPLICIT_BIG_ENDIAN]}],
     MaxPDUSize = 16384,
     Class = <<"1.2.276.0.7230010.3.0.3.6.4">>,
     VersionName = <<"WolfPACS_000">>,
@@ -173,11 +177,20 @@ associate(info, {tcp, _Port, DataNew}, SenderData) ->
 	{ok, _CalledAE, _CallingAE, _R, Contexts, MaxPDU, _Class, _VersionName, Rest} ->
 	    _ = lager:debug("[Sender] [Associate] Association accepted"),
 	    _ = lager:debug("[Sender] [Associate] Context ~p", [Contexts]),
-	    {next_state, send_data, SenderData#sender_data{data = Rest, maxpdu = MaxPDU}};
+	    Strategy = pick_strategy(Contexts),
+	    {next_state, send_data, SenderData#sender_data{data = Rest,
+							   maxpdu = MaxPDU,
+							   strategy = Strategy}};
 	{error, Data, Error}  ->
 	    _ = lager:warning("[Sender] [Associate] Association failed ~p", [Error]),
 	    {keep_state, SenderData#sender_data{data = Data}, []}
     end;
+associate(info, {tcp_closed, _Port}, SenderData) ->
+    #sender_data{flow = Flow, from = From, abstract_syntax = AbstractSyntax} = SenderData,
+    wolfpacs_flow:failed(Flow, ?MODULE, "Server closed socket"),
+    _ = lager:warning("[Sender] [Associate] Error: Server closed socket (~p)", [AbstractSyntax]),
+    {keep_state, SenderData, [{reply, From, {error, failed_to_associate}}]};
+
 associate(A, B, Data) ->
     _ = lager:warning("[Sender] [Associate] Unknown message ~p ~p", [A, B]),
     {keep_state, Data, []}.
@@ -193,8 +206,11 @@ associate(A, B, Data) ->
 
 send_data(enter, _Prev, SenderData) ->
     ok = send_command_message(SenderData),
-    #sender_data{flow = Flow, dataset = DataSet, maxpdu = MaxPDU} = SenderData,
-    Encoded = wolfpacs_data_elements:encode(Flow, {explicit, little}, DataSet),
+    #sender_data{flow = Flow,
+		 dataset = DataSet,
+		 maxpdu = MaxPDU,
+		 strategy = Strategy} = SenderData,
+    Encoded = wolfpacs_data_elements:encode(Flow, Strategy, DataSet),
     Overhead = 6,
     Chunks = wolfpacs_utils:chunk(Encoded, MaxPDU - Overhead),
     {keep_state, SenderData#sender_data{data = <<>>, chunks=Chunks}, [{timeout, 0, send_more}]};
@@ -260,6 +276,13 @@ release(enter, _Prev, SenderData) ->
 release(info, {tcp, _Port, DataNew}, SenderData) ->
     #sender_data{flow = Flow, data = DataOld} = SenderData,
     Data = <<DataOld/binary, DataNew/binary>>,
+    handle_release_data(Flow, SenderData, Data);
+
+release(A, B, SenderData) ->
+    _ = lager:warning("[Sender] [Release] Unknown message ~p ~p", [A, B]),
+    {keep_state, SenderData, []}.
+
+handle_release_data(Flow, SenderData, Data = <<16#4, _/binary>>) ->
     case wolfpacs_p_data_tf:decode(Flow, Data) of
 	{ok, [#pdv_item{pdv_data=Payload}], Rest} ->
 	    _ = wolfpacs_data_elements:decode(Flow, {explicit, little}, Payload),
@@ -268,10 +291,9 @@ release(info, {tcp, _Port, DataNew}, SenderData) ->
 	_ ->
 	    {keep_state, SenderData#sender_data{data = Data}, []}
     end;
-
-release(A, B, SenderData) ->
-    _ = lager:warning("[Sender] [Release] Unknown message ~p ~p", [A, B]),
-    {keep_state, SenderData, []}.
+handle_release_data(_Flow, SenderData, Data = <<16#7, _/binary>>) ->
+    _ = lager:debug("[Sender] [Release] Abort received"),
+    {keep_state, SenderData#sender_data{data = Data}, []}.
 
 %%-------------------------------------------------------------------
 %% @doc Finish state.
@@ -287,13 +309,13 @@ finish(enter, _Prev, SenderData) ->
 
 finish(timeout, close, SenderData) ->
     #sender_data{sock = Sock, from = From} = SenderData,
-    gen_tcp:close(Sock),
+    gen_tcp:shutdown(Sock, read_write),
     _ = lager:debug("[Sender] [Finish] Closed socket due to timeout"),
     {keep_state, SenderData, [{reply, From, ok}]};
 
 finish(info, {tcp, _, <<6, _/binary>>}, SenderData) ->
     #sender_data{sock = Sock, from = From} = SenderData,
-    gen_tcp:close(Sock),
+    gen_tcp:shutdown(Sock, read_write),
     _ = lager:debug("[Sender] [Finish] Release response. Closed socket"),
     {keep_state, SenderData, [{reply, From, ok}]};
 
@@ -327,3 +349,14 @@ int(Value) when is_list(Value) ->
     list_to_integer(Value);
 int(Value) when is_integer(Value) ->
     Value.
+
+pick_strategy([{1, ?EXPLICIT_LITTLE_ENDIAN}]) ->
+    {explicit, little};
+pick_strategy([{1, ?IMPLICIT_LITTLE_ENDIAN}]) ->
+    {implicit, little};
+pick_strategy([{1, ?EXPLICIT_BIG_ENDIAN}]) ->
+    {explicit, big};
+pick_strategy(Contexts) ->
+    _ = lager:warning("[Sender] Unable to pick transfer syntax (~p)", [Contexts]),
+    %% Pick the default, universially supported implicit little
+    {implicit, little}.

@@ -7,6 +7,9 @@
 -module(wolfpacs_file_format).
 -export([encode/3,
 	 decode/3]).
+-export([write_file/2,
+	 read_file/1]).
+
 -include("wolfpacs_types.hrl").
 -include("transfer_syntax.hrl").
 
@@ -18,10 +21,13 @@
 %%
 %% @end
 %%-------------------------------------------------------------------
--spec encode(flow(), strategy(), binary()) -> binary().
-encode(Flow, Strategy, Data) ->
+-spec encode(flow(), strategy(), binary() | map()) -> binary().
+encode(Flow, Strategy, Data) when is_binary(Data) ->
     MetaInformation = wolfpacs_file_meta_information:encode(Flow, Strategy, meta_info()),
-    <<MetaInformation/binary, Data/binary>>.
+    <<MetaInformation/binary, Data/binary>>;
+encode(Flow, Strategy, DataSet) ->
+    Data = wolfpacs_data_elements:encode(Flow, Strategy, DataSet),
+    encode(Flow, Strategy, Data).
 
 %%-------------------------------------------------------------------
 %% @doc Decodes a File Format.
@@ -38,6 +44,24 @@ decode(Flow, Strategy, Data) ->
 	    wolfpacs_flow:failed(Flow, ?MODULE, ?ERROR_META),
 	    error
     end.
+
+%%-------------------------------------------------------------------
+%% @doc Write File
+%%
+%% @end
+%%-------------------------------------------------------------------
+write_file(Filename, Content) ->
+    Encoded = encode(no_flow, {explicit, little}, Content),
+    file:write_file(Filename, Encoded).
+
+%%-------------------------------------------------------------------
+%% @doc Read File
+%%
+%% @end
+%%-------------------------------------------------------------------
+read_file(Filename) ->
+    {ok, Content} = file:read_file(Filename),
+    decode(no_flow, {explicit, little}, Content).
 
 %%==============================================================================
 %% Private
@@ -115,3 +139,24 @@ encode_decode_test_() ->
     , ?_assertEqual(decode(Flow, Strategy, Incorrect1), error)
     , ?_assertEqual(decode(Flow, Strategy, Incorrect2), error)
     ].
+
+-define(CMD, 16#0000).
+-define(UID, 16#0002).
+-define(FLD, 16#0100).
+
+-define(RQID, 16#0110).
+-define(RPID, 16#0120).
+-define(SET, 16#0800).
+-define(STU, 16#0900).
+
+write_read_test() ->
+    DataSet = #{{?CMD, ?UID} => <<"1.2.3.4">>,
+		{?CMD, ?FLD} => 16#8030,
+		{?CMD, ?RPID} => ?RQID,
+		{?CMD, ?SET} => 16#0101,
+		{?CMD, ?STU} => 16#0000},
+
+    Filename = string:strip(os:cmd("mktemp"), right, $\n),
+
+    write_file(Filename, DataSet),
+    {ok, {_Meta, DataSet}, <<>>} = read_file(Filename).
