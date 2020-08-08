@@ -316,21 +316,24 @@ decode_with_vr_16bit_length(Flow, _Strategy, _G, _E, _VR, _Data) ->
 decode_common_with_decoder(Flow, _Strategy, G, E, 0, Data, _Decoder) ->
     wolfpacs_flow:good(Flow, ?MODULE, io_lib:format("common_with_decoder (~.16B, ~.16B) empty", [G, E])),
     {ok, {{G, E}, <<>>}, Data};
-decode_common_with_decoder(Flow, _Strategy, G, E, 16#ffffffff, Data, _Decoder) ->
+decode_common_with_decoder(Flow, Strategy={_, little}, G, E, 16#ffffffff, Data, Decoder) ->
+    wolfpacs_flow:good(Flow, ?MODULE, io_lib:format("common_with_decoder (~.16B, ~.16B) unknown length", [G, E])),
     Len = byte_size(Data),
-    decode_common_with_decoder(Flow, _Strategy, G, E, Len, Data, _Decoder);
+    decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, Decoder);
 decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, Decoder) ->
+    wolfpacs_flow:good(Flow, ?MODULE, io_lib:format("common_with_decoder (~.16B, ~.16B)", [G, E])),
     case wolfpacs_utils:split(Data, Len) of
-	{ok, Bytes, Rest} ->
+	{ok, Bytes, Rest2} ->
 	    case Decoder:decode(Flow, Strategy, Bytes) of
-		{ok, Value, <<>>} ->
+		{ok, Value, Rest1} ->
 		    wolfpacs_flow:success(Flow, ?MODULE),
 		    Tag = io_lib:format("(~.16B, ~.16B)", [G, E]),
 		    wolfpacs_flow:good(Flow, ?MODULE, Tag),
 
-		    {ok, {{G, E}, Value}, Rest};
+		    {ok, {{G, E}, Value}, <<Rest1/binary, Rest2/binary>>};
 		_ ->
 		    wolfpacs_flow:failed(Flow, ?MODULE, "decoder failed"),
+		    wolfpacs_flow:failed(Flow, ?MODULE, Bytes),
 		    error
 	    end;
 	_ ->
@@ -673,3 +676,42 @@ decode_example_one_test() ->
     {ok, Flow} = wolfpacs_flow:start_link(),
     Decoded = decode(Flow, {explicit, little}, Encoded),
     ?assertEqual(Decoded, {ok, {{16#0070, 16#0060}, Correct}, <<>>}).
+
+nested_sq_explicit_little_test_() ->
+    G = 16#0008,
+    E = 16#1115,
+
+    SOPClassUID = <<"1.2.840.10008.5.1.4.1.1.4">>,
+    SOPInstance = <<"1.2.826.0.1.3680043.2.1125.1.92123297551800019460041377923358764">>,
+    SeriesUID = <<"1.2.826.0.1.3680043.2.1125.1.73374395458721436255565291253139444">>,
+
+
+    Correct = {{G, E}, [#{{8,4416} => [#{{8,4432} => SOPClassUID,
+					 {8,4437} => SOPInstance}],
+			  {32,14} => SeriesUID
+			 }]},
+
+    Encoded = wolfpacs_utils:hexl_log_to_binary(
+		"" ++
+		    "                                   0800 " ++
+		    "1511 5351 0000 ffff ffff feff 00e0 ffff " ++
+		    "ffff 0800 4011 5351 0000 ffff ffff feff " ++
+		    "00e0 ffff ffff 0800 5011 5549 1a00 312e " ++
+		    "322e 3834 302e 3130 3030 382e 352e 312e " ++
+		    "342e 312e 312e 3400 0800 5511 5549 4000 " ++
+		    "312e 322e 3832 362e 302e 312e 3336 3830 " ++
+		    "3034 332e 322e 3131 3235 2e31 2e39 3231 " ++
+		    "3233 3239 3735 3531 3830 3030 3139 3436 " ++
+		    "3030 3431 3337 3739 3233 3335 3837 3634 " ++
+		    "feff 0de0 0000 0000 feff dde0 0000 0000 " ++
+		    "2000 0e00 5549 4000 312e 322e 3832 362e " ++
+		    "302e 312e 3336 3830 3034 332e 322e 3131 " ++
+		    "3235 2e31 2e37 3333 3734 3339 3534 3538 " ++
+		    "3732 3134 3336 3235 3535 3635 3239 3132 " ++
+		    "3533 3133 3934 3434 feff 0de0 0000 0000 " ++
+		    "feff dde0 0000 0000 0102                "),
+    {ok, Flow} = wolfpacs_flow:start_link(),
+    {ok, Decoded, Rest} = decode(Flow, {explicit, little}, Encoded),
+    [ ?_assertEqual(Decoded, Correct)
+    , ?_assertEqual(Rest, <<1, 2>>)
+    ].

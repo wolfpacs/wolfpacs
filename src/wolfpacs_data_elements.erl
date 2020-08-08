@@ -38,12 +38,6 @@ encode(Flow, Strategy, Extra, [{{G, E, VR}, Data}|Rest], Acc) ->
 -spec decode(flow(), strategy(), binary(), list(), map()) -> {ok, map(), binary()} | error.
 decode(_Flow, _, <<>>, Acc, _) ->
     {ok, maps:from_list(Acc), <<>>};
-decode(Flow, _, Rest, [{{16#fffe, 16#e00d}, _}|Acc], _) ->
-    wolfpacs_flow:good(Flow, ?MODULE, "Found item delimitation"),
-    {ok, maps:from_list(Acc), Rest};
-decode(Flow, _, Rest, [{{16#fffe, 16#e0dd}, _}|Acc], _) ->
-    wolfpacs_flow:good(Flow, ?MODULE, "Found sequence delimitation"),
-    {ok, maps:from_list(Acc), Rest};
 decode(Flow, Strategy, Data, Acc, Extra) ->
     case wolfpacs_data_element:decode(Flow, Strategy, Data, Extra) of
 	{ok, Res, Rest} ->
