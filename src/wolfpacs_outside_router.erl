@@ -7,6 +7,7 @@
 	 route/4,
 	 add_worker/3,
 	 remove_worker/3,
+	 workers/0,
 	 debug/0]).
 
 -export([init/1,
@@ -35,6 +36,9 @@ add_worker(Host, Port, AE) ->
 remove_worker(Host, Port, AE) ->
     gen_server:cast(?MODULE, {remove_worker, Host, Port, AE}).
 
+workers() ->
+    gen_server:call(?MODULE, workers).
+
 number_of_workers() ->
     gen_server:call(?MODULE, number_of_workers).
 
@@ -57,6 +61,8 @@ handle_call(debug, _From, State) ->
     {reply, {ok, State}, State};
 handle_call(number_of_workers, _From, State=#{nb_workers := N}) ->
     {reply, {ok, N}, State};
+handle_call(workers, _From, State=#{workers := Workers}) ->
+    {reply, {ok, Workers}, State};
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
 
