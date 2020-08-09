@@ -1,6 +1,9 @@
 %%%-------------------------------------------------------------------
 %% @doc Value Representation Long String.
 %%
+%% Multiple venders break the limit of 64. In order for us to route
+%% correctly, we have change our limit to 128.
+%%
 %% @end
 %%%-------------------------------------------------------------------
 
@@ -9,7 +12,7 @@
 
 -include("wolfpacs_types.hrl").
 
--define(LIMIT, 64).
+-define(LIMIT, 128).
 -define(PAD, " ").
 
 encode(Flow, _Strategy, X) ->
