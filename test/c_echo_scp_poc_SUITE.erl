@@ -12,11 +12,11 @@ all() -> [test_c_echo_scp_scu,
 
 init_per_suite(Cfg) ->
     lager_common_test_backend:bounce(debug),
-    application:ensure_all_started(wolfpacs),
+    {ok, _} = application:ensure_all_started(wolfpacs),
     Cfg.
 
 end_per_suite(Cfg) ->
-    application:stop(wolfpacs),
+    ok = application:stop(wolfpacs),
     Cfg.
 
 test_c_echo_scp_scu(_Config) ->
