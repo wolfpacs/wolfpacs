@@ -15,8 +15,11 @@
 
 <h2><a name="description">Description</a></h2><p>Value Representation Code String.</p>
  
-  A string of characters with leading or trailing spaces (20H)
-  being non-significant.
+  <p>A string of characters with leading or trailing spaces (20H)  
+being non-significant.</p>
+ 
+  Multiple venders break the limit of 16. In order for us to route
+  correctly, we have change our limit to 32.
  
 <h2><a name="index">Function Index</a></h2>
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#decode-3">decode/3</a></td><td></td></tr>

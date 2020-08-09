@@ -28,4 +28,4 @@
           wolfpacs_vr_sl,wolfpacs_vr_sq,wolfpacs_vr_sq_item,
           wolfpacs_vr_sq_items,wolfpacs_vr_ss,wolfpacs_vr_st,wolfpacs_vr_tm,
           wolfpacs_vr_ui,wolfpacs_vr_ul,wolfpacs_vr_un,wolfpacs_vr_us,
-          wolfpacs_vr_utils]}.
+          wolfpacs_vr_utils,workers_handler]}.
