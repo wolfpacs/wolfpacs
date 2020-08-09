@@ -175,7 +175,4 @@ minimal_test() ->
     {ok, [{expected, "", not_enough_data}|_]} = events(Flow),
     reset(Flow),
 
-    warning(Flow, abc, 123),
-    {ok, [{warning, abc, 123}]} = events(Flow),
-
     ok = stop(Flow).
