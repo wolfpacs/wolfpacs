@@ -123,8 +123,8 @@ priv_send(DataSet, #wolfpacs_worker{host=Host, port=Port, ae=CalledAE}) ->
     CallingAE = <<"WolfPACS">>,
     wolfpacs_sender_pool:send(Host, Port, CalledAE, CallingAE, DataSet).
 
-update_studyuid_map(StudyUID, #wolfpacs_worker{id = Id}, State=#{study_workers := Map}) ->
-    State#{study_workers => Map#{StudyUID => Id}}.
+update_studyuid_map(StudyUID, Worker, State=#{study_workers := Map}) ->
+    State#{study_workers => Map#{StudyUID => Worker}}.
 
 %%-----------------------------------------------------------------------------
 %% Tests
