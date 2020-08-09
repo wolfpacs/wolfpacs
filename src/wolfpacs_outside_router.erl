@@ -66,7 +66,7 @@ handle_call(workers, _From, State=#{workers := Workers}) ->
 
 handle_call({add_worker, Host, Port, AE}, _From, State=#{workers := Workers}) ->
     NewID = length(Workers),
-    Worker = #wolfpacs_worker{id = NewID, host = Host, port = Port, ae = AE, state = unseen},
+    Worker = #wolfpacs_worker{id = NewID, host = Host, port = Port, ae = AE, state = online},
     {reply, {ok, NewID}, State#{workers => [Worker|Workers]}};
 
 handle_call(What, _From, State) ->
