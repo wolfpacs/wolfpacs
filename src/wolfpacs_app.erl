@@ -16,6 +16,15 @@
 
 start(_StartType, _StartArgs) ->
     wolfpacs_config:load(),
+    Dispatch = cowboy_router:compile(
+		 [{'_', [{"/", root_handler, []},
+			 {"/workers", workers_handler, []}
+			]}
+		 ]),
+    cowboy:start_clear(rest_listener,
+		       [{port, 8080}],
+		       #{env => #{dispatch => Dispatch}}
+		      ),
     wolfpacs_sup:start_link().
 
 %%--------------------------------------------------------------------

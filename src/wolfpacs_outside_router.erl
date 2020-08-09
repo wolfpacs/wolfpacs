@@ -2,11 +2,14 @@
 -behaviour(gen_server).
 -define(SERVER, ?MODULE).
 
+-include("wolfpacs_types.hrl").
+
 -export([start_link/0,
 	 stop/0,
 	 route/4,
 	 add_worker/3,
 	 remove_worker/3,
+	 workers/0,
 	 debug/0]).
 
 -export([init/1,
@@ -30,10 +33,13 @@ route(CalledAE, CallingAE, DataSet, StudyUID) ->
     gen_server:cast(?MODULE, {route, CalledAE, CallingAE, DataSet, StudyUID}).
 
 add_worker(Host, Port, AE) ->
-    gen_server:cast(?MODULE, {add_worker, Host, Port, AE}).
+    gen_server:call(?MODULE, {add_worker, Host, Port, AE}).
 
 remove_worker(Host, Port, AE) ->
     gen_server:cast(?MODULE, {remove_worker, Host, Port, AE}).
+
+workers() ->
+    gen_server:call(?MODULE, workers).
 
 number_of_workers() ->
     gen_server:call(?MODULE, number_of_workers).
@@ -46,44 +52,38 @@ debug() ->
 %%------------------------------------------------------------------------------
 
 init(_) ->
-    State = #{workers => #{},
-	      next_worker => 0,
-	      nb_workers => 0,
-	      study_workers => #{}
-	     },
+    State = #{workers => [], study_workers => #{}},
     {ok, State}.
 
 handle_call(debug, _From, State) ->
     {reply, {ok, State}, State};
-handle_call(number_of_workers, _From, State=#{nb_workers := N}) ->
-    {reply, {ok, N}, State};
+
+handle_call(number_of_workers, _From, State=#{workers := Workers}) ->
+    {reply, {ok, length(Workers)}, State};
+
+handle_call(workers, _From, State=#{workers := Workers}) ->
+    {reply, {ok, Workers}, State};
+
+handle_call({add_worker, Host, Port, AE}, _From, State=#{workers := Workers}) ->
+    NewID = length(Workers),
+    Worker = #wolfpacs_worker{id = NewID, host = Host, port = Port, ae = AE, state = online},
+    {reply, {ok, NewID}, State#{workers => [Worker|Workers]}};
+
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
 
-handle_cast({route, _CalledAE, _CallingAE, DataSet, _StudyUID},  State=#{nb_workers := 0}) ->
-    _ = lager:warning("[OutsideRouter] No workers. Save dataset"),
-    wolfpacs_storage:store(DataSet),
-    {noreply, State};
 handle_cast({route, _CalledAE, _CallingAE, DataSet, StudyUID}, State) ->
-    #{workers := Workers, next_worker := I, study_workers := StudyMap} = State,
-    case maps:get(StudyUID, StudyMap, missing) of
+    #{workers := Workers, study_workers := StudyMap} = State,
+    Known = maps:get(StudyUID, StudyMap, missing),
+    case find_worker(Workers, Known) of
 	missing ->
-	    case maps:get(I, Workers, missing) of
-		missing ->
-		    _ = lager:warning("[OutsideRouter] Study wasn't previously seen. No worker found"),
-		    wolfpacs_storage:store(DataSet),
-		    {noreply, State};
-		SendInfo ->
-		    priv_send(DataSet, SendInfo),
-		    {noreply, round_robin_and_note_studyuid(State, StudyUID, SendInfo)}
-	    end;
+	    _ = lager:warning("[OutsideRouter] Study wasn't previously seen. No worker found"),
+	    wolfpacs_storage:store(DataSet),
+	    {noreply, State};
 	SendInfo ->
 	    priv_send(DataSet, SendInfo),
-	    {noreply, State}
+	    {noreply, update_studyuid_map(StudyUID, SendInfo, State)}
     end;
-
-handle_cast({add_worker, Host, Port, AE}, State=#{workers := Workers, nb_workers := I}) ->
-    {noreply, State#{workers => Workers#{I => {Host, Port, AE}}, nb_workers => (I + 1)}};
 
 handle_cast(_What, State) ->
     {noreply, State}.
@@ -101,14 +101,30 @@ code_change(_Vsn, State, _Extra) ->
 %% Private
 %%------------------------------------------------------------------------------
 
-priv_send(DataSet, {Host, Port, CalledAE}) ->
+-spec find_worker(list(tuple()), tuple() | missing) -> tuple() | missing.
+find_worker(Workers, missing) ->
+    OnlineWorkers = lists:filter(fun online/1, Workers),
+    random_worker(OnlineWorkers);
+find_worker(_Workers, SendInfo) ->
+    SendInfo.
+
+online(#wolfpacs_worker{state = online}) ->
+    true;
+online(_) ->
+    false.
+
+random_worker([]) ->
+    missing;
+random_worker(Workers) ->
+    Index = rand:uniform(length(Workers)),
+    lists:nth(Index, Workers).
+
+priv_send(DataSet, #wolfpacs_worker{host=Host, port=Port, ae=CalledAE}) ->
     CallingAE = <<"WolfPACS">>,
     wolfpacs_sender_pool:send(Host, Port, CalledAE, CallingAE, DataSet).
 
-round_robin_and_note_studyuid(State, StudyUID, SendInfo) ->
-    #{next_worker := I, nb_workers := N, study_workers := StudyMap} = State,
-    J = (I + 1) rem N,
-    State#{next_worker => J, study_workers => StudyMap#{StudyUID => SendInfo}}.
+update_studyuid_map(StudyUID, Worker, State=#{study_workers := Map}) ->
+    State#{study_workers => Map#{StudyUID => Worker}}.
 
 %%-----------------------------------------------------------------------------
 %% Tests
@@ -125,9 +141,9 @@ start_debug_info_stop_test() ->
 minimal_worker_test() ->
     {ok, _} = start_link(),
     {ok, 0} = number_of_workers(),
-    ok = add_worker("localhost", 1234, "AE1"),
+    {ok, _} = add_worker("localhost", 1234, "AE1"),
     {ok, 1} = number_of_workers(),
-    ok = add_worker("localhost", 1234, "AE2"),
+    {ok, _} = add_worker("localhost", 1234, "AE2"),
     {ok, 2} = number_of_workers(),
     ok = stop().
 

@@ -18,9 +18,11 @@ all() -> [ test_missing_config
 
 init_per_suite(Cfg) ->
     lager_common_test_backend:bounce(debug),
+    {ok, _} = application:ensure_all_started(wolfpacs),
     Cfg.
 
 end_per_suite(Cfg) ->
+    ok = application:stop(wolfpacs),
     Cfg.
 
 test_missing_config(Config) ->
