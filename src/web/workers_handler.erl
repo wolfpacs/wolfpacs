@@ -48,7 +48,6 @@ workers_from_json(Req1, State) ->
     {ok, Id} = wolfpacs_outside_router:add_worker(Host, Port, AE),
     Encoded = jiffy:encode(#{<<"id">> => Id}),
     Req3 = cowboy_req:set_resp_body(Encoded, Req2),
-    %% Req3 = cowboy_req:reply(201, Resp),
     {true, Req3, State}.
 
 %%==============================================================================
@@ -137,3 +136,8 @@ reformat_workers_test() ->
     Workers = [W1, W2],
     Reformated = reformat_workers(Workers),
     ?assertEqual(Reformated, [C1, C2]).
+
+b_test_() ->
+    [ ?_assertEqual(b("foo"), <<"foo">>)
+    , ?_assertEqual(b(<<"foo">>), <<"foo">>)
+    ].
