@@ -108,8 +108,8 @@ common_cast(no_flow, _) ->
 common_cast(Flow, Info={bad, Module, Data}) ->
     _ = lager:warning("[~p] ~p: ~p", [Module, bad, Data]),
     gen_server:cast(Flow, Info);
-common_cast(Flow, Info={good, Module, Data}) ->
-    _ = lager:debug("[~p] ~p: ~p", [Module, good, Data]),
+common_cast(Flow, Info={Tag, Module, Data}) ->
+    _ = lager:debug("[~p] ~p: ~p", [Module, Tag, Data]),
     gen_server:cast(Flow, Info);
 common_cast(Flow, Info) ->
     gen_server:cast(Flow, Info).
