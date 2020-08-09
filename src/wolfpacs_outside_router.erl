@@ -78,6 +78,7 @@ handle_cast({route, _CalledAE, _CallingAE, DataSet, StudyUID}, State) ->
     case find_worker(Workers, Known) of
 	missing ->
 	    _ = lager:warning("[OutsideRouter] Study wasn't previously seen. No worker found"),
+	    wolfpacs_storage:store(DataSet),
 	    {noreply, State};
 	SendInfo ->
 	    priv_send(DataSet, SendInfo),
