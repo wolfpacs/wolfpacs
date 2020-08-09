@@ -4,6 +4,9 @@
 %% A string of characters with leading or trailing spaces (20H)
 %% being non-significant.
 %%
+%% Multiple venders break the limit of 16. In order for us to route
+%% correctly, we have change our limit to 32.
+%%
 %% @end
 %%%-------------------------------------------------------------------
 
@@ -12,7 +15,7 @@
 
 -include("wolfpacs_types.hrl").
 
--define(LIMIT, 16).
+-define(LIMIT, 32). %% OUT OF SPEC
 -define(PAD, " ").
 
 encode(Flow, _Strategy, X) ->
