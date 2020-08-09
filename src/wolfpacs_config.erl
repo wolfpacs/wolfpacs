@@ -30,7 +30,7 @@ load_config_content({error, Reason}) ->
 load_terms([]) ->
     ok;
 load_terms([{worker, Host, Port, AE}|Terms]) ->
-    wolfpacs_outside_router:add_worker(Host, Port, AE),
+    {ok, _} = wolfpacs_outside_router:add_worker(Host, Port, AE),
     load_terms(Terms);
 load_terms([{destination, Ref, Host, Port}|Terms]) ->
     wolfpacs_inside_router:set_destination(Ref, Host, Port),
