@@ -27,7 +27,6 @@ decode(Flow, <<16#4, _, Length:32, Data/binary>>) ->
 		    error
 		end;
 	_ ->
-	    wolfpacs_flow:warning(Flow, ?MODULE, "unable to split"),
 	    error
     end;
 decode(Flow, _Data) ->

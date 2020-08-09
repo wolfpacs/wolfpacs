@@ -24,7 +24,6 @@
 	 bad/3,
 	 expected_16/3,
 	 expected_32/3,
-	 warning/3,
 	 events/1]).
 
 %% Behaviour
@@ -90,9 +89,6 @@ expected_32(Flow, Module, _Data) ->
 
 bad(Flow, Module, Info) ->
     common_cast(Flow, {bad, Module, Info}).
-
-warning(Flow, Module, Info) ->
-    common_cast(Flow, {warning, Module, Info}).
 
 events(Flow) ->
     gen_server:call(Flow, events).
