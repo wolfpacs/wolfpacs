@@ -21,10 +21,10 @@ start(_StartType, _StartArgs) ->
 			 {"/workers", workers_handler, []}
 			]}
 		 ]),
-    {ok, _} = cowboy:start_clear(rest_listener,
-				 [{port, 8080}],
-				 #{env => #{dispatch => Dispatch}}
-				),
+    cowboy:start_clear(rest_listener,
+		       [{port, 8080}],
+		       #{env => #{dispatch => Dispatch}}
+		      ),
     wolfpacs_sup:start_link().
 
 %%--------------------------------------------------------------------
