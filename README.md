@@ -7,11 +7,45 @@
 
 ![Logo](priv/wolfpacs_small.png)
 
-WolfPACS is an open-source Picture Archiving and Communication System (PACS) solution written in Erlang.
+WolfPACS is an DICOM router and open-source Picture Archiving and Communication System (PACS) solution written in Erlang.
+
+## Raison d'être
+
+With the advent of heavy ML/AI solutions in Radiology,
+there is growing need to split the workload across multiple workers.
+**WolfPACS** acts as a router, sending DICOM series to the correct worker.
 
 ## Status
 
 **WolfPACS** is under active development and not ready for production.
+
+## WolfPACS's vision
+
+Imagine two hospitals that need help with processing data.
+Let's call them Stockholm Hospital (S) and Berlin Hospital (B).
+Both Stockholm and Berlin have their own central PACS systems.
+Let's call them S-PACS and B-PACS.
+
+A medical company provides software that can provide extra information
+(derived series) to a medical study. Their software is running on external
+computers (called workers).
+
+![Logo](priv/dream1.png)
+
+The key contribution of the WolfPACS router is front multiple workers,
+spread the load and return the processed dicom files to the correct PACS.
+
+To clarify the situation, let's create an example table of all the relevant components.
+
+| Name     | Host         | Port  | Calling AE | Called AE | WolfPACS Role | Note                                                           |
+| -------- | ------------ | ----- | ---------- | --------- | ------------- | -------------------------------------------------------------- |
+| S-Client | N/A          | N/A   | S-CLIENT   | S-PASS    | Server        | A Radiologist sends a study to WolfPACS for further processing |
+| B-Client | N/A          | N/A   | B-CLIENT   | B-PASS    | Server        |                                                                |
+| Worker A | 192.168.0.10 | 11112 | WolfPACS   | WORKER-A  | Client        | A worker that will process a study and generate derived series |
+| Worker B | 192.168.0.11 | 11113 | WolfPACS   | WORKER-B  | Client        |                                                                |
+| Worker C | 192.168.0.12 | 11114 | WolfPACS   | WORKER-C  | Client        |                                                                |
+| S-PACS   | s.com        | 11110 | WolfPACS   | ABCD      | Client        | A PACS system in the hospital that recieves the derived series |
+| B-PACS   | b.com        | 11111 | WolfPACS   | EFGH      | Client        |                                                                |
 
 ## Test plan
 
@@ -33,6 +67,7 @@ Start WolfPACS in background.
 ```sh
 docker run -d -p 11112:11112 wolfpacs/wolfpacs
 ```
+
 Debug WolfPACS instance
 
 ```sh
