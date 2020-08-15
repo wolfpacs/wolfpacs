@@ -1,6 +1,6 @@
 {application, wolfpacs,
- [{description, "An OTP application"},
-  {vsn, "0.1.0"},
+ [{description, "WolfPACS is an DICOM router and open-source Picture Archiving and Communication System (PACS) solution."},
+  {vsn, "0.2.0"},
   {registered, []},
   {mod, {wolfpacs_app, []}},
   {applications,
