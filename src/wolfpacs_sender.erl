@@ -360,3 +360,21 @@ pick_strategy(Contexts) ->
     _ = lager:warning("[Sender] Unable to pick transfer syntax (~p)", [Contexts]),
     %% Pick the default, universially supported implicit little
     {implicit, little}.
+
+%%==============================================================================
+%% Test
+%%==============================================================================
+
+-include_lib("eunit/include/eunit.hrl").
+
+missing_class_uid_test() ->
+    DataSet = #{},
+    {ok, Sender} = start_link("localhost", 11112, "a", "b"),
+    Res = send(Sender, DataSet),
+    ?assertEqual(Res, {error, sop_class_uid_missing}).
+
+missing_instance_uid_test() ->
+    DataSet = #{?SOP_CLASS_UID => <<"class uid">>},
+    {ok, Sender} = start_link("localhost", 11112, "a", "b"),
+    Res = send(Sender, DataSet),
+    ?assertEqual(Res, {error, sop_instance_uid_missing}).
