@@ -16,19 +16,38 @@ cloud {
 
 component "WolfPACS" as WP
 
-agent "Worker A" as WA
-agent "Worker B" as WB
-agent "Worker C" as WC
+package Workers {
+	agent "Worker A" as WA
+	agent "Worker B" as WB
+	agent "Worker C" as WC
 }
 
-S_CLIENT --> WP
-B_CLIENT --> WP
+note bottom of WP
+     Series with the same StudyUID
+     will always end up on the same worker.
+end note
 
-WP <--> WA
-WP <--> WB
-WP <--> WC
+}
 
-WP --> S_PACS
-WP --> B_PACS
+S_CLIENT -[#blue]- S_PACS
+
+S_PACS -[#blue]-> WP : 1
+
+WP -[#blue]-> WA : 2
+
+WP <-[#blue]- WA : 3
+
+WP -[#blue]-> S_PACS : 4
+
+B_CLIENT -[#green]- B_PACS
+
+B_PACS -[#green]-> WP
+
+WP -[#green]-> WB
+
+WP <-[#green]- WB
+
+WP -[#green]-> B_PACS
+
 
 @enduml
