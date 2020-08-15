@@ -32,33 +32,15 @@ computers (called workers).
 
 ![Logo](priv/dream1.png)
 
+Steps in figure above.
+
+1. Radiologist sends primary series to WolfPACS.
+2. WolfPACS receives the series, routes data to appropriate worker.
+3. Worker sends all new series to WolfPACS.
+4. WolfPACS sends new series to correct destination.
+
 The key contribution of the WolfPACS router is front multiple workers,
 spread the load and return the processed dicom files to the correct PACS.
-
-To clarify the situation, let's create an example table of all the relevant components.
-
-| Name     | Host         | Port  | Calling AE | Called AE | WolfPACS Role | Note                                                           |
-| -------- | ------------ | ----- | ---------- | --------- | ------------- | -------------------------------------------------------------- |
-| S-Client | N/A          | N/A   | S-CLIENT   | S-PASS    | Server        | A Radiologist sends a study to WolfPACS for further processing |
-| B-Client | N/A          | N/A   | B-CLIENT   | B-PASS    | Server        |                                                                |
-| Worker A | 192.168.0.10 | 11112 | WolfPACS   | WORKER-A  | Client        | A worker that will process a study and generate derived series |
-| Worker B | 192.168.0.11 | 11113 | WolfPACS   | WORKER-B  | Client        |                                                                |
-| Worker C | 192.168.0.12 | 11114 | WolfPACS   | WORKER-C  | Client        |                                                                |
-| S-PACS   | s.com        | 11110 | WolfPACS   | ABCD      | Client        | A PACS system in the hospital that recieves the derived series |
-| B-PACS   | b.com        | 11111 | WolfPACS   | EFGH      | Client        |                                                                |
-
-## Test plan
-
-A PACS is classified as a medical device and needs to be painstakingly tested.
-
-We use four different test in WolfPACS and we aim to test the software thoroughly.
-
-| Test                   | Target                | Method                                                                           |
-| ---------------------- | --------------------- | -------------------------------------------------------------------------------- |
-| Unit tests             | One Module            | [Erlang Eunit](http://erlang.org/doc/apps/eunit/chapter.html)                    |
-| Integration tests      | Many Modules          | [Erlang Common Tests](https://erlang.org/doc/apps/common_test/introduction.html) |
-| Validation testing     | User requirements     | [Python Robot Framework](https://robotframework.org/)                            |
-| Property based testing | Hidden bugs / Fussing | [Erlang proper](https://propertesting.com/)                                      |
 
 ## Quick Start
 
@@ -72,6 +54,10 @@ Debug WolfPACS instance
 
 ```sh
 docker run -it -p 11112:11112 wolfpacs/wolfpacs console
+```
+
+```sh
+docker run -d -v /a/path/config/folder:/app123 -e WOLFPACS_DIR=/app123 -p 11112:11112 wolfpacs/wolfpacs
 ```
 
 ## Configuration
@@ -99,9 +85,20 @@ docker run -it -p 11112:11112 wolfpacs/wolfpacs console
 {destination, {"WOLFPACS", "DCMSEND"}, "pacs.example.com", 11112}.
 ```
 
-```sh
-docker run -d -v /a/path/config/folder:/app123 -e WOLFPACS_DIR=/app123 -p 11112:11112 wolfpacs/wolfpacs
-```
+## Some notes above AE titles
+
+To clarify the situation, let's create an example table of all the relevant components.
+
+| Name     | Host         | Port  | Calling AE | Called AE | WolfPACS Role | Note                                                           |
+| -------- | ------------ | ----- | ---------- | --------- | ------------- | -------------------------------------------------------------- |
+| S-Client | N/A          | N/A   | S-CLIENT   | S-PASS    | Server        | A Radiologist sends a study to WolfPACS for further processing |
+| B-Client | N/A          | N/A   | B-CLIENT   | B-PASS    | Server        |                                                                |
+| Worker A | 192.168.0.10 | 11112 | WolfPACS   | WORKER-A  | Client        | A worker that will process a study and generate derived series |
+| Worker B | 192.168.0.11 | 11113 | WolfPACS   | WORKER-B  | Client        |                                                                |
+| Worker C | 192.168.0.12 | 11114 | WolfPACS   | WORKER-C  | Client        |                                                                |
+| S-PACS   | s.com        | 11110 | WolfPACS   | ABCD      | Client        | A PACS system in the hospital that recieves the derived series |
+| B-PACS   | b.com        | 11111 | WolfPACS   | EFGH      | Client        |                                                                |
+
 
 ## DICOM Conformance Statement
 
@@ -118,6 +115,21 @@ The following services are supported:
 | Name         | UID               | SCP       | SCU       |
 | ------------ | ----------------- | --------- | --------- |
 | Verification | 1.2.840.10008.1.1 | Yes (PoC) | Yes (PoC) |
+
+
+## Test plan
+
+A PACS is classified as a medical device and needs to be painstakingly tested.
+
+We use four different test in WolfPACS and we aim to test the software thoroughly.
+
+| Test                   | Target                | Method                                                                           |
+| ---------------------- | --------------------- | -------------------------------------------------------------------------------- |
+| Unit tests             | One Module            | [Erlang Eunit](http://erlang.org/doc/apps/eunit/chapter.html)                    |
+| Integration tests      | Many Modules          | [Erlang Common Tests](https://erlang.org/doc/apps/common_test/introduction.html) |
+| Validation testing     | User requirements     | [Python Robot Framework](https://robotframework.org/)                            |
+| Property based testing | Hidden bugs / Fussing | [Erlang proper](https://propertesting.com/)                                      |
+
 
 ## Links and references
 
