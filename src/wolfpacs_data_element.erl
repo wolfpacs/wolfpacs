@@ -124,12 +124,9 @@ encode(Flow, Strategy, G, E, "FL", Name, _Extra) ->
 encode(Flow, Strategy, G, E, "SQ", Bytes, _Extra) ->
     wolfpacs_flow:good(Flow, ?MODULE, "encode OB"),
     encode_common(Strategy, G, E, "SQ", wolfpacs_vr_sq:encode(Flow, Strategy, Bytes));
-encode(Flow, Strategy, G, E, "xs", Value, _Extra) when Value >= 0 ->
-    wolfpacs_flow:good(Flow, ?MODULE, "encode xs as US"),
-    encode_common(Strategy, G, E, "US", wolfpacs_vr_us:encode(Flow, Strategy, Value));
 encode(Flow, Strategy, G, E, "xs", Value, _Extra) ->
-    wolfpacs_flow:good(Flow, ?MODULE, "encode xs as SS"),
-    encode_common(Strategy, G, E, "SS", wolfpacs_vr_ss:encode(Flow, Strategy, Value));
+    wolfpacs_flow:good(Flow, ?MODULE, "encode xs"),
+    encode_common(Strategy, G, E, "US", wolfpacs_vr_xs:encode(Flow, Strategy, Value));
 encode(Flow, Strategy, G, E, VR, Bytes, Extra) ->
     case maps:get({G, E}, Extra, missing) of
 	missing ->
@@ -435,6 +432,10 @@ decode_common(Flow, Strategy, G, E, "DS", Len, Data) ->
 decode_common(Flow, Strategy, G, E, "SS", Len, Data) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_common SS"),
     decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_ss);
+
+decode_common(Flow, Strategy, G, E, "xs", Len, Data) ->
+    wolfpacs_flow:good(Flow, ?MODULE, "decode_common xs"),
+    decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, wolfpacs_vr_xs);
 
 decode_common(Flow, Strategy, G, E, "LT", Len, Data) ->
     wolfpacs_flow:good(Flow, ?MODULE, "decode_common LT"),
