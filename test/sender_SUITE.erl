@@ -1,5 +1,6 @@
 -module(sender_SUITE).
 -include_lib("common_test/include/ct.hrl").
+-include("wolfpacs_types.hrl").
 
 -export([all/0,
 	 init_per_suite/1,
@@ -18,10 +19,9 @@ end_per_suite(Cfg) ->
 test_send_mr(Config) ->
     Filename = filename:join([?config(data_dir, Config), "0000.dcm"]),
     DataSet = testutils:read_dataset(Filename),
-    Host = "127.0.0.1",
-    Port = 1234,
-    CalledAE = <<"CalledAE">>,
-    CallingAE = <<"CallingAE">>,
-    {ok, Sender} = wolfpacs_sender:start_link(Host, Port, CalledAE, CallingAE),
+    Remote = #wolfpacs_remote{ host = "127.0.0.1"
+			     , port = 1234
+			     , ae = <<"CalledAE">>},
+    {ok, Sender} = wolfpacs_sender:start_link(Remote),
     wolfpacs_sender:send(Sender, DataSet),
     wolfpacs_sender:stop(Sender).

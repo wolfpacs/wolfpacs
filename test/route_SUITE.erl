@@ -19,20 +19,23 @@ end_per_suite(Cfg) ->
 
 test_minimal_route(Config) ->
     %% Add mockup PACS system
+    MockName = "mock",
     MockHost = "localhost",
     MockPort = integer_to_list(rand:uniform(1000) + 22222),
+    MockAE = "MockAE",
     Self = self(),
     spawn(fun() -> server(MockPort, Self) end),
 
-    %% Set mock pacs system as destination in inside route
-    Ref = {<<"ANY-SCP         ">>,<<"STORESCU        ">>},
-    wolfpacs_inside_router:set_destination(Ref, MockHost, MockPort),
-
-    %% Instead of an external worker, send directly to inside port 11113
-    wolfpacs_outside_router:add_worker("127.0.0.1", 11113, <<"AE">>),
+    wolfpacs_clients:add("mock", "ninja"),
+    wolfpacs_dests:add(MockName, MockHost, MockPort, MockAE),
+    wolfpacs_workers:add("worker 1", "127.0.0.1", 11113, <<"AE">>),
+    wolfpacs_clients:assoc_worker("mock", "worker 1"),
+    wolfpacs_clients:assoc_dest("mock", MockName),
 
     %% Pretend that an dicom file arrives from the outside
     Filename = filename:join([?config(data_dir, Config), "0000.dcm"]),
+
+    timer:sleep(100),
     send_dicom_file_to_outside(Filename),
 
     receive

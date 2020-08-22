@@ -1,7 +1,6 @@
--module(workers_handler).
+-module(clients_handler).
 -behaviour(cowboy_rest).
 -include("wolfpacs_types.hrl").
--import(wolfpacs_utils, [b/1]).
 
 %% REST Callbacks
 -export([init/2]).
@@ -11,8 +10,8 @@
 -export([resource_exists/2]).
 
 %% Callback Callbacks
--export([workers_to_json/2,
-	 workers_from_json/2]).
+-export([clients_to_json/2,
+	 clients_from_json/2]).
 
 init(Req, State) ->
     {cowboy_rest, Req, State}.
@@ -22,12 +21,12 @@ allowed_methods(Req, State) ->
 
 content_types_provided(Req, State) ->
     {[
-      {{<<"application">>, <<"json">>, []}, workers_to_json}
+      {{<<"application">>, <<"json">>, []}, clients_to_json}
      ], Req, State}.
 
 content_types_accepted(Req, State) ->
     {[
-      {<<"application/json">>, workers_from_json}
+      {<<"application/json">>, clients_from_json}
      ], Req, State}.
 
 resource_exists(Req, State) ->
@@ -38,17 +37,14 @@ resource_exists(Req, State) ->
 
 %% Callbacks
 
-workers_to_json(Req, State) ->
+clients_to_json(Req, State) ->
     Method = cowboy_req:method(Req),
-    workers_to_json(Req, State, Method).
+    clients_to_json(Req, State, Method).
 
-workers_from_json(Req1, State) ->
+clients_from_json(Req1, State) ->
     {Req2, Body} = read_body_json(Req1),
-    #{<<"name">> := Name,
-      <<"host">> := Host,
-      <<"port">> := Port,
-      <<"ae">> := AE} = Body,
-    wolfpacs_workers:add(Name, Host, Port, AE),
+    #{<<"name">> := Name, <<"ae">> := AE} = Body,
+    wolfpacs_clients:add(Name, AE),
     Encoded = jiffy:encode(#{<<"name">> => Name}),
     Req3 = cowboy_req:set_resp_body(Encoded, Req2),
     {true, Req3, State}.
@@ -69,20 +65,23 @@ read_body_json(Req) ->
     {Req2, RawBody} = read_body(Req, <<>>),
     {Req2, jiffy:decode(RawBody, [return_maps])}.
 
-workers_to_json(Req, State, <<"GET">>) ->
-    {ok, WorkersObj} = wolfpacs_workers:all(),
-    Workers = reformat_workers(WorkersObj),
-    {jiffy:encode(Workers), Req, State}.
+clients_to_json(Req, State, <<"GET">>) ->
+    {ok, ClientsObj} = wolfpacs_clients:all(),
+    Clients = reformat_clients(ClientsObj),
+    {jiffy:encode(Clients), Req, State}.
 
-reformat_workers(Workers) ->
-    lists:map(fun reformat_worker/1, Workers).
+reformat_clients(Clients) ->
+    lists:map(fun reformat_client/1, Clients).
 
-reformat_worker({Name, #wolfpacs_remote{host=Host, port=Port, ae=AE}}) ->
+reformat_client({Name, AE}) ->
     #{ <<"name">> => Name
-     , <<"host">> => b(Host)
-     , <<"port">> => Port
      , <<"ae">> => b(AE)
      }.
+
+b(Data) when is_binary(Data) ->
+    Data;
+b(List) when is_list(List) ->
+    list_to_binary(List).
 
 %%==============================================================================
 %% Test

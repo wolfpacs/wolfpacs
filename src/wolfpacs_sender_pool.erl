@@ -2,10 +2,11 @@
 -behaviour(gen_server).
 -define(SERVER, ?MODULE).
 -define(PARALLEL_SENDS, 25).
+-include("wolfpacs_types.hrl").
 
 -export([start_link/0,
 	 stop/0,
-	 send/5,
+	 send/2,
 	 done/0,
 	 size/0]).
 
@@ -20,12 +21,9 @@
 %% API
 %%------------------------------------------------------------------------------
 
--record(sender_info, {host :: string(),
-		      port :: integer(),
-		      called :: binary(),
-		      calling :: binary(),
-		      dataset :: map(),
-		      retries :: integer()
+-record(sender_info, { remote :: #wolfpacs_remote{}
+		     , dataset :: map()
+		     , retries :: integer()
 		     }).
 
 start_link() ->
@@ -34,11 +32,8 @@ start_link() ->
 stop() ->
     gen_server:stop(?MODULE).
 
-send(Host, Port, CalledAE, CallingAE, DataSet) ->
-    SenderInfo = #sender_info{host = s(Host),
-			      port = i(Port),
-			      called = b(CalledAE),
-			      calling = b(CallingAE),
+send(Remote, DataSet) ->
+    SenderInfo = #sender_info{remote = Remote,
 			      dataset = DataSet,
 			      retries = 0},
     gen_server:cast(?MODULE, {send, SenderInfo}).
@@ -102,14 +97,11 @@ handle_timeout(Queue, true, _) ->
 handle_timeout(QueueIn, false, true) ->
     {{value, SenderInfo}, QueueOut} = queue:out(QueueIn),
     spawn(fun() ->
-		  #sender_info{host = Host,
-			       port = Port,
-			       called = CalledAE,
-			       calling = CallingAE,
-			       dataset = DataSet,
-			       retries = Retries} = SenderInfo,
+		  #sender_info{ remote = Remote
+			      , dataset = DataSet
+			      , retries = Retries } = SenderInfo,
 		  lager:debug("[SenderPool] Retry: ~p", [Retries]),
-		  {ok, Sender} = wolfpacs_sender:start_link(Host, Port, CalledAE, CallingAE),
+		  {ok, Sender} = wolfpacs_sender:start_link(Remote),
 		  case wolfpacs_sender:send(Sender, DataSet) of
 		      ok ->
 			  lager:debug("[SenderPool] Successfully send dataset"),
@@ -123,18 +115,3 @@ handle_timeout(QueueIn, false, true) ->
     {noreply, QueueOut, 0};
 handle_timeout(Queue, _, _) ->
     {noreply, Queue, 100}.
-
-i(Value) when is_list(Value) ->
-    list_to_integer(Value);
-i(Value) when is_integer(Value) ->
-    Value.
-
-b(Value) when is_list(Value) ->
-    list_to_binary(Value);
-b(Value) when is_binary(Value) ->
-    Value.
-
-s(Value) when is_binary(Value) ->
-    binary_to_list(Value);
-s(Value) when is_list(Value) ->
-    Value.

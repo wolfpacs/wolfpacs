@@ -93,6 +93,7 @@ vr_to_example_group_element("FL") -> {16#0008, 16#9459};
 vr_to_example_group_element("SS") -> {16#0018, 16#9219};
 vr_to_example_group_element("SL") -> {16#0018, 16#6020};
 vr_to_example_group_element("LT") -> {16#0008, 16#0108};
+vr_to_example_group_element("xs") -> {16#0018, 16#9810};
 vr_to_example_group_element(VR) -> {error, VR, ["No example found"]}.
 
 %%==============================================================================

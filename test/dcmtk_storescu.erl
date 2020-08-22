@@ -51,7 +51,7 @@ handle_call({send, Host, Port, Filename}, From, State) ->
     lager:warning("** SENDING ** ~p ~p ~p", [Host, Port, Filename]),
     Cmd = {spawn_executable, os:find_executable("storescu")},
     Options = [exit_status, use_stdio, stderr_to_stdout,
-	       {line, 4096}, {args, ["-v", "-d", Host, str(Port), Filename]}],
+	       {line, 4096}, {args, ["-aec", "ninja", "-v", "-d", Host, str(Port), Filename]}],
     Process = open_port(Cmd, Options),
     {noreply, State#{process => Process, from => From}};
 

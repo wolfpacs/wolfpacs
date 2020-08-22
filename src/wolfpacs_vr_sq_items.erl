@@ -158,6 +158,7 @@ nested_sq_explicit_little_test_() ->
     {ok, Flow} = wolfpacs_flow:start_link(),
 
     {ok, Decoded, Rest} = decode(Flow, {explicit, little}, Encoded),
+
     [ ?_assertEqual(Decoded, Correct)
     , ?_assertEqual(Rest, <<1, 2>>)
     ].

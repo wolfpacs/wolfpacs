@@ -18,6 +18,7 @@
 	 random_clear/2,
 	 chunk/2,
 	 flatten_decoded/1]).
+-export([b/1]).
 
 -spec drop_first_byte(<<_:8, _:_*8>>) -> binary().
 drop_first_byte(<<_, Data/binary>>) ->
@@ -156,6 +157,11 @@ flatten_decoded([{ok, X, <<>>}|Tail], Acc) ->
     flatten_decoded(Tail, [X|Acc]);
 flatten_decoded(_, _) ->
     error.
+
+b(String) when is_list(String) ->
+    list_to_binary(String);
+b(Data) when is_binary(Data) ->
+    Data.
 
 %%==============================================================================
 %% Test
