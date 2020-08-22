@@ -2,26 +2,28 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Module wolfpacs_authentication</title>
+<title>Module wolfpacs_clients</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
 <body bgcolor="white">
 <div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
 <hr>
 
-<h1>Module wolfpacs_authentication</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Authentication.
+<h1>Module wolfpacs_clients</h1>
+<ul class="index"><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>
 
 <p><b>Behaviours:</b> <a href="gen_server.html"><tt>gen_server</tt></a>.</p>
 
-<h2><a name="description">Description</a></h2>Authentication.
- 
 <h2><a name="index">Function Index</a></h2>
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#add-2">add/2</a></td><td></td></tr>
-<tr><td valign="top"><a href="#add_called-1">add_called/1</a></td><td></td></tr>
-<tr><td valign="top"><a href="#add_calling-1">add_calling/1</a></td><td></td></tr>
-<tr><td valign="top"><a href="#authenticate-2">authenticate/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#all-0">all/0</a></td><td></td></tr>
+<tr><td valign="top"><a href="#assoc_dest-2">assoc_dest/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#assoc_studyuid-2">assoc_studyuid/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#assoc_worker-2">assoc_worker/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#code_change-3">code_change/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#dest_for_ae-1">dest_for_ae/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#dest_for_name-1">dest_for_name/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#dest_for_studyuid-1">dest_for_studyuid/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#handle_info-2">handle_info/2</a></td><td></td></tr>
@@ -29,28 +31,35 @@
 <tr><td valign="top"><a href="#start_link-0">start_link/0</a></td><td></td></tr>
 <tr><td valign="top"><a href="#stop-0">stop/0</a></td><td></td></tr>
 <tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#workers_for_ae-1">workers_for_ae/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#workers_for_name-1">workers_for_name/1</a></td><td></td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
 
 <h3 class="function"><a name="add-2">add/2</a></h3>
 <div class="spec">
-<p><tt>add(CallingAE, CalledAE) -&gt; any()</tt></p>
+<p><tt>add(Name, AE) -&gt; any()</tt></p>
 </div>
 
-<h3 class="function"><a name="add_called-1">add_called/1</a></h3>
+<h3 class="function"><a name="all-0">all/0</a></h3>
 <div class="spec">
-<p><tt>add_called(CalledAE) -&gt; any()</tt></p>
+<p><tt>all() -&gt; any()</tt></p>
 </div>
 
-<h3 class="function"><a name="add_calling-1">add_calling/1</a></h3>
+<h3 class="function"><a name="assoc_dest-2">assoc_dest/2</a></h3>
 <div class="spec">
-<p><tt>add_calling(CallingAE) -&gt; any()</tt></p>
+<p><tt>assoc_dest(Name, Dest) -&gt; any()</tt></p>
 </div>
 
-<h3 class="function"><a name="authenticate-2">authenticate/2</a></h3>
+<h3 class="function"><a name="assoc_studyuid-2">assoc_studyuid/2</a></h3>
 <div class="spec">
-<p><tt>authenticate(CallingAE, CalledAE) -&gt; any()</tt></p>
+<p><tt>assoc_studyuid(AE, StudyUID) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="assoc_worker-2">assoc_worker/2</a></h3>
+<div class="spec">
+<p><tt>assoc_worker(Name, Worker) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="code_change-3">code_change/3</a></h3>
@@ -58,14 +67,29 @@
 <p><tt>code_change(Vsn, State, Extra) -&gt; any()</tt></p>
 </div>
 
+<h3 class="function"><a name="dest_for_ae-1">dest_for_ae/1</a></h3>
+<div class="spec">
+<p><tt>dest_for_ae(AE) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="dest_for_name-1">dest_for_name/1</a></h3>
+<div class="spec">
+<p><tt>dest_for_name(Name) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="dest_for_studyuid-1">dest_for_studyuid/1</a></h3>
+<div class="spec">
+<p><tt>dest_for_studyuid(StudyUID) -&gt; any()</tt></p>
+</div>
+
 <h3 class="function"><a name="handle_call-3">handle_call/3</a></h3>
 <div class="spec">
-<p><tt>handle_call(X1, From, State) -&gt; any()</tt></p>
+<p><tt>handle_call(What, From, State) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="handle_cast-2">handle_cast/2</a></h3>
 <div class="spec">
-<p><tt>handle_cast(What, State) -&gt; any()</tt></p>
+<p><tt>handle_cast(X1, State) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="handle_info-2">handle_info/2</a></h3>
@@ -91,6 +115,16 @@
 <h3 class="function"><a name="terminate-2">terminate/2</a></h3>
 <div class="spec">
 <p><tt>terminate(Reason, State) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="workers_for_ae-1">workers_for_ae/1</a></h3>
+<div class="spec">
+<p><tt>workers_for_ae(AE) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="workers_for_name-1">workers_for_name/1</a></h3>
+<div class="spec">
+<p><tt>workers_for_name(Name) -&gt; any()</tt></p>
 </div>
 <hr>
 
