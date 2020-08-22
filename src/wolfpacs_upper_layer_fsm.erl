@@ -162,7 +162,7 @@ handle_associate_rq(AssociateRQ, Data) ->
      _MaxSize, Class, VersionName,
      _Rest} = AssociateRQ,
 
-    {ok, Allowed} = wolfpacs_authentication:authenticate(CallingAE, CalledAE),
+    {ok, Allowed} = wolfpacs_route_logic:allow(CalledAE),
 
     {ok, SupportedContexts, ContextMap} = wolfpacs_conformance:supported(Contexts, Allowed),
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
@@ -301,16 +301,37 @@ route_payload(Flow, RouteTag, CalledAE, CallingAE, DataSet) ->
     StudyUID = maps:get({16#0020, 16#000d}, DataSet, missing),
     SeriesUID = maps:get({16#0020, 16#000e}, DataSet, missing),
     wolfpacs_router_insight:note(RouteTag, CalledAE, CallingAE, ImageType, StudyUID, SeriesUID),
+    wolfpacs_storage:store(DataSet),
 
     case RouteTag of
 	wolfpacs_outside ->
-	    wolfpacs_outside_router:route(CalledAE, CallingAE, DataSet, StudyUID),
-	    wolfpacs_inside_router:remember({CalledAE, CallingAE}, StudyUID);
+	    outside_route(CalledAE, StudyUID, DataSet);
 	wolfpacs_inside ->
-	    wolfpacs_inside_router:route(StudyUID, DataSet);
+	    inside_route(StudyUID, DataSet);
 	_ ->
 	    lager:warning("[UpperLayerFSM] Critical error. Incorrect RouteTag: ~p", [RouteTag])
     end.
+
+%%==============================================================================
+%% Private
+%%==============================================================================
+
+outside_route(CalledAE, StudyUID, DataSet) ->
+    case wolfpacs_route_logic:pick_worker(CalledAE, StudyUID) of
+	{ok, Remote} ->
+	    wolfpacs_sender_pool:send(Remote, DataSet);
+	_ ->
+	    _ = lager:warning("[UpperLayerFSM] Unable to route client AE: ~p", [CalledAE])
+    end.
+
+inside_route(StudyUID, DataSet) ->
+    case wolfpacs_route_logic:pick_destination(StudyUID) of
+	{ok, Remote} ->
+	    wolfpacs_sender_pool:send(Remote, DataSet);
+	_ ->
+	    _ = lager:warning("[UpperLayerFSM] Unable to route study uid: ~p", [StudyUID])
+    end.
+
 
 %%==============================================================================
 %% Test
