@@ -12,9 +12,7 @@
 
 -type ui() :: list() | binary().
 
--record(wolfpacs_worker, { id :: integer()
-			 , host :: string()
-			 , port :: integer()
-			 , ae :: string()
-			 , state :: unseen | online | paused
+-record(wolfpacs_remote, { host = <<"localhost">> :: binary()
+			 , port = 1112 :: integer()
+			 , ae = <<"ae">> :: binary()
 			 }).
