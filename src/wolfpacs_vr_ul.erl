@@ -60,7 +60,7 @@ bad_decode_test_() ->
 
 encode_decode_vm_test_() ->
     S = {explicit, little},
-    Values = [1, 16, 256, 1024],
+    Values = [1, 16, 220, 220, 256, 1024],
     Encoded = encode(no_flow, S, Values),
     Result = decode(no_flow, S, Encoded),
     [ ?_assertEqual(Result, {ok, Values, <<>>})
