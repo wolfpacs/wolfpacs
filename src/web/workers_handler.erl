@@ -1,7 +1,7 @@
 -module(workers_handler).
 -behaviour(cowboy_rest).
 -include("wolfpacs_types.hrl").
-
+-import(wolfpacs_utils, [b/1]).
 
 %% REST Callbacks
 -export([init/2]).
@@ -44,9 +44,12 @@ workers_to_json(Req, State) ->
 
 workers_from_json(Req1, State) ->
     {Req2, Body} = read_body_json(Req1),
-    #{<<"host">> := Host, <<"port">> := Port, <<"ae">> := AE} = Body,
-    {ok, Id} = wolfpacs_outside_router:add_worker(Host, Port, AE),
-    Encoded = jiffy:encode(#{<<"id">> => Id}),
+    #{<<"name">> := Name,
+      <<"host">> := Host,
+      <<"port">> := Port,
+      <<"ae">> := AE} = Body,
+    wolfpacs_workers:add(Name, Host, Port, AE),
+    Encoded = jiffy:encode(#{<<"name">> => Name}),
     Req3 = cowboy_req:set_resp_body(Encoded, Req2),
     {true, Req3, State}.
 
@@ -67,77 +70,22 @@ read_body_json(Req) ->
     {Req2, jiffy:decode(RawBody, [return_maps])}.
 
 workers_to_json(Req, State, <<"GET">>) ->
-    {ok, WorkersObj} = wolfpacs_outside_router:workers(),
+    {ok, WorkersObj} = wolfpacs_workers:all(),
     Workers = reformat_workers(WorkersObj),
     {jiffy:encode(Workers), Req, State}.
 
 reformat_workers(Workers) ->
     lists:map(fun reformat_worker/1, Workers).
 
-reformat_worker(#wolfpacs_worker{id=Id, host=Host, port=Port, ae=AE, state=State}) ->
-    #{<<"id">> => Id,
-      <<"host">> => b(Host),
-      <<"port">> => Port,
-      <<"ae">> => b(AE),
-      <<"state">> => list_to_binary(atom_to_list(State))
+reformat_worker({Name, #wolfpacs_remote{host=Host, port=Port, ae=AE}}) ->
+    #{ <<"name">> => Name
+     , <<"host">> => b(Host)
+     , <<"port">> => Port
+     , <<"ae">> => b(AE)
      }.
-
-b(Data) when is_binary(Data) ->
-    Data;
-b(List) when is_list(List) ->
-    list_to_binary(List).
 
 %%==============================================================================
 %% Test
 %%==============================================================================
 
 -include_lib("eunit/include/eunit.hrl").
-
-reformat_worker_test() ->
-    W1 = #wolfpacs_worker{id=1,
-			  host="localhost",
-			  port=11113,
-			  ae="foo",
-			  state=unseen},
-    Correct = #{ <<"ae">> => <<"foo">>
-	       , <<"host">> => <<"localhost">>
-	       , <<"id">> => 1
-	       , <<"port">> => 11113
-	       , <<"state">> => <<"unseen">>
-	       },
-    Res = reformat_worker(W1),
-    ?assertEqual(Res, Correct).
-
-reformat_workers_test() ->
-    W1 = #wolfpacs_worker{id=1,
-			  host="localhost",
-			  port=11113,
-			  ae="foo",
-			  state=unseen},
-    W2 = #wolfpacs_worker{id=2,
-			  host="localhost",
-			  port=11113,
-			  ae="bar",
-			  state=online},
-
-    C1 = #{ <<"ae">> => <<"foo">>
-	  , <<"host">> => <<"localhost">>
-	  , <<"id">> => 1
-	  , <<"port">> => 11113
-	  , <<"state">> => <<"unseen">>
-	  },
-    C2 = #{ <<"ae">> => <<"bar">>
-	  , <<"host">> => <<"localhost">>
-	  , <<"id">> => 2
-	  , <<"port">> => 11113
-	  , <<"state">> => <<"online">>
-	  },
-
-    Workers = [W1, W2],
-    Reformated = reformat_workers(Workers),
-    ?assertEqual(Reformated, [C1, C2]).
-
-b_test_() ->
-    [ ?_assertEqual(b("foo"), <<"foo">>)
-    , ?_assertEqual(b(<<"foo">>), <<"foo">>)
-    ].
