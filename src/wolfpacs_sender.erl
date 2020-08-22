@@ -13,7 +13,7 @@
 -define(SOP_CLASS_UID, {16#0008, 16#0016}).
 -define(SOP_INSTANCE_UID, {16#0008, 16#0018}).
 
--export([start_link/4,
+-export([start_link/1,
 	 stop/1,
 	 send/2]).
 -export([init/1,
@@ -30,8 +30,8 @@
 %% API
 %%------------------------------------------------------------------------------
 
-start_link(Host, Port, CalledAE, CallingAE) ->
-    gen_statem:start_link(?MODULE, [Host, Port, CalledAE, CallingAE], []).
+start_link(Remote) ->
+    gen_statem:start_link(?MODULE, Remote, []).
 
 stop(Sender) ->
     gen_statem:stop(Sender).
@@ -68,13 +68,17 @@ send_with_class_and_instance_uid(Sender, DataSet, ClassUID, InstanceUID) ->
 		      chunks :: list(binary())}).
 
 %% @hidden
-init([Host, Port, CalledAE, CallingAE]) ->
+init(Remote) ->
+    #wolfpacs_remote{ host = Host
+		    , port = Port
+		    , ae = AE } = Remote,
+
     {ok, Flow} = wolfpacs_flow:start_link(),
     SenderData = #sender_data{flow = Flow,
 			      host = Host,
 			      port = Port,
-			      called = CalledAE,
-			      calling = CallingAE,
+			      called = AE,
+			      calling = <<"WolfPACS">>,
 			      sock = none,
 			      from = none,
 			      dataset = #{},
@@ -119,7 +123,8 @@ idle({call, From}, {send, DataSet, AbstractSyntax, InstanceUID}, SenderData) ->
     _ = lager:debug("[Sender] [Idle] Connect over tcp/ip"),
     #sender_data{flow = Flow, host = Host, port = Port} = SenderData,
     wolfpacs_flow:reset(Flow),
-    case gen_tcp:connect(Host, int(Port), [binary, {active, true}]) of
+    lager:debug("[Sender] Conenct to ~p ~p", [Host, Port]),
+    case gen_tcp:connect(s(Host), int(Port), [binary, {active, true}]) of
 	{ok, Sock} ->
 	    NewSenderData = SenderData#sender_data{from = From,
 						   sock = Sock,
@@ -350,6 +355,11 @@ int(Value) when is_list(Value) ->
 int(Value) when is_integer(Value) ->
     Value.
 
+s(String) when is_list(String) ->
+    String;
+s(Data) when is_binary(Data) ->
+    binary_to_list(Data).
+
 pick_strategy([{1, ?EXPLICIT_LITTLE_ENDIAN}]) ->
     {explicit, little};
 pick_strategy([{1, ?IMPLICIT_LITTLE_ENDIAN}]) ->
@@ -369,12 +379,12 @@ pick_strategy(Contexts) ->
 
 missing_class_uid_test() ->
     DataSet = #{},
-    {ok, Sender} = start_link("localhost", 11112, "a", "b"),
+    {ok, Sender} = start_link(#wolfpacs_remote{}),
     Res = send(Sender, DataSet),
     ?assertEqual(Res, {error, sop_class_uid_missing}).
 
 missing_instance_uid_test() ->
     DataSet = #{?SOP_CLASS_UID => <<"class uid">>},
-    {ok, Sender} = start_link("localhost", 11112, "a", "b"),
+    {ok, Sender} = start_link(#wolfpacs_remote{}),
     Res = send(Sender, DataSet),
     ?assertEqual(Res, {error, sop_instance_uid_missing}).
