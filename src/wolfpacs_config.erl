@@ -29,12 +29,27 @@ load_config_content({error, Reason}) ->
 
 load_terms([]) ->
     ok;
-load_terms([{worker, Host, Port, AE}|Terms]) ->
-    {ok, _} = wolfpacs_outside_router:add_worker(Host, Port, AE),
+
+load_terms([{client, Name, AE}|Terms]) ->
+    wolfpacs_clients:add(Name, AE),
     load_terms(Terms);
-load_terms([{destination, Ref, Host, Port}|Terms]) ->
-    wolfpacs_inside_router:set_destination(Ref, Host, Port),
+
+load_terms([{worker, Name, Host, Port, AE}|Terms]) ->
+    wolfpacs_workers:add(Name, Host, Port, AE),
     load_terms(Terms);
+
+load_terms([{destination, Name, Host, Port, AE}|Terms]) ->
+    wolfpacs_dests:add(Name, Host, Port, AE),
+    load_terms(Terms);
+
+load_terms([{client_worker, ClientName, WorkerName}|Terms]) ->
+    wolfpacs_clients:assoc_worker(ClientName, WorkerName),
+    load_terms(Terms);
+
+load_terms([{client_destination, ClientName, DestinationName}|Terms]) ->
+    wolfpacs_clients:assoc_dest(ClientName, DestinationName),
+    load_terms(Terms);
+
 load_terms([Item|_Terms]) ->
     _ = lager:warning("[Config] Don't understand ~p", [Item]),
     error.
