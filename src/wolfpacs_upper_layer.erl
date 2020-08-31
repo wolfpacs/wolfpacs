@@ -8,7 +8,6 @@
 
 -module(wolfpacs_upper_layer).
 -behaviour(gen_server).
--include_lib("eunit/include/eunit.hrl").
 
 %% API
 -export([start_link/4,
@@ -126,6 +125,8 @@ send_response(Payload, #state{socket=Socket, transport=Transport}) ->
 %%------------------------------------------------------------------------------
 %% Test
 %%------------------------------------------------------------------------------
+
+-include_lib("eunit/include/eunit.hrl").
 
 protocol_data_unit_complete_test_() ->
     [ ?_assertEqual(protocol_data_unit_complete(<<>>), error)

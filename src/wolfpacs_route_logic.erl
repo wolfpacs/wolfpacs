@@ -48,27 +48,14 @@ pick_destination(StudyUID) ->
 %%------------------------------------------------------------------------------
 
 init(_) ->
-    {ok, [allow_all]}.
+    {ok, #{}}.
 
-handle_call({allow, _AE}, _From, Events) ->
-    {reply, {ok, true}, Events};
+handle_call({allow, _AE}, _From, State) ->
+    {reply, {ok, true}, State};
 
-handle_call({pick_worker, ClientAE, StudyUID}, _From, Events) ->
-    case wolfpacs_clients:workers_for_ae(ClientAE) of
-	{ok, WorkerNames} ->
-	    MaybeWorkers = wolfpacs_workers:remotes(WorkerNames),
-	    Workers = lists:filter(fun ok_p/1, MaybeWorkers),
-
-	    case Workers of
-		[] ->
-		    {reply, {error, no_workers_available}, Events};
-		[{ok, Worker}|_] ->
-		    wolfpacs_clients:assoc_studyuid(ClientAE, StudyUID),
-		    {reply, {ok, Worker}, Events}
-	    end;
-	_ ->
-	    {reply, {error, no_workers_for_client}, Events}
-    end;
+handle_call({pick_worker, ClientAE, StudyUID}, _From, State) ->
+    MaybeWorker = maps:get(StudyUID, State, missing),
+    priv_pick_worker(MaybeWorker, ClientAE, StudyUID, State);
 
 handle_call({pick_dest, StudyUID}, _From, State) ->
     Result = wolfpacs_clients:dest_for_studyuid(StudyUID),
@@ -77,8 +64,8 @@ handle_call({pick_dest, StudyUID}, _From, State) ->
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
 
-handle_cast(Event, Events) ->
-    {noreply, [Event|Events]}.
+handle_cast(_What, State) ->
+    {noreply, State}.
 
 handle_info(_What, State) ->
     {noreply, State}.
@@ -98,10 +85,22 @@ trim(Item) when is_binary(Item) ->
 trim(Item) ->
     string:strip(string:strip(Item, right, 0), right, 32).
 
-ok_p({ok, _}) ->
-    true;
-ok_p(_) ->
-    false.
+priv_pick_worker(missing, ClientAE, StudyUID, State) ->
+    case wolfpacs_clients:workers_for_ae(ClientAE) of
+	{ok, WorkerNames} ->
+	    case wolfpacs_workers:remotes(WorkerNames) of
+		[] ->
+		    {reply, {error, no_workers_available}, State};
+		[{ok, Worker, _Load}|_] ->
+		    wolfpacs_workers:inc_load(Worker),
+		    wolfpacs_clients:assoc_studyuid(ClientAE, StudyUID),
+		    {reply, {ok, Worker}, State#{StudyUID => Worker}}
+	    end;
+	_ ->
+	    {reply, {error, no_workers_for_client}, State}
+    end;
+priv_pick_worker(Worker, _ClientAE, _StudyUID, State) ->
+    {reply, {ok, Worker}, State}.
 
 %%==============================================================================
 %% Test
@@ -125,8 +124,66 @@ single_test_() ->
     W = #wolfpacs_remote{host= <<"localhost">>, port=11113, ae= <<"W_AE">>},
     D = #wolfpacs_remote{host= <<"localhost">>, port=1235, ae= <<"D_AE">>},
 
-    [ ?_assertEqual(wolfpacs_workers:remote("W"), {ok, W})
+    [ ?_assertEqual(wolfpacs_workers:remote("W"), {ok, W, 0})
     , ?_assertEqual(wolfpacs_dests:remote("D"), {ok, D})
     , ?_assertEqual(pick_worker("C_AE", "X"), {ok, W})
     , ?_assertEqual(pick_destination("X"), {ok, D})
+    , ?_assertEqual(stop(), ok)
     ].
+
+
+advanced_worker_pick_test_() ->
+    start_link(),
+
+    wolfpacs_clients:start_link(),
+    wolfpacs_workers:start_link(),
+    wolfpacs_dests:start_link(),
+
+    wolfpacs_clients:add("C", "C_AE"),
+
+    wolfpacs_workers:add("W1", "localhost", 11111, "W1_AE"),
+    wolfpacs_workers:add("W2", "localhost", 11112, "W2_AE"),
+    wolfpacs_workers:add("W3", "localhost", 11113, "W3_AE"),
+
+    wolfpacs_clients:assoc_worker("C", "W1"),
+    wolfpacs_clients:assoc_worker("C", "W2"),
+    wolfpacs_clients:assoc_worker("C", "W3"),
+
+    W1 = #wolfpacs_remote{host= <<"localhost">>, port=11111, ae= <<"W1_AE">>},
+    W2 = #wolfpacs_remote{host= <<"localhost">>, port=11112, ae= <<"W2_AE">>},
+    W3 = #wolfpacs_remote{host= <<"localhost">>, port=11113, ae= <<"W3_AE">>},
+
+    [ ?_assertEqual(pick_worker("C_AE", <<"StudyUID1">>), {ok, W1})
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID2">>), {ok, W2})
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID3">>), {ok, W3})
+
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID1">>), {ok, W1})
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID1">>), {ok, W1})
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID1">>), {ok, W1})
+
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID2">>), {ok, W2})
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID2">>), {ok, W2})
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID2">>), {ok, W2})
+
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID3">>), {ok, W3})
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID3">>), {ok, W3})
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID3">>), {ok, W3})
+    ].
+
+start_stop_test() ->
+    start_link(),
+    ?assertEqual(stop(), ok).
+
+cast_test() ->
+    start_link(),
+    gen_server:cast(?MODULE, this_should_not_crash),
+    ?assertEqual(stop(), ok).
+
+info_test() ->
+    start_link(),
+    ?MODULE ! this_should_not_crash,
+    ?assertEqual(stop(), ok).
+
+code_change_test() ->
+    start_link(),
+    ?assertEqual(code_change(1, state, extra), {ok, state}).

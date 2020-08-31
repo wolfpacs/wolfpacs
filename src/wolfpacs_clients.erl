@@ -149,7 +149,10 @@ handle_cast({assoc_studyuid, AE, StudyUID}, State) ->
     #state{ studyuid_to_dests=StudyUIDToDests
 	  , ae_to_dests=AEToDests } = State,
     Dest = maps:get(AE, AEToDests),
-    {noreply, State#state{studyuid_to_dests=StudyUIDToDests#{StudyUID => Dest}}}.
+    {noreply, State#state{studyuid_to_dests=StudyUIDToDests#{StudyUID => Dest}}};
+
+handle_cast(_What, State) ->
+    {noreply, State}.
 
 handle_info(_What, State) ->
     {noreply, State}.
@@ -215,3 +218,21 @@ studyuid_test_() ->
     , ?_assertEqual(dest_for_studyuid("SUID"), {ok, Dest})
     , ?_assertEqual(ok, stop())
     ].
+
+start_stop_test() ->
+    start_link(),
+    ?assertEqual(stop(), ok).
+
+cast_test() ->
+    start_link(),
+    gen_server:cast(?MODULE, this_should_not_crash),
+    ?assertEqual(stop(), ok).
+
+info_test() ->
+    start_link(),
+    ?MODULE ! this_should_not_crash,
+    ?assertEqual(stop(), ok).
+
+code_change_test() ->
+    start_link(),
+    ?assertEqual(code_change(1, state, extra), {ok, state}).

@@ -61,7 +61,10 @@ handle_call(What, _From, Events) ->
     {reply, {error, What}, Events}.
 
 handle_cast({add, Name, Remote}, Remotes) ->
-    {noreply, Remotes#{Name => Remote}}.
+    {noreply, Remotes#{Name => Remote}};
+
+handle_cast(_What, State) ->
+    {noreply, State}.
 
 handle_info(_What, State) ->
     {noreply, State}.
@@ -99,3 +102,21 @@ minimal_test_() ->
     , ?_assertEqual(remote("R2"), {ok, R2})
     , ?_assertEqual(remotes(["R1", "R2"]), [{ok, R1}, {ok, R2}])
     ].
+
+start_stop_test() ->
+    start_link(),
+    ?assertEqual(stop(), ok).
+
+cast_test() ->
+    start_link(),
+    gen_server:cast(?MODULE, this_should_not_crash),
+    ?assertEqual(stop(), ok).
+
+info_test() ->
+    start_link(),
+    ?MODULE ! this_should_not_crash,
+    ?assertEqual(stop(), ok).
+
+code_change_test() ->
+    start_link(),
+    ?assertEqual(code_change(1, state, extra), {ok, state}).
