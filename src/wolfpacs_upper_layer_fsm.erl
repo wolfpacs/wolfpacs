@@ -319,6 +319,7 @@ route_payload(Flow, RouteTag, CalledAE, CallingAE, DataSet) ->
 outside_route(CalledAE, StudyUID, DataSet) ->
     case wolfpacs_route_logic:pick_worker(CalledAE, StudyUID) of
 	{ok, Remote} ->
+	    wolfpacs_workers:inc_load(Remote),
 	    wolfpacs_sender_pool:send(Remote, DataSet);
 	_ ->
 	    _ = lager:warning("[UpperLayerFSM] Unable to route client AE: ~p", [CalledAE])
