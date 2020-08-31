@@ -152,7 +152,10 @@ handle_cast({inc_load, Name}, State=#state{loads=Loads}) ->
 
 handle_cast({dec_load, Name}, State=#state{loads=Loads}) ->
     Load = maps:get(Name, Loads, 0),
-    {noreply, State#state{loads=maps:put(Name, Load - 1, Loads)}}.
+    {noreply, State#state{loads=maps:put(Name, Load - 1, Loads)}};
+
+handle_cast(_What, State) ->
+    {noreply, State}.
 
 handle_info(_What, State) ->
     {noreply, State}.
@@ -203,3 +206,21 @@ minimal_test_() ->
     , ?_assertEqual(name_for_remote(R3), {error, not_found})
     , ?_assertEqual(remotes(["R1", "R2", "RX"]), [{ok, R2, 2}, {ok, R1, 3}])
     ].
+
+start_stop_test() ->
+    start_link(),
+    ?assertEqual(stop(), ok).
+
+cast_test() ->
+    start_link(),
+    gen_server:cast(?MODULE, this_should_not_crash),
+    ?assertEqual(stop(), ok).
+
+info_test() ->
+    start_link(),
+    ?MODULE ! this_should_not_crash,
+    ?assertEqual(stop(), ok).
+
+code_change_test() ->
+    start_link(),
+    ?assertEqual(code_change(1, state, extra), {ok, state}).
