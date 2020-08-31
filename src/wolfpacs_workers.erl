@@ -1,6 +1,7 @@
 -module(wolfpacs_workers).
 -behaviour(gen_server).
 -define(SERVER, ?MODULE).
+-define(MAX_LOAD, 1000000).
 -include("wolfpacs_types.hrl").
 
 -export([start_link/0,
@@ -72,7 +73,17 @@ remote(Name) ->
     gen_server:call(?MODULE, {remote, b(Name)}).
 
 remotes(Names) ->
-    [remote(Name) || Name <- Names].
+    AllRemotes = [remote(Name) || Name <- Names],
+
+    OkPred = fun({ok, _, _}) ->
+		   true;
+	      (_) ->
+		   false
+	   end,
+    OkRemotes = lists:filter(OkPred, AllRemotes),
+
+    Sorter = fun({ok, _, Load0}, {ok, _, Load1}) -> Load0 =< Load1 end,
+    lists:sort(Sorter, OkRemotes).
 
 all() ->
     gen_server:call(?MODULE, all).
@@ -92,12 +103,14 @@ init(_) ->
 handle_call(debug, _From, State) ->
     {reply, {ok, State}, State};
 
-handle_call({remote, Name}, _From, State=#state{remotes=Remotes}) ->
+handle_call({remote, Name}, _From, State) ->
+    #state{remotes=Remotes, loads=Loads} = State,
     case maps:get(Name, Remotes, missing) of
 	missing ->
 	    {reply, {error, remote_missing}, State};
 	Remote ->
-	    {reply, {ok, Remote}, State}
+	    Load = maps:get(Name, Loads, ?MAX_LOAD),
+	    {reply, {ok, Remote, Load}, State}
     end;
 
 handle_call(all, _From, State=#state{remotes=Remotes}) ->
@@ -128,8 +141,11 @@ handle_call({name_for_remote, Remote}, _From, State=#state{remotes=Map}) ->
 handle_call(What, _From, State) ->
     {reply, {error, What, State}, State}.
 
-handle_cast({add, Name, Remote}, State=#state{remotes=Remotes}) ->
-    {noreply, State#state{remotes=maps:put(Name, Remote, Remotes)}};
+handle_cast({add, Name, Remote}, State) ->
+    #state{remotes=Remotes, loads=Loads} = State,
+    NewRemotes = maps:put(Name, Remote, Remotes),
+    NewLoads = maps:put(Name, 0, Loads),
+    {noreply, State#state{remotes=NewRemotes, loads=NewLoads}};
 
 handle_cast({inc_load, Name}, State=#state{loads=Loads}) ->
     Load = maps:get(Name, Loads, 0),
@@ -173,10 +189,13 @@ minimal_test_() ->
     R2 = #wolfpacs_remote{host= <<"localhost">>, port=2, ae= <<"R2_AE">>},
     R3 = #wolfpacs_remote{host= <<"localhost">>, port=3, ae= <<"R3_AE">>},
 
-    [ ?_assertEqual(remote("R1"), {ok, R1})
-    , ?_assertEqual(remote("R2"), {ok, R2})
-    , ?_assertEqual(remotes(["R1", "R2"]), [{ok, R1}, {ok, R2}])
+    inc_load(R1), inc_load(R1), inc_load(R1),
+    inc_load(R2), inc_load(R2),
+
+    [ ?_assertEqual(remote("R1"), {ok, R1, 3})
+    , ?_assertEqual(remote("R2"), {ok, R2, 2})
     , ?_assertEqual(name_for_remote(R1), {ok, <<"R1">>})
     , ?_assertEqual(name_for_remote(R2), {ok, <<"R2">>})
     , ?_assertEqual(name_for_remote(R3), {error, not_found})
+    , ?_assertEqual(remotes(["R1", "R2", "RX"]), [{ok, R2, 2}, {ok, R1, 3}])
     ].

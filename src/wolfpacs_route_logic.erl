@@ -56,13 +56,10 @@ handle_call({allow, _AE}, _From, Events) ->
 handle_call({pick_worker, ClientAE, StudyUID}, _From, Events) ->
     case wolfpacs_clients:workers_for_ae(ClientAE) of
 	{ok, WorkerNames} ->
-	    MaybeWorkers = wolfpacs_workers:remotes(WorkerNames),
-	    Workers = lists:filter(fun ok_p/1, MaybeWorkers),
-
-	    case Workers of
+	    case wolfpacs_workers:remotes(WorkerNames) of
 		[] ->
 		    {reply, {error, no_workers_available}, Events};
-		[{ok, Worker}|_] ->
+		[{ok, Worker, _Load}|_] ->
 		    wolfpacs_clients:assoc_studyuid(ClientAE, StudyUID),
 		    {reply, {ok, Worker}, Events}
 	    end;
@@ -98,11 +95,6 @@ trim(Item) when is_binary(Item) ->
 trim(Item) ->
     string:strip(string:strip(Item, right, 0), right, 32).
 
-ok_p({ok, _}) ->
-    true;
-ok_p(_) ->
-    false.
-
 %%==============================================================================
 %% Test
 %%==============================================================================
@@ -125,7 +117,7 @@ single_test_() ->
     W = #wolfpacs_remote{host= <<"localhost">>, port=11113, ae= <<"W_AE">>},
     D = #wolfpacs_remote{host= <<"localhost">>, port=1235, ae= <<"D_AE">>},
 
-    [ ?_assertEqual(wolfpacs_workers:remote("W"), {ok, W})
+    [ ?_assertEqual(wolfpacs_workers:remote("W"), {ok, W, 0})
     , ?_assertEqual(wolfpacs_dests:remote("D"), {ok, D})
     , ?_assertEqual(pick_worker("C_AE", "X"), {ok, W})
     , ?_assertEqual(pick_destination("X"), {ok, D})
