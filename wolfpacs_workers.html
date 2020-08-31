@@ -18,10 +18,16 @@
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#add-4">add/4</a></td><td></td></tr>
 <tr><td valign="top"><a href="#all-0">all/0</a></td><td></td></tr>
 <tr><td valign="top"><a href="#code_change-3">code_change/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#debug-0">debug/0</a></td><td></td></tr>
+<tr><td valign="top"><a href="#dec_load-1">dec_load/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#handle_info-2">handle_info/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#inc_load-1">inc_load/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#init-1">init/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#load-1">load/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#loads-1">loads/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#name_for_remote-1">name_for_remote/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#remote-1">remote/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#remotes-1">remotes/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#start_link-0">start_link/0</a></td><td></td></tr>
@@ -46,14 +52,24 @@
 <p><tt>code_change(Vsn, State, Extra) -&gt; any()</tt></p>
 </div>
 
+<h3 class="function"><a name="debug-0">debug/0</a></h3>
+<div class="spec">
+<p><tt>debug() -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="dec_load-1">dec_load/1</a></h3>
+<div class="spec">
+<p><tt>dec_load(Remote) -&gt; any()</tt></p>
+</div>
+
 <h3 class="function"><a name="handle_call-3">handle_call/3</a></h3>
 <div class="spec">
-<p><tt>handle_call(What, From, Remotes) -&gt; any()</tt></p>
+<p><tt>handle_call(What, From, State) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="handle_cast-2">handle_cast/2</a></h3>
 <div class="spec">
-<p><tt>handle_cast(X1, Remotes) -&gt; any()</tt></p>
+<p><tt>handle_cast(What, State) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="handle_info-2">handle_info/2</a></h3>
@@ -61,9 +77,29 @@
 <p><tt>handle_info(What, State) -&gt; any()</tt></p>
 </div>
 
+<h3 class="function"><a name="inc_load-1">inc_load/1</a></h3>
+<div class="spec">
+<p><tt>inc_load(Remote) -&gt; any()</tt></p>
+</div>
+
 <h3 class="function"><a name="init-1">init/1</a></h3>
 <div class="spec">
 <p><tt>init(X1) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="load-1">load/1</a></h3>
+<div class="spec">
+<p><tt>load(Name) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="loads-1">loads/1</a></h3>
+<div class="spec">
+<p><tt>loads(Names) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="name_for_remote-1">name_for_remote/1</a></h3>
+<div class="spec">
+<p><tt>name_for_remote(Remote) -&gt; any()</tt></p>
 </div>
 
 <h3 class="function"><a name="remote-1">remote/1</a></h3>
