@@ -120,7 +120,7 @@ handle_call({load, Name}, _From, State=#state{loads=Loads}) ->
 	missing ->
 	    {reply, {error, worker_missing}, State};
 	Load ->
-	    {reply, {error, Load}, State}
+	    {reply, {ok, Load}, State}
     end;
 
 handle_call({name_for_remote, Remote}, _From, State=#state{remotes=Map}) ->
@@ -205,6 +205,29 @@ minimal_test_() ->
     , ?_assertEqual(name_for_remote(R2), {ok, <<"R2">>})
     , ?_assertEqual(name_for_remote(R3), {error, not_found})
     , ?_assertEqual(remotes(["R1", "R2", "RX"]), [{ok, R2, 2}, {ok, R1, 3}])
+    ].
+
+inc_dec_test_() ->
+    start_link(),
+
+    add("R1", "localhost", 1, "R1_AE"),
+    add("R2", "localhost", 2, "R2_AE"),
+
+    R1 = #wolfpacs_remote{host= <<"localhost">>, port=1, ae= <<"R1_AE">>},
+    R2 = #wolfpacs_remote{host= <<"localhost">>, port=2, ae= <<"R2_AE">>},
+    R3 = #wolfpacs_remote{host= <<"localhost">>, port=3, ae= <<"R3_AE">>},
+
+    [ ?_assertEqual(inc_load(R1), ok)
+    , ?_assertEqual(inc_load(R1), ok)
+    , ?_assertEqual(dec_load(R1), ok)
+    , ?_assertEqual(inc_load(R2), ok)
+    , ?_assertEqual(dec_load(R2), ok)
+    , ?_assertEqual(inc_load(R3), error)
+    , ?_assertEqual(dec_load(R3), error)
+    , ?_assertEqual(load("R1"), {ok, 1})
+    , ?_assertEqual(load("R2"), {ok, 0})
+    , ?_assertEqual(load("R3"), {error, worker_missing})
+    , ?_assertEqual(loads(["R1", "R2"]), #{"R1" => {ok, 1}, "R2" => {ok,  0}})
     ].
 
 start_stop_test() ->
