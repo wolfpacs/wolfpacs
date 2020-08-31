@@ -1,6 +1,6 @@
 {application, wolfpacs,
  [{description, "WolfPACS is an DICOM router and open-source Picture Archiving and Communication System (PACS) solution."},
-  {vsn, "0.2.0"},
+  {vsn, "0.3.0"},
   {registered, []},
   {mod, {wolfpacs_app, []}},
   {applications,
@@ -14,5 +14,5 @@
   {modules, []},
 
   {licenses, ["Apache 2.0"]},
-  {links, []}
+  {links, ["https://wolfpacs.github.io/"]}
  ]}.
