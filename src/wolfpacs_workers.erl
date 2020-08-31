@@ -82,8 +82,7 @@ remotes(Names) ->
 	   end,
     OkRemotes = lists:filter(OkPred, AllRemotes),
 
-    Sorter = fun({ok, _, Load0}, {ok, _, Load1}) -> Load0 =< Load1 end,
-    lists:sort(Sorter, OkRemotes).
+    lists:sort(fun worker_sorter/2, OkRemotes).
 
 all() ->
     gen_server:call(?MODULE, all).
@@ -172,6 +171,11 @@ b(String) when is_list(String) ->
     list_to_binary(String);
 b(Data) when is_binary(Data) ->
     Data.
+
+worker_sorter({ok, #wolfpacs_remote{ae=AE0}, Load}, {ok, #wolfpacs_remote{ae=AE1}, Load}) ->
+    AE0 =< AE1;
+worker_sorter({ok, _, Load0}, {ok, _, Load1}) ->
+    Load0 =< Load1.
 
 %%==============================================================================
 %% Test
