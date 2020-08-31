@@ -4,11 +4,17 @@
 -include("wolfpacs_types.hrl").
 
 -export([start_link/0,
-	 stop/0]).
+	 stop/0,
+	 debug/0]).
 -export([add/4,
 	 remote/1,
 	 remotes/1,
 	 all/0]).
+-export([inc_load/1,
+	 dec_load/1,
+	 load/1,
+	 loads/1]).
+-export([name_for_remote/1]).
 -export([init/1,
 	 handle_call/3,
 	 handle_cast/2,
@@ -30,6 +36,38 @@ add(Name, Host, Port, AE) ->
     Remote = #wolfpacs_remote{host=b(Host), port=Port, ae=b(AE)},
     gen_server:cast(?MODULE, {add, b(Name), Remote}).
 
+inc_load(Remote=#wolfpacs_remote{}) ->
+    case name_for_remote(Remote) of
+	{ok, Name} ->
+	    inc_load(Name);
+	_ ->
+	    lager:warning("[Workers] Unable to incease load"),
+	    error
+    end;
+inc_load(Name) ->
+    gen_server:cast(?MODULE, {inc_load, b(Name)}).
+
+dec_load(Remote=#wolfpacs_remote{}) ->
+    case name_for_remote(Remote) of
+	{ok, Name} ->
+	    dec_load(Name);
+	_ ->
+	    lager:warning("[Workers] Unable to decrease load"),
+	    error
+    end;
+dec_load(Name) ->
+    gen_server:cast(?MODULE, {dec_load, b(Name)}).
+
+load(Name) ->
+    gen_server:call(?MODULE, {load, b(Name)}).
+
+loads(Names) ->
+    Loads = [{Name, load(Name)} || Name <- Names],
+    maps:from_list(Loads).
+
+name_for_remote(Remote) ->
+    gen_server:call(?MODULE, {name_for_remote, Remote}).
+
 remote(Name) ->
     gen_server:call(?MODULE, {remote, b(Name)}).
 
@@ -39,29 +77,67 @@ remotes(Names) ->
 all() ->
     gen_server:call(?MODULE, all).
 
+debug() ->
+    gen_server:call(?MODULE, debug).
+
 %%=============================================================================
 %% Behaviour callbacks
 %%=============================================================================
 
-init(_) ->
-    {ok, #{}}.
+-record(state, {remotes :: map(), loads :: map()}).
 
-handle_call({remote, Name}, _From, Remotes) ->
+init(_) ->
+    {ok, #state{remotes=#{}, loads=#{}}}.
+
+handle_call(debug, _From, State) ->
+    {reply, {ok, State}, State};
+
+handle_call({remote, Name}, _From, State=#state{remotes=Remotes}) ->
     case maps:get(Name, Remotes, missing) of
 	missing ->
-	    {reply, {error, remote_missing}, Remotes};
+	    {reply, {error, remote_missing}, State};
 	Remote ->
-	    {reply, {ok, Remote}, Remotes}
+	    {reply, {ok, Remote}, State}
     end;
 
-handle_call(all, _From, Remotes) ->
-    {reply, {ok, maps:to_list(Remotes)}, Remotes};
+handle_call(all, _From, State=#state{remotes=Remotes}) ->
+    {reply, {ok, maps:to_list(Remotes)}, State};
 
-handle_call(What, _From, Events) ->
-    {reply, {error, What}, Events}.
+handle_call({load, Name}, _From, State=#state{loads=Loads}) ->
+    case maps:get(Name, Loads, missing) of
+	missing ->
+	    {reply, {error, worker_missing}, State};
+	Load ->
+	    {reply, {error, Load}, State}
+    end;
 
-handle_cast({add, Name, Remote}, Remotes) ->
-    {noreply, Remotes#{Name => Remote}}.
+handle_call({name_for_remote, Remote}, _From, State=#state{remotes=Map}) ->
+    Remotes = maps:to_list(Map),
+    Pred = fun({_Name, R}) when R == Remote ->
+		   true;
+	      ({_Name, _Other}) ->
+		   false
+	   end,
+    case lists:filter(Pred, Remotes) of
+	[{Name, Remote}] ->
+	    {reply, {ok, Name}, State};
+	_ ->
+	    {reply, {error, not_found}, State}
+    end;
+
+handle_call(What, _From, State) ->
+    {reply, {error, What, State}, State}.
+
+handle_cast({add, Name, Remote}, State=#state{remotes=Remotes}) ->
+    {noreply, State#state{remotes=maps:put(Name, Remote, Remotes)}};
+
+handle_cast({inc_load, Name}, State=#state{loads=Loads}) ->
+    Load = maps:get(Name, Loads, 0),
+    {noreply, State#state{loads=maps:put(Name, Load + 1, Loads)}};
+
+handle_cast({dec_load, Name}, State=#state{loads=Loads}) ->
+    Load = maps:get(Name, Loads, 0),
+    {noreply, State#state{loads=maps:put(Name, Load - 1, Loads)}}.
 
 handle_info(_What, State) ->
     {noreply, State}.
@@ -95,8 +171,12 @@ minimal_test_() ->
 
     R1 = #wolfpacs_remote{host= <<"localhost">>, port=1, ae= <<"R1_AE">>},
     R2 = #wolfpacs_remote{host= <<"localhost">>, port=2, ae= <<"R2_AE">>},
+    R3 = #wolfpacs_remote{host= <<"localhost">>, port=3, ae= <<"R3_AE">>},
 
     [ ?_assertEqual(remote("R1"), {ok, R1})
     , ?_assertEqual(remote("R2"), {ok, R2})
     , ?_assertEqual(remotes(["R1", "R2"]), [{ok, R1}, {ok, R2}])
+    , ?_assertEqual(name_for_remote(R1), {ok, <<"R1">>})
+    , ?_assertEqual(name_for_remote(R2), {ok, <<"R2">>})
+    , ?_assertEqual(name_for_remote(R3), {error, not_found})
     ].
