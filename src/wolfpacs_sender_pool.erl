@@ -109,6 +109,7 @@ handle_timeout(QueueIn, false, true) ->
 			  done();
 		      Error ->
 			  lager:warning("[SenderPool] Error: ~p", [Error]),
+			  timer:sleep(min(Retries * 1000, 60000)),
 			  retry(SenderInfo)
 		  end
 	  end),
