@@ -7,13 +7,13 @@
 
 ![Logo](priv/logo.png)
 
-WolfPACS is an DICOM router and open-source Picture Archiving and Communication System (PACS) solution written in Erlang.
+WolfPACS is an DICOM load balancer written in Erlang.
 
 ## Raison d'être
 
 With the advent of heavy ML/AI solutions in Radiology,
 there is growing need to split the workload across multiple workers.
-**WolfPACS** acts as a router, sending DICOM series to the correct worker.
+**WolfPACS** acts as a load balancer, sending DICOM series to the correct worker.
 
 ## Status
 
@@ -26,7 +26,7 @@ Let's call them Stockholm Hospital (S) and Berlin Hospital (B).
 Both Stockholm and Berlin have their own central PACS systems.
 Let's call them S-PACS and B-PACS.
 
-A medical company provides software that can provide extra information
+A medical company provides a software solution, that provides extra information
 (derived series) to a medical study. Their software is running on external
 computers (called workers).
 
@@ -34,13 +34,10 @@ computers (called workers).
 
 Steps in figure above.
 
-1. Radiologist sends primary series to WolfPACS.
-2. WolfPACS receives the series, routes data to appropriate worker.
-3. Worker sends all new series to WolfPACS.
-4. WolfPACS sends new series to correct destination.
-
-The key contribution of the WolfPACS router is front multiple workers,
-spread the load and return the processed dicom files to the correct PACS.
+1. A Radiologist sends the primary series to WolfPACS.
+2. WolfPACS receives the series, routes the data to the correct worker(s).
+3. The worker sends the new derived series back to WolfPACS.
+4. Finally, WolfPACS sends then new series to the correct destination.
 
 ## Quick Start
 
@@ -55,50 +52,6 @@ Debug WolfPACS instance
 ```sh
 docker run -it -p 11112:11112 wolfpacs/wolfpacs console
 ```
-
-```sh
-docker run -d -v /a/path/config/folder:/app123 -e WOLFPACS_DIR=/app123 -p 11112:11112 wolfpacs/wolfpacs
-```
-
-## Configuration
-
-```
-# wolfpacs.conf
-
-# Add worker (s)
-# A worker is an "internal" machine that may do some processing on DICOM files.
-# The specification is: {worker, <host>, <port>, <ae>}
-# The worker should reply to wolfpacs on port 11113 (default).
-
-{worker, "localhost", 1234, "WORKER"}.
-
-# Add destination(s)
-# A destination is an "external" machine that will recieve the final
-# series that where created by the worker.
-# The specification is: {destination, {<called AE>, <calling AE>}, <destination-host>, <destination-port>}
-# The destination should be prepared to answer and receive data on <host> and <port>.
-# The <called AE> and <calling AE> acts as a "key"/"authorization"/"routing" pair.
-# Especially, it is the original call to wolfpacs that uses this pair.
-#
-# dcmsend -aec WOLFPACS -aet DCMSEND <wolfpacs-host> <wolfpacs-port>
-
-{destination, {"WOLFPACS", "DCMSEND"}, "pacs.example.com", 11112}.
-```
-
-## Some notes above AE titles
-
-To clarify the situation, let's create an example table of all the relevant components.
-
-| Name     | Host         | Port  | Calling AE | Called AE | WolfPACS Role | Note                                                           |
-| -------- | ------------ | ----- | ---------- | --------- | ------------- | -------------------------------------------------------------- |
-| S-Client | N/A          | N/A   | S-CLIENT   | S-PASS    | Server        | A Radiologist sends a study to WolfPACS for further processing |
-| B-Client | N/A          | N/A   | B-CLIENT   | B-PASS    | Server        |                                                                |
-| Worker A | 192.168.0.10 | 11112 | WolfPACS   | WORKER-A  | Client        | A worker that will process a study and generate derived series |
-| Worker B | 192.168.0.11 | 11113 | WolfPACS   | WORKER-B  | Client        |                                                                |
-| Worker C | 192.168.0.12 | 11114 | WolfPACS   | WORKER-C  | Client        |                                                                |
-| S-PACS   | s.com        | 11110 | WolfPACS   | ABCD      | Client        | A PACS system in the hospital that recieves the derived series |
-| B-PACS   | b.com        | 11111 | WolfPACS   | EFGH      | Client        |                                                                |
-
 
 ## DICOM Conformance Statement
 
@@ -115,7 +68,6 @@ The following services are supported:
 | Name         | UID               | SCP       | SCU       |
 | ------------ | ----------------- | --------- | --------- |
 | Verification | 1.2.840.10008.1.1 | Yes (PoC) | Yes (PoC) |
-
 
 ## Test plan
 
