@@ -1,0 +1,48 @@
+#wrapper {
+  display: flex;
+}
+
+div {
+    font-size: 180px;
+    margin: auto;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-family: "Cardo, Arial";
+}
+.wolf {
+    color: #AA8639;
+    background: #236267;
+}
+.fwolf {
+    flex: 0 0 50%;
+    margin-right: -17px;
+}
+.swolf {
+    flex: 0;
+    width:250px;
+}
+.pacs {
+    flex: 1;
+    color: #236267;
+    background: #AA8639;
+}
+.fpacs {
+    margin-left: -12px;
+}
+.spacs {
+    width:250px;
+}
+
+.small {
+    width: 500px;
+}
+.sandbox {
+    font-family: "Lucida Console", monospace;
+    font-weight: bold;
+    color: #AA8639;
+    background: #236267;
+    color: #309bd9;
+    background: #d96b30;
+}
