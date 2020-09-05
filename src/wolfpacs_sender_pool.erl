@@ -8,7 +8,8 @@
 	 stop/0,
 	 send/2,
 	 done/0,
-	 size/0]).
+	 size/0,
+	 info/0]).
 
 -export([init/1,
 	 handle_call/3,
@@ -48,6 +49,9 @@ retry(SenderInfo) ->
 size() ->
     gen_server:call(?MODULE, size).
 
+info() ->
+    gen_server:call(?MODULE, info).
+
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
 %%------------------------------------------------------------------------------
@@ -58,6 +62,14 @@ init(_) ->
 
 handle_call(size, _From, Queue) ->
     {reply, {ok, queue:len(Queue)}, Queue};
+
+handle_call(info, _From, Queue) ->
+    F = fun(#sender_info{remote=Remote, retries=Retries}) ->
+		{Remote, Retries}
+	end,
+    Items = queue:to_list(Queue),
+    Info = lists:map(F, Items),
+    {reply, {ok, Info}, Queue};
 
 handle_call(What, _From, Queue) ->
     {reply, {error, What}, Queue}.
