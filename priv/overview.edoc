@@ -1,6 +1,6 @@
 @author Niklas Johansson <raphexion@gmail.com>
 @copyright 2019 Niklas Johansson
-@version 0.0.1
+@version 0.3.1
 @title WolfPACS
 @doc `WolfPACS' A Open Source PACS solution written in Erlang.
 
@@ -9,4 +9,10 @@
 <img src="https://img.shields.io/docker/cloud/build/wolfpacs/wolfpacs.svg?color=green"></img>
 <img src="https://img.shields.io/badge/License-Apache2-blue.svg"></img>
 
-WolfPACS is an open-source Picture Archiving and Communication System (PACS) solution written in Erlang.
+WolfPACS is an DICOM load balancer written in Erlang.
+
+<p>
+With the advent of heavy ML/AI solutions in Radiology,
+there is growing need to split the workload across multiple workers.
+WolfPACS acts as a load balancer, sending DICOM series to the correct worker.
+</p>
