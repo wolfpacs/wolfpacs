@@ -27,6 +27,12 @@ note bottom of WP
      will always end up on the same worker.
 end note
 
+actor "WolfPACS admin" as ADMIN
+
+note left of ADMIN
+     Admin can configure WolfPACS
+     over http on port 8080.
+end note
 }
 
 S_CLIENT -[#blue]- S_PACS
@@ -49,5 +55,6 @@ WP <-[#green]- WB
 
 WP -[#green]-> B_PACS
 
+WP <-[#black]- ADMIN
 
 @enduml
