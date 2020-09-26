@@ -53,6 +53,23 @@ Debug WolfPACS instance
 docker run -it -p 11112:11112 wolfpacs/wolfpacs console
 ```
 
+## Mental model
+
+Any router / load balancer has two sides.
+On side facing the outside world.
+And the other side facing the inside world (workers).
+
+We expose port 11112 for outside clients of WolfPACS.
+Workers on the other side, should contact WolfPACS on port 11113.
+
+Therefore, if you deploy WolfPACS, you need to expose 11112 to the outside world.
+Whereas you want to keep 11113 open inside the firewall (trusted side).
+
+In addtion, WolfPACS is best configured using http.
+WolfPACS listens on port 8080.
+
+Please see ![mini_admin.py](priv/mini_admin.py) for an example python script.
+
 ## DICOM Conformance Statement
 
 The following transfer syntax are are supported:

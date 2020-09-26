@@ -20,7 +20,7 @@ start(_StartType, _StartArgs) ->
 		 [{'_', [{"/", root_handler, []},
 			 {"/clients", clients_handler, []},
 			 {"/clients/:client_name/workers", client_workers_handler, []},
-			 {"/clients/:client_name/dest", client_dest_handler, []},
+			 {"/clients/:client_name/dests", client_dest_handler, []},
 			 {"/workers", workers_handler, []},
 			 {"/dests", dests_handler, []}
 			]}
