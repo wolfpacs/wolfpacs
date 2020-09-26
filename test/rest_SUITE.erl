@@ -124,7 +124,7 @@ get_client_workers(Client) ->
     testutils:get_client_resource("/workers", Client).
 
 get_client_dest(Client) ->
-    testutils:get_client_resource("/dest", Client).
+    testutils:get_client_resource("/dests", Client).
 
 post_client(Client) ->
     testutils:post_resource("/clients", Client).
@@ -139,7 +139,7 @@ post_client_worker(Client, Worker) ->
     testutils:post_client_resource("/workers", Client, Worker).
 
 post_client_dest(Client, Dest) ->
-    testutils:post_client_resource("/dest", Client, Dest).
+    testutils:post_client_resource("/dests", Client, Dest).
 
 %%                              _            _
 %%                             | |_ ___  ___| |_ ___
