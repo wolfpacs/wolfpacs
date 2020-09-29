@@ -1,6 +1,6 @@
 {application, wolfpacs,
- [{description, "WolfPACS is an DICOM router and open-source Picture Archiving and Communication System (PACS) solution."},
-  {vsn, "0.3.1"},
+ [{description, "WolfPACS is an DICOM load balancer written in Erlang."},
+  {vsn, "0.3.2"},
   {registered, []},
   {mod, {wolfpacs_app, []}},
   {applications,
