@@ -7,19 +7,26 @@
 
 ![Logo](priv/logo.png)
 
-WolfPACS is an DICOM load balancer written in Erlang.
-
 ## Raison d'être
 
-With the advent of heavy ML/AI solutions in Radiology,
+With the advent of powerful AI solutions in Radiology,
 there is growing need to split the workload across multiple workers.
 **WolfPACS** acts as a load balancer, sending DICOM series to the correct worker.
 
+## Mission statement
+
+> Enable a pool of heterogeneous workers (hardware, software) to serve multiple clients in a flexible way.
+
 ## Status
 
-**WolfPACS** is under active development and not ready for production.
+**WolfPACS** is currently in the **Alpha** phase of development.
+Some critical bugs may still remain in the software.
 
-## WolfPACS's vision
+**WolfPACS** is close to feature freeze but is open for smaller adjustments upon feedback.
+
+**WolfPACS** needs more black-box testing. If you have a use case please write raphexion+wolfpacs@gmail.com.
+
+## Bird's-eye view
 
 Imagine two hospitals that need help with processing data.
 Let's call them Stockholm Hospital (S) and Berlin Hospital (B).
@@ -35,23 +42,9 @@ computers (called workers).
 Steps in figure above.
 
 1. A Radiologist sends the primary series to WolfPACS.
-2. WolfPACS receives the series, routes the data to the correct worker(s).
+2. WolfPACS receives the series, routes the data to the correct worker.
 3. The worker sends the new derived series back to WolfPACS.
 4. Finally, WolfPACS sends then new series to the correct destination.
-
-## Quick Start
-
-Start WolfPACS in background.
-
-```sh
-docker run -d -p 11112:11112 wolfpacs/wolfpacs
-```
-
-Debug WolfPACS instance
-
-```sh
-docker run -it -p 11112:11112 wolfpacs/wolfpacs console
-```
 
 ## Mental model
 
@@ -70,6 +63,20 @@ WolfPACS listens on port 8080.
 
 Please see ![mini_admin.py](priv/mini_admin.py) for an example python script.
 
+## Quick Start
+
+Start WolfPACS in background.
+
+```sh
+docker run -d -p 11112:11112 -p 11113:11113 -p 8080:8080 wolfpacs/wolfpacs
+```
+
+Debug WolfPACS instance
+
+```sh
+docker run -it -p 11112:11112 -p 11113:11113 -p 8080:8080 wolfpacs/wolfpacs console
+```
+
 ## DICOM Conformance Statement
 
 The following transfer syntax are are supported:
@@ -79,12 +86,6 @@ The following transfer syntax are are supported:
 | Implicit VR Little Endian | 1.2.840.10008.1.2   | Yes       |
 | Explicit VR Little Endian | 1.2.840.10008.1.2.1 | Yes       |
 | Explicit VR Big Endian    | 1.2.840.10008.1.2.2 | Yes       |
-
-The following services are supported:
-
-| Name         | UID               | SCP       | SCU       |
-| ------------ | ----------------- | --------- | --------- |
-| Verification | 1.2.840.10008.1.1 | Yes (PoC) | Yes (PoC) |
 
 ## Test plan
 
@@ -100,14 +101,3 @@ We use four different test in WolfPACS and we aim to test the software thoroughl
 | Property based testing | Hidden bugs / Fussing | [Erlang proper](https://propertesting.com/)                                      |
 
 
-## Links and references
-
-[How to Write Erlang Documentation](https://docs.2600hz.com/dev/doc/engineering/erlang-documentation/)
-
-[DICOM Validator](https://www.dclunie.com/dicom3tools/dciodvfy.html)
-
-## Lager
-
-```sh
-1> gen_event:add_handler(error_logger, error_logger_tty_h, []).
-```
