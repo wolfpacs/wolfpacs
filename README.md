@@ -17,7 +17,12 @@ there is growing need to split the workload across multiple workers.
 
 ## Status
 
-**WolfPACS** is under active development and not ready for production.
+**WolfPACS** is currently in the **Alpha** phase of development.
+Some critical bugs may still remain in the software.
+
+**WolfPACS** is close to feature freeze but is open for smaller adjustments upon feedback.
+
+**WolfPACS** needs more black-box testing. If you have a use case please write raphexion+wolfpacs@gmail.com.
 
 ## WolfPACS's vision
 
@@ -35,23 +40,9 @@ computers (called workers).
 Steps in figure above.
 
 1. A Radiologist sends the primary series to WolfPACS.
-2. WolfPACS receives the series, routes the data to the correct worker(s).
+2. WolfPACS receives the series, routes the data to the correct worker.
 3. The worker sends the new derived series back to WolfPACS.
 4. Finally, WolfPACS sends then new series to the correct destination.
-
-## Quick Start
-
-Start WolfPACS in background.
-
-```sh
-docker run -d -p 11112:11112 wolfpacs/wolfpacs
-```
-
-Debug WolfPACS instance
-
-```sh
-docker run -it -p 11112:11112 wolfpacs/wolfpacs console
-```
 
 ## Mental model
 
@@ -70,6 +61,20 @@ WolfPACS listens on port 8080.
 
 Please see ![mini_admin.py](priv/mini_admin.py) for an example python script.
 
+## Quick Start
+
+Start WolfPACS in background.
+
+```sh
+docker run -d -p 11112:11112 -p 11113:11113 -p 8080:8080 wolfpacs/wolfpacs
+```
+
+Debug WolfPACS instance
+
+```sh
+docker run -it -p 11112:11112 -p 11113:11113 -p 8080:8080 wolfpacs/wolfpacs console
+```
+
 ## DICOM Conformance Statement
 
 The following transfer syntax are are supported:
@@ -79,12 +84,6 @@ The following transfer syntax are are supported:
 | Implicit VR Little Endian | 1.2.840.10008.1.2   | Yes       |
 | Explicit VR Little Endian | 1.2.840.10008.1.2.1 | Yes       |
 | Explicit VR Big Endian    | 1.2.840.10008.1.2.2 | Yes       |
-
-The following services are supported:
-
-| Name         | UID               | SCP       | SCU       |
-| ------------ | ----------------- | --------- | --------- |
-| Verification | 1.2.840.10008.1.1 | Yes (PoC) | Yes (PoC) |
 
 ## Test plan
 
