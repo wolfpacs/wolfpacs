@@ -7,13 +7,15 @@
 
 ![Logo](priv/logo.png)
 
-WolfPACS is an DICOM load balancer written in Erlang.
-
 ## Raison d'être
 
-With the advent of heavy ML/AI solutions in Radiology,
+With the advent of powerful AI solutions in Radiology,
 there is growing need to split the workload across multiple workers.
 **WolfPACS** acts as a load balancer, sending DICOM series to the correct worker.
+
+## Mission statement
+
+> Enable a pool of heterogeneous workers (hardware, software) to serve multiple clients in a flexible way.
 
 ## Status
 
@@ -24,7 +26,7 @@ Some critical bugs may still remain in the software.
 
 **WolfPACS** needs more black-box testing. If you have a use case please write raphexion+wolfpacs@gmail.com.
 
-## WolfPACS's vision
+## Bird's-eye view
 
 Imagine two hospitals that need help with processing data.
 Let's call them Stockholm Hospital (S) and Berlin Hospital (B).
@@ -99,14 +101,3 @@ We use four different test in WolfPACS and we aim to test the software thoroughl
 | Property based testing | Hidden bugs / Fussing | [Erlang proper](https://propertesting.com/)                                      |
 
 
-## Links and references
-
-[How to Write Erlang Documentation](https://docs.2600hz.com/dev/doc/engineering/erlang-documentation/)
-
-[DICOM Validator](https://www.dclunie.com/dicom3tools/dciodvfy.html)
-
-## Lager
-
-```sh
-1> gen_event:add_handler(error_logger, error_logger_tty_h, []).
-```
