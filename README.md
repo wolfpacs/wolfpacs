@@ -49,7 +49,7 @@ Steps in figure above.
 ## Mental model
 
 Any router / load balancer has two sides.
-On side facing the outside world.
+One side facing the outside world.
 And the other side facing the inside world (workers).
 
 We expose port 11112 for outside clients of WolfPACS.
@@ -58,7 +58,7 @@ Workers on the other side, should contact WolfPACS on port 11113.
 Therefore, if you deploy WolfPACS, you need to expose 11112 to the outside world.
 Whereas you want to keep 11113 open inside the firewall (trusted side).
 
-In addtion, WolfPACS is best configured using http.
+In addition, WolfPACS is best configured using HTTP.
 WolfPACS listens on port 8080.
 
 Please see ![mini_admin.py](priv/mini_admin.py) for an example python script.
@@ -99,5 +99,3 @@ We use four different test in WolfPACS and we aim to test the software thoroughl
 | Integration tests      | Many Modules          | [Erlang Common Tests](https://erlang.org/doc/apps/common_test/introduction.html) |
 | Validation testing     | User requirements     | [Python Robot Framework](https://robotframework.org/)                            |
 | Property based testing | Hidden bugs / Fussing | [Erlang proper](https://propertesting.com/)                                      |
-
-
