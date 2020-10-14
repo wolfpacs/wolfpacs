@@ -1,6 +1,6 @@
 {application, wolfpacs,
  [{description, "WolfPACS is an DICOM load balancer written in Erlang."},
-  {vsn, "0.3.2"},
+  {vsn, "0.3.3"},
   {registered, []},
   {mod, {wolfpacs_app, []}},
   {applications,
@@ -8,7 +8,8 @@
     stdlib,
     ranch,
     lager,
-    cowboy
+    cowboy,
+    jiffy
    ]},
   {env,[]},
   {modules, []},
