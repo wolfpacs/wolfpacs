@@ -12,14 +12,23 @@ actor "Berlin Client" as B_CLIENT
 agent "Berlin PACS" as B_PACS
 }
 
+package Helsinki {
+actor "Helsinki Client" as H_CLIENT
+agent "Helsinki PACS" as H_PACS
+}
+
 cloud {
 
 component "WolfPACS" as WP
 
-package Workers {
+package "Workers - Type 1" {
 	agent "Worker A" as WA
 	agent "Worker B" as WB
 	agent "Worker C" as WC
+}
+
+package "Workers - Type 2"{
+	agent "Worker D" as WD
 }
 
 note bottom of WP
@@ -35,6 +44,9 @@ note left of ADMIN
 end note
 }
 
+WP <-[#black]- ADMIN
+
+
 S_CLIENT -[#blue]- S_PACS
 
 S_PACS -[#blue]-> WP : 1
@@ -45,16 +57,28 @@ WP <-[#blue]- WA : 3
 
 WP -[#blue]-> S_PACS : 4
 
+
+
 B_CLIENT -[#green]- B_PACS
 
 B_PACS -[#green]-> WP
 
-WP -[#green]-> WB
+WP -[#green]-> WD
 
-WP <-[#green]- WB
+WP <-[#green]- WD
 
 WP -[#green]-> B_PACS
 
-WP <-[#black]- ADMIN
+
+
+H_CLIENT -[#orange]- H_PACS
+
+H_PACS -[#orange]-> WP
+
+WP -[#orange]-> WB
+
+WP <-[#orange]- WB
+
+WP -[#orange]-> H_PACS
 
 @enduml
