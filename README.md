@@ -22,7 +22,7 @@ there is growing need to split the workload across multiple workers.
 **WolfPACS** is currently in the **Alpha** phase of development.
 Some critical bugs may still remain in the software.
 
-**WolfPACS** is close to feature freeze but is open for smaller adjustments upon feedback.
+**WolfPACS** is close to feature freeze but is open for adjustments upon feedback.
 
 **WolfPACS** needs more black-box testing. If you have a use case please write raphexion+wolfpacs@gmail.com.
 
@@ -69,6 +69,22 @@ Start WolfPACS in background.
 
 ```sh
 docker run -d -p 11112:11112 -p 11113:11113 -p 8080:8080 wolfpacs/wolfpacs
+```
+
+Configure WolfPACS to have 3 workers, 1 client and 1 destination.
+
+```sh
+python3 mini_admin.py --add-worker --name w1 --host 192.168.1.11 --port 1111 -ae W1
+python3 mini_admin.py --add-worker --name w2 --host 192.168.1.12 --port 2222 -ae W2
+
+python3 mini_admin.py --add-client --name c1 --ae C1111
+
+python3 mini_admin.py --add-dest --name c1 --host 1.2.3.4 --port 1234 --ae D1111
+
+python3 mini_admin.py --assoc_worker --client c1 --worker w1
+python3 mini_admin.py --assoc_worker --client c1 --worker w2
+
+python3 mini_admin.py --assoc_dest --client c1 --worker d1
 ```
 
 Debug WolfPACS instance
