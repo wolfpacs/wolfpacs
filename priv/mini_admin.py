@@ -64,9 +64,8 @@ class WolfPACS:
 @click.command()
 @click.option('--wolfpacs-host', default='localhost', help='WolfPACS hostname')
 @click.option('--wolfpacs-port', default='8080', help='WolfPACS admin port')
-@click.option('--client-name', default='', help='client name (optional)')
-@click.option('--worker-name', default='', help='worker name (optional)')
-@click.option('--dest-name', default='', help='destination name (optional)')
+@click.option('--client', default='', help='client name (optional)')
+@click.option('--name', default='', help='name (optional)')
 @click.option('--host', default='', help='hostname (optional')
 @click.option('--port', default='', help='port (optional')
 @click.option('--ae', default='', help='AE (optional')
@@ -76,22 +75,22 @@ class WolfPACS:
 @click.option('--assoc-worker', default=False, is_flag=True, help='Associate a worker with a client')
 @click.option('--assoc-dest', default=False, is_flag=True, help='Associate a destination with a client')
 def main(wolfpacs_host, wolfpacs_port,
-         client_name, worker_name, dest_name,
-         host, port, ae,
+         client,
+         name, host, port, ae,
          add_client, add_worker, add_dest,
          assoc_worker, assoc_dest):
     wolfpacs = WolfPACS(wolfpacs_host, wolfpacs_port)
 
     if add_client:
-        wolfpacs.add_client(client_name, ae)
+        wolfpacs.add_client(name, ae)
     elif add_worker:
-        wolfpacs.add_worker(worker_name, host, port, ae)
+        wolfpacs.add_worker(name, host, port, ae)
     elif add_dest:
-        wolfpacs.add_destination(dest_name, host, port, ae)
+        wolfpacs.add_destination(name, host, port, ae)
     elif assoc_worker:
-        wolfpacs.assoc_worker(client_name, worker_name)
+        wolfpacs.assoc_worker(client, name)
     elif assoc_dest:
-        wolfpacs.assoc_dest(client_name, dest_name)
+        wolfpacs.assoc_destination(client, name)
     else:
         print('No task given')
 

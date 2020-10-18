@@ -1,0 +1,12 @@
+# Name and cookie
+-name wolfpacs@127.0.0.1
+-setcookie wolfpacs
+
+# Sets the maximum number of simultaneously existing processes
++P 262144
+
+# Kernel polling can improve performance if many file descriptors are in use.
++K true
+
+# Set the maximum number of simultaneously existing system processes.
++P 256000
