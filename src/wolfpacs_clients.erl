@@ -274,6 +274,11 @@ start_stop_test() ->
     start_link(),
     ?assertEqual(stop(), ok).
 
+call_test() ->
+    start_link(),
+    gen_server:call(?MODULE, this_should_not_crash),
+    ?assertEqual(stop(), ok).
+
 cast_test() ->
     start_link(),
     gen_server:cast(?MODULE, this_should_not_crash),
