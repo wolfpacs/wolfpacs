@@ -25,7 +25,7 @@ init({Host, Port}) ->
     {ok, #{host => Host, port => Port}}.
 
 handle_call({send, Filename}, From, State=#{host := Host, port := Port}) ->
-    Args = [Host, Port, Filename],
+    Args = ["-aec", "ninja", Host, Port, Filename],
     Options = [eof, {line, 4096}, exit_status, {args, Args}],
     Proc = open_port({spawn_executable, "/usr/bin/dcmsend"}, Options),
     {noreply, State#{from => From, proc => Proc}}.

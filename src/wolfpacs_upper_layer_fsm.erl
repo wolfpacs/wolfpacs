@@ -178,10 +178,11 @@ handle_associate_rq(AssociateRQ, Data) ->
      _MaxSize, Class, VersionName,
      _Rest} = AssociateRQ,
 
-    {ok, Allowed} = wolfpacs_route_logic:allow(CalledAE),
+    #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer, route_tag=RouteTag} = Data,
+
+    {ok, Allowed} = wolfpacs_route_logic:allow(CalledAE, RouteTag),
 
     {ok, SupportedContexts, ContextMap} = wolfpacs_conformance:supported(Contexts, Allowed),
-    #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
 
     AssociateAC = wolfpacs_associate_ac:encode(CalledAE, CallingAE, R,
 					       SupportedContexts,

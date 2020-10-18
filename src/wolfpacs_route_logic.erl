@@ -27,7 +27,7 @@
 
 -export([start_link/0,
 	 stop/0]).
--export([allow/1]).
+-export([allow/2]).
 -export([pick_worker/2,
 	 pick_destination/1]).
 -export([init/1,
@@ -47,7 +47,10 @@ start_link() ->
 stop() ->
     gen_server:stop(?MODULE).
 
-allow(ClientAE) ->
+allow(_ClientAE, wolfpacs_inside) ->
+    {ok, true};
+
+allow(ClientAE, _RouteTag) ->
     gen_server:call(?MODULE, {allow, ClientAE}).
 
 pick_worker(_, missing) ->
@@ -66,8 +69,16 @@ pick_destination(StudyUID) ->
 init(_) ->
     {ok, #{}}.
 
-handle_call({allow, _AE}, _From, State) ->
-    {reply, {ok, true}, State};
+handle_call({allow, AE}, _From, State) ->
+    case wolfpacs_clients:is_client_registered(AE) of
+	{ok, true} ->
+	    lager:info("[RouteLogic] Allow AE"),
+	    {reply, {ok, true}, State};
+	{ok, false} ->
+	    lager:warning("[RouteLogic] Disallow AE"),
+	    lager:warning(AE),
+	    {reply, {ok, false}, State}
+    end;
 
 handle_call({pick_worker, ClientAE, StudyUID}, _From, State) ->
     MaybeWorker = maps:get(StudyUID, State, missing),
