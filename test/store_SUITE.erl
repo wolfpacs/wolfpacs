@@ -13,6 +13,7 @@ all() -> [test_store_ct,
 init_per_suite(Cfg) ->
     lager_common_test_backend:bounce(debug),
     application:ensure_all_started(wolfpacs),
+    wolfpacs_clients:add("ninja", "ninja"),
     Cfg.
 
 end_per_suite(Cfg) ->

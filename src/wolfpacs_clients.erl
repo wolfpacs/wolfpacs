@@ -26,11 +26,13 @@
 -include("wolfpacs_types.hrl").
 
 -export([start_link/0,
-	 stop/0]).
+	 stop/0,
+	 reset/0]).
 -export([add/2,
 	 assoc_worker/2,
 	 assoc_dest/2,
 	 assoc_studyuid/2,
+	 is_client_registered/1,
 	 workers_for_name/1,
 	 workers_for_ae/1,
 	 dest_for_name/1,
@@ -56,6 +58,9 @@ start_link() ->
 stop() ->
     gen_server:stop(?MODULE).
 
+reset() ->
+    gen_server:cast(?MODULE, reset).
+
 add(Name, AE) ->
     gen_server:cast(?MODULE, {add, b(Name), b(trim(AE))}).
 
@@ -67,6 +72,9 @@ assoc_dest(Name, Dest) ->
 
 assoc_studyuid(AE, StudyUID) ->
     gen_server:cast(?MODULE, {assoc_studyuid, b(AE), b(StudyUID)}).
+
+is_client_registered(AE) ->
+    gen_server:call(?MODULE, {is_client_registered, b(trim(AE))}).
 
 workers_for_name(Name) ->
     gen_server:call(?MODULE, {workers_for_name, b(Name)}).
@@ -99,6 +107,15 @@ all() ->
 
 init(_) ->
     {ok, #state{}}.
+
+handle_call({is_client_registered, AE}, _From, State) ->
+    #state{ae_to_names=AEToNames} = State,
+    case maps:get(AE, AEToNames, missing) of
+	missing ->
+	    {reply, {ok, false}, State};
+	_ ->
+	    {reply, {ok, true}, State}
+    end;
 
 handle_call({workers_for_name, Name}, _From, State) ->
     #state{ names_to_ae=NamesToAE
@@ -141,6 +158,9 @@ handle_call(all, _From, State) ->
 
 handle_call(What, _From, Events) ->
     {reply, {error, What}, Events}.
+
+handle_cast(reset, _State) ->
+    {noreply, #state{}};
 
 handle_cast({add, Name, AE}, State) ->
     #state{ names_to_ae=NamesToAE
@@ -238,6 +258,15 @@ studyuid_test_() ->
     , ?_assertEqual(dest_for_name("C"), {ok, <<"D1">>})
     , ?_assertEqual(assoc_studyuid("C_AE", "SUID"), ok)
     , ?_assertEqual(dest_for_studyuid("SUID"), {ok, Dest})
+    , ?_assertEqual(ok, stop())
+    ].
+
+is_client_registered_test() ->
+    start_link(),
+    add("C", "C_AE"),
+
+    [ ?_assertEqual(is_client_registered("C_AE"), {ok, true})
+    , ?_assertEqual(is_client_registered("BAD_AE"), {ok, false})
     , ?_assertEqual(ok, stop())
     ].
 

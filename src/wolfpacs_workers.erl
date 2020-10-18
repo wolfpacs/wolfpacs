@@ -28,6 +28,7 @@
 
 -export([start_link/0,
 	 stop/0,
+	 reset/0,
 	 debug/0]).
 -export([add/4,
 	 remote/1,
@@ -54,6 +55,9 @@ start_link() ->
 
 stop() ->
     gen_server:stop(?MODULE).
+
+reset() ->
+    gen_server:cast(?MODULE, reset).
 
 add(Name, Host, Port, AE) ->
     Remote = #wolfpacs_remote{host=b(Host), port=Port, ae=b(AE)},
@@ -161,6 +165,9 @@ handle_call({name_for_remote, Remote}, _From, State=#state{remotes=Map}) ->
 
 handle_call(What, _From, State) ->
     {reply, {error, What, State}, State}.
+
+handle_cast(reset, _State) ->
+    {noreply, #state{remotes=#{}, loads=#{}}};
 
 handle_cast({add, Name, Remote}, State) ->
     #state{remotes=Remotes, loads=Loads} = State,
