@@ -58,10 +58,21 @@ Workers on the other side, should contact WolfPACS on port 11113.
 Therefore, if you deploy WolfPACS, you need to expose 11112 to the outside world.
 Whereas you want to keep 11113 open inside the firewall (trusted side).
 
+![Logo](priv/mental-model.png)
+
 In addition, WolfPACS is best configured using HTTP.
 WolfPACS listens on port 8080.
 
 Please see ![mini_admin.py](priv/mini_admin.py) for an example python script.
+
+## Client vs Destination
+
+A client is anyone with the correct Application Entity (AE). This acts as a shared secret / password.
+
+A destionation is a server that can receive DICOM data.
+WolfPACS needs a hostname, IP-address and called AE.
+
+So the client will send data to WolfPACS and the destination will receive data from WolfPACS.
 
 ## Quick Start
 
