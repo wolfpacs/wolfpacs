@@ -53,7 +53,9 @@ client_dest_from_json(Req1, State) ->
     {Req2, Body} = read_body_json(Req1),
     #{<<"name">> := WorkerName} = Body,
     wolfpacs_clients:assoc_dest(ClientName, WorkerName),
-    {true, Req2, State}.
+    Encoded = jiffy:encode(#{<<"msg">> => <<"ok">>}),
+    Req3 = cowboy_req:set_resp_body(Encoded, Req2),
+    {true, Req3, State}.
 
 %%==============================================================================
 %% Private
