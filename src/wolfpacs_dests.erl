@@ -26,7 +26,8 @@
 -include("wolfpacs_types.hrl").
 
 -export([start_link/0,
-	 stop/0]).
+	 stop/0,
+	 reset/0]).
 -export([add/4,
 	 remote/1,
 	 remotes/1,
@@ -47,6 +48,9 @@ start_link() ->
 
 stop() ->
     gen_server:stop(?MODULE).
+
+reset() ->
+    gen_server:cast(?MODULE, reset).
 
 add(Name, Host, Port, AE) ->
     Remote = #wolfpacs_remote{host=b(Host), port=Port, ae=b(AE)},
@@ -81,6 +85,9 @@ handle_call(all, _From, Remotes) ->
 
 handle_call(What, _From, Events) ->
     {reply, {error, What}, Events}.
+
+handle_cast(reset, _Remotes) ->
+    {noreply, #{}};
 
 handle_cast({add, Name, Remote}, Remotes) ->
     {noreply, Remotes#{Name => Remote}};

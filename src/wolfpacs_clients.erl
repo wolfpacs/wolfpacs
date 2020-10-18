@@ -26,7 +26,8 @@
 -include("wolfpacs_types.hrl").
 
 -export([start_link/0,
-	 stop/0]).
+	 stop/0,
+	 reset/0]).
 -export([add/2,
 	 assoc_worker/2,
 	 assoc_dest/2,
@@ -56,6 +57,9 @@ start_link() ->
 
 stop() ->
     gen_server:stop(?MODULE).
+
+reset() ->
+    gen_server:cast(?MODULE, reset).
 
 add(Name, AE) ->
     gen_server:cast(?MODULE, {add, b(Name), b(trim(AE))}).
@@ -154,6 +158,9 @@ handle_call(all, _From, State) ->
 
 handle_call(What, _From, Events) ->
     {reply, {error, What}, Events}.
+
+handle_cast(reset, _State) ->
+    {noreply, #state{}};
 
 handle_cast({add, Name, AE}, State) ->
     #state{ names_to_ae=NamesToAE
