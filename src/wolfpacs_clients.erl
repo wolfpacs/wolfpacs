@@ -239,6 +239,7 @@ minimal_test_() ->
     [ ?_assertEqual(workers_for_name("C"), {ok, [<<"W2">>, <<"W1">>]})
     , ?_assertEqual(workers_for_name("C"), workers_for_ae(<<"C_AE">>))
     , ?_assertEqual(dest_for_name("C"), {ok, <<"D1">>})
+    , ?_assertEqual(dest_for_ae("C_AE"), {ok, <<"D1">>})
     , ?_assertEqual(ok, stop())
     ].
 
@@ -261,7 +262,7 @@ studyuid_test_() ->
     , ?_assertEqual(ok, stop())
     ].
 
-is_client_registered_test() ->
+is_client_registered_test_() ->
     start_link(),
     add("C", "C_AE"),
 
@@ -273,6 +274,12 @@ is_client_registered_test() ->
 start_stop_test() ->
     start_link(),
     ?assertEqual(stop(), ok).
+
+call_test_() ->
+    start_link(),
+    [ ?_assertEqual(gen_server:call(?MODULE, msg), {error, msg})
+    , ?_assertEqual(stop(), ok)
+    ].
 
 cast_test() ->
     start_link(),

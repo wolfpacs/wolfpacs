@@ -4,6 +4,8 @@
 [![codecov.io](https://codecov.io/gh/wolfpacs/wolfpacs/coverage.svg?branch=master)](https://codecov.io/gh/wolfpacs/wolfpacs?branch=master)
 [![Docker build](https://img.shields.io/docker/cloud/build/wolfpacs/wolfpacs.svg?color=green)](https://hub.docker.com/r/wolfpacs/wolfpacs)
 [![License Apache 2](https://img.shields.io/badge/License-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Documentation](https://img.shields.io/badge/documentation-documentation-yellowgreen)](https://wolfpacs.github.io/wolfpacs/)
+[![Version Observance](https://img.shields.io/badge/semver-0.3.3-blue)](https://semver.org/)
 
 ![Logo](priv/logo.png)
 
@@ -58,10 +60,21 @@ Workers on the other side, should contact WolfPACS on port 11113.
 Therefore, if you deploy WolfPACS, you need to expose 11112 to the outside world.
 Whereas you want to keep 11113 open inside the firewall (trusted side).
 
+![Logo](priv/mental-model.png)
+
 In addition, WolfPACS is best configured using HTTP.
 WolfPACS listens on port 8080.
 
 Please see ![mini_admin.py](priv/mini_admin.py) for an example python script.
+
+## Client vs Destination
+
+A client is anyone with the correct Application Entity (AE). This acts as a shared secret / password.
+
+A destionation is a server that can receive DICOM data.
+WolfPACS needs a hostname, IP-address and called AE.
+
+So the client will send data to WolfPACS and the destination will receive data from WolfPACS.
 
 ## Quick Start
 
