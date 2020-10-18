@@ -19,6 +19,9 @@ ENV WOLFPACS_DIR="/wolfpacs"
 COPY --from=builder /build/_build/prod/rel/wolfpacs/wolfpacs-*.tar.gz /tmp
 RUN tar xvfh /tmp/wolfpacs-*.tar.gz -C /usr/local
 
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
 EXPOSE 11112
 EXPOSE 11113
 EXPOSE 8080
