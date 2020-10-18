@@ -1,3 +1,9 @@
+%%%-------------------------------------------------------------------
+%% @doc Group Element Cache.
+%%
+%% @end
+%%%-------------------------------------------------------------------
+
 -module(wolfpacs_group_elements_cache).
 -behaviour(gen_server).
 -define(SERVER, ?MODULE).

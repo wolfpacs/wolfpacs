@@ -1,3 +1,9 @@
+%%%-------------------------------------------------------------------
+%% @doc Router Insight.
+%%
+%% @end
+%%%-------------------------------------------------------------------
+
 -module(wolfpacs_router_insight).
 -behaviour(gen_server).
 -define(SERVER, ?MODULE).

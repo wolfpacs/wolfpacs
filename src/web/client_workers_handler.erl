@@ -1,3 +1,9 @@
+%%%-------------------------------------------------------------------
+%% @doc Client Workers Handler.
+%%
+%% @end
+%%%-------------------------------------------------------------------
+
 -module(client_workers_handler).
 -behaviour(cowboy_rest).
 -include("wolfpacs_types.hrl").

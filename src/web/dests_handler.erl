@@ -1,3 +1,9 @@
+%%%-------------------------------------------------------------------
+%% @doc Destinations Handler.
+%%
+%% @end
+%%%-------------------------------------------------------------------
+
 -module(dests_handler).
 -behaviour(cowboy_rest).
 -include("wolfpacs_types.hrl").
