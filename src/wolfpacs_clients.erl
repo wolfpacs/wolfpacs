@@ -31,6 +31,7 @@
 	 assoc_worker/2,
 	 assoc_dest/2,
 	 assoc_studyuid/2,
+	 is_client_registered/1,
 	 workers_for_name/1,
 	 workers_for_ae/1,
 	 dest_for_name/1,
@@ -68,6 +69,9 @@ assoc_dest(Name, Dest) ->
 assoc_studyuid(AE, StudyUID) ->
     gen_server:cast(?MODULE, {assoc_studyuid, b(AE), b(StudyUID)}).
 
+is_client_registered(AE) ->
+    gen_server:call(?MODULE, {is_client_registered, b(trim(AE))}).
+
 workers_for_name(Name) ->
     gen_server:call(?MODULE, {workers_for_name, b(Name)}).
 
@@ -99,6 +103,15 @@ all() ->
 
 init(_) ->
     {ok, #state{}}.
+
+handle_call({is_client_registered, AE}, _From, State) ->
+    #state{ae_to_names=AEToNames} = State,
+    case maps:get(AE, AEToNames, missing) of
+	missing ->
+	    {reply, {ok, false}, State};
+	_ ->
+	    {reply, {ok, true}, State}
+    end;
 
 handle_call({workers_for_name, Name}, _From, State) ->
     #state{ names_to_ae=NamesToAE
@@ -238,6 +251,15 @@ studyuid_test_() ->
     , ?_assertEqual(dest_for_name("C"), {ok, <<"D1">>})
     , ?_assertEqual(assoc_studyuid("C_AE", "SUID"), ok)
     , ?_assertEqual(dest_for_studyuid("SUID"), {ok, Dest})
+    , ?_assertEqual(ok, stop())
+    ].
+
+is_client_registered_test() ->
+    start_link(),
+    add("C", "C_AE"),
+
+    [ ?_assertEqual(is_client_registered("C_AE"), {ok, true})
+    , ?_assertEqual(is_client_registered("BAD_AE"), {ok, false})
     , ?_assertEqual(ok, stop())
     ].
 
