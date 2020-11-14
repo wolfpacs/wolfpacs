@@ -39,6 +39,8 @@
 	 load/1,
 	 loads/1]).
 -export([name_for_remote/1]).
+-export([pause/1,
+	 unpause/1]).
 -export([init/1,
 	 handle_call/3,
 	 handle_cast/2,
@@ -101,7 +103,7 @@ remote(Name) ->
 remotes(Names) ->
     AllRemotes = [remote(Name) || Name <- Names],
 
-    OkPred = fun({ok, _, _}) ->
+    OkPred = fun({ok, _, _, false}) ->
 		   true;
 	      (_) ->
 		   false
@@ -109,6 +111,12 @@ remotes(Names) ->
     OkRemotes = lists:filter(OkPred, AllRemotes),
 
     lists:sort(fun worker_sorter/2, OkRemotes).
+
+pause(Name) ->
+    gen_server:cast(?MODULE, {pause, b(Name)}).
+
+unpause(Name) ->
+    gen_server:cast(?MODULE, {unpause, b(Name)}).
 
 all() ->
     gen_server:call(?MODULE, all).
@@ -120,22 +128,23 @@ debug() ->
 %% Behaviour callbacks
 %%=============================================================================
 
--record(state, {remotes :: map(), loads :: map()}).
+-record(state, {remotes :: map(), loads :: map(), paused :: map()}).
 
 init(_) ->
-    {ok, #state{remotes=#{}, loads=#{}}}.
+    {ok, #state{remotes=#{}, loads=#{}, paused=#{}}}.
 
 handle_call(debug, _From, State) ->
     {reply, {ok, State}, State};
 
 handle_call({remote, Name}, _From, State) ->
-    #state{remotes=Remotes, loads=Loads} = State,
+    #state{remotes=Remotes, loads=Loads, paused=PausedNames} = State,
     case maps:get(Name, Remotes, missing) of
 	missing ->
 	    {reply, {error, remote_missing}, State};
 	Remote ->
 	    Load = maps:get(Name, Loads, ?MAX_LOAD),
-	    {reply, {ok, Remote, Load}, State}
+	    Paused = maps:get(Name, PausedNames, false),
+	    {reply, {ok, Remote, Load, Paused}, State}
     end;
 
 handle_call(all, _From, State=#state{remotes=Remotes}) ->
@@ -167,7 +176,7 @@ handle_call(What, _From, State) ->
     {reply, {error, What, State}, State}.
 
 handle_cast(reset, _State) ->
-    {noreply, #state{remotes=#{}, loads=#{}}};
+    {noreply, #state{remotes=#{}, loads=#{}, paused=#{}}};
 
 handle_cast({add, Name, Remote}, State) ->
     #state{remotes=Remotes, loads=Loads} = State,
@@ -182,6 +191,14 @@ handle_cast({inc_load, Name}, State=#state{loads=Loads}) ->
 handle_cast({dec_load, Name}, State=#state{loads=Loads}) ->
     Load = maps:get(Name, Loads, 0),
     {noreply, State#state{loads=maps:put(Name, Load - 1, Loads)}};
+
+handle_cast({pause, Name}, State) ->
+    #state{ paused=Paused } = State,
+    {noreply, State#state{paused=Paused#{Name => true}}};
+
+handle_cast({unpause, Name}, State) ->
+    #state{ paused=Paused } = State,
+    {noreply, State#state{paused=maps:remove(Name, Paused)}};
 
 handle_cast(_What, State) ->
     {noreply, State}.
@@ -204,9 +221,9 @@ b(String) when is_list(String) ->
 b(Data) when is_binary(Data) ->
     Data.
 
-worker_sorter({ok, #wolfpacs_remote{ae=AE0}, Load}, {ok, #wolfpacs_remote{ae=AE1}, Load}) ->
+worker_sorter({ok, #wolfpacs_remote{ae=AE0}, Load, _Paused}, {ok, #wolfpacs_remote{ae=AE1}, Load, _Paused}) ->
     AE0 =< AE1;
-worker_sorter({ok, _, Load0}, {ok, _, Load1}) ->
+worker_sorter({ok, _, Load0, _Paused}, {ok, _, Load1, _Paused}) ->
     Load0 =< Load1.
 
 %%==============================================================================
@@ -228,12 +245,12 @@ minimal_test_() ->
     inc_load(R1), inc_load(R1), inc_load(R1),
     inc_load(R2), inc_load(R2),
 
-    [ ?_assertEqual(remote("R1"), {ok, R1, 3})
-    , ?_assertEqual(remote("R2"), {ok, R2, 2})
+    [ ?_assertEqual(remote("R1"), {ok, R1, 3, false})
+    , ?_assertEqual(remote("R2"), {ok, R2, 2, false})
     , ?_assertEqual(name_for_remote(R1), {ok, <<"R1">>})
     , ?_assertEqual(name_for_remote(R2), {ok, <<"R2">>})
     , ?_assertEqual(name_for_remote(R3), {error, not_found})
-    , ?_assertEqual(remotes(["R1", "R2", "RX"]), [{ok, R2, 2}, {ok, R1, 3}])
+    , ?_assertEqual(remotes(["R1", "R2", "RX"]), [{ok, R2, 2, false}, {ok, R1, 3, false}])
     ].
 
 inc_dec_test_() ->
@@ -257,6 +274,10 @@ inc_dec_test_() ->
     , ?_assertEqual(load("R2"), {ok, 0})
     , ?_assertEqual(load("R3"), {error, worker_missing})
     , ?_assertEqual(loads(["R1", "R2"]), #{"R1" => {ok, 1}, "R2" => {ok,  0}})
+    ].
+
+pause_unpause_test_() ->
+    [
     ].
 
 start_stop_test() ->
