@@ -118,7 +118,7 @@ priv_pick_worker(missing, ClientAE, StudyUID, State) ->
 	    case wolfpacs_workers:remotes(WorkerNames) of
 		[] ->
 		    {reply, {error, no_workers_available}, State};
-		[{ok, Worker, _Load}|_] ->
+		[{ok, Worker, _Load, false}|_] ->
 		    wolfpacs_workers:inc_load(Worker),
 		    wolfpacs_clients:assoc_studyuid(ClientAE, StudyUID),
 		    {reply, {ok, Worker}, State#{StudyUID => Worker}}
@@ -151,11 +151,14 @@ single_test_() ->
     W = #wolfpacs_remote{host= <<"localhost">>, port=11113, ae= <<"W_AE">>},
     D = #wolfpacs_remote{host= <<"localhost">>, port=1235, ae= <<"D_AE">>},
 
-    [ ?_assertEqual(wolfpacs_workers:remote("W"), {ok, W, 0})
+    [ ?_assertEqual(wolfpacs_workers:remote("W"), {ok, W, 0, false})
     , ?_assertEqual(wolfpacs_dests:remote("D"), {ok, D})
     , ?_assertEqual(pick_worker("C_AE", "X"), {ok, W})
     , ?_assertEqual(pick_destination("X"), {ok, D})
     , ?_assertEqual(stop(), ok)
+    , ?_assertEqual(wolfpacs_dests:stop(), ok)
+    , ?_assertEqual(wolfpacs_workers:stop(), ok)
+    , ?_assertEqual(wolfpacs_clients:stop(), ok)
     ].
 
 
@@ -195,6 +198,54 @@ advanced_worker_pick_test_() ->
     , ?_assertEqual(pick_worker("C_AE", <<"StudyUID3">>), {ok, W3})
     , ?_assertEqual(pick_worker("C_AE", <<"StudyUID3">>), {ok, W3})
     , ?_assertEqual(pick_worker("C_AE", <<"StudyUID3">>), {ok, W3})
+
+    , ?_assertEqual(stop(), ok)
+    , ?_assertEqual(wolfpacs_dests:stop(), ok)
+    , ?_assertEqual(wolfpacs_workers:stop(), ok)
+    , ?_assertEqual(wolfpacs_clients:stop(), ok)
+    ].
+
+pause_unpaused_test_() ->
+    start_link(),
+
+    wolfpacs_clients:start_link(),
+    wolfpacs_workers:start_link(),
+    wolfpacs_dests:start_link(),
+
+    wolfpacs_clients:add("C", "C_AE"),
+
+    wolfpacs_workers:add("W1", "localhost", 11111, "W1_AE"),
+    wolfpacs_workers:add("W2", "localhost", 11112, "W2_AE"),
+    wolfpacs_workers:add("W3", "localhost", 11113, "W3_AE"),
+
+    wolfpacs_clients:assoc_worker("C", "W1"),
+    wolfpacs_clients:assoc_worker("C", "W2"),
+    wolfpacs_clients:assoc_worker("C", "W3"),
+
+    W1 = #wolfpacs_remote{host= <<"localhost">>, port=11111, ae= <<"W1_AE">>},
+    W2 = #wolfpacs_remote{host= <<"localhost">>, port=11112, ae= <<"W2_AE">>},
+    W3 = #wolfpacs_remote{host= <<"localhost">>, port=11113, ae= <<"W3_AE">>},
+
+    [ ?_assertEqual(pick_worker("C_AE", <<"StudyUID1">>), {ok, W1})
+    , ?_assertEqual(wolfpacs_workers:pause("W1"), ok)
+    , ?_assertEqual(wolfpacs_workers:pause("W2"), ok)
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID1">>), {ok, W1})
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID2">>), {ok, W3})
+
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID3">>), {ok, W3})
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID4">>), {ok, W3})
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID5">>), {ok, W3})
+
+    , ?_assertEqual(wolfpacs_workers:unpause("W1"), ok)
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID6">>), {ok, W1})
+
+    , ?_assertEqual(wolfpacs_workers:unpause("W2"), ok)
+    , ?_assertEqual(pick_worker("C_AE", <<"StudyUID7">>), {ok, W2})
+
+    , ?_assertEqual(stop(), ok)
+    , ?_assertEqual(wolfpacs_dests:stop(), ok)
+    , ?_assertEqual(wolfpacs_workers:stop(), ok)
+    , ?_assertEqual(wolfpacs_clients:stop(), ok)
     ].
 
 start_stop_test() ->
