@@ -1,0 +1,46 @@
+name: Main
+
+on: push
+
+# Set the GITHUB_TOKEN to a restricted permission we don't need anything else than this.
+# This will disable all other permissions than metadata: read, which is always enabled.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: OTP ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
+    strategy:
+      matrix:
+        otp: ["24.2.1"]
+    env:
+      cache_version: 1
+
+    steps:
+      - name: Install dcmtk (needed by common tests)
+        run: sudo apt-get -y install dcmtk
+
+      - uses: actions/checkout@v2
+        name: Checkout
+
+      - uses: erlef/setup-beam@v1
+        name: Setup Beam
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+
+      - run: rebar3 compile
+      - run: rebar3 xref
+      - run: rebar3 dialyzer
+      - run: rebar3
+      - run: rebar3 eunit --cover
+      - run: rebar3 proper --cover
+      - run: rebar3 ct --readable true --cover --readable=false
+      - run: rebar3 cover
+
+      - uses: codecov/codecov-action@v2
+        name: Upload coverage report
+        with:
+          fail_ci_if_error: true
+          verbose: true
