@@ -225,9 +225,9 @@ b(String) when is_list(String) ->
 b(Data) when is_binary(Data) ->
     Data.
 
-worker_sorter({ok, #wolfpacs_remote{ae=AE0}, Load, _Paused}, {ok, #wolfpacs_remote{ae=AE1}, Load, _Paused}) ->
+worker_sorter({ok, #wolfpacs_remote{ae=AE0}, Load, _}, {ok, #wolfpacs_remote{ae=AE1}, Load, _}) ->
     AE0 =< AE1;
-worker_sorter({ok, _, Load0, _Paused}, {ok, _, Load1, _Paused}) ->
+worker_sorter({ok, _, Load0, _}, {ok, _, Load1, _}) ->
     Load0 =< Load1.
 
 %%==============================================================================
