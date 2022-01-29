@@ -76,11 +76,11 @@ init(_) ->
 handle_call({allow, AE}, _From, State) ->
     case wolfpacs_clients:is_client_registered(AE) of
 	{ok, true} ->
-	    lager:info("[RouteLogic] Allow AE"),
+	    logger:info("[RouteLogic] Allow AE"),
 	    {reply, {ok, true}, State};
 	{ok, false} ->
-	    lager:warning("[RouteLogic] Disallow AE"),
-	    lager:warning(AE),
+	    logger:warning("[RouteLogic] Disallow AE"),
+	    logger:warning(AE),
 	    {reply, {ok, false}, State}
     end;
 

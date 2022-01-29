@@ -138,15 +138,15 @@ handle_timeout(QueueIn, false, true) ->
 		  #sender_info{ remote = Remote
 			      , dataset = DataSet
 			      , retries = Retries } = SenderInfo,
-		  lager:debug("[SenderPool] Retry: ~p", [Retries]),
+		  logger:debug("[SenderPool] Retry: ~p", [Retries]),
 		  {ok, Sender} = wolfpacs_sender:start_link(Remote),
 		  case wolfpacs_sender:send(Sender, DataSet) of
 		      ok ->
-			  lager:debug("[SenderPool] Successfully send dataset"),
+			  logger:debug("[SenderPool] Successfully send dataset"),
 			  wolfpacs_sender:stop(Sender),
 			  done();
 		      Error ->
-			  lager:warning("[SenderPool] Error: ~p", [Error]),
+			  logger:warning("[SenderPool] Error: ~p", [Error]),
 			  timer:sleep(min(Retries * 1000, 60000)),
 			  retry(SenderInfo)
 		  end

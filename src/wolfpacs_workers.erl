@@ -74,7 +74,7 @@ inc_load(Remote=#wolfpacs_remote{}) ->
 	{ok, Name} ->
 	    inc_load(Name);
 	_ ->
-	    lager:warning("[Workers] Unable to incease load"),
+	    logger:warning("[Workers] Unable to incease load"),
 	    error
     end;
 inc_load(Name) ->
@@ -85,7 +85,7 @@ dec_load(Remote=#wolfpacs_remote{}) ->
 	{ok, Name} ->
 	    dec_load(Name);
 	_ ->
-	    lager:warning("[Workers] Unable to decrease load"),
+	    logger:warning("[Workers] Unable to decrease load"),
 	    error
     end;
 dec_load(Name) ->

@@ -70,7 +70,7 @@ vr_lookup(Group, Element, missing) ->
 	{ok, VR} ->
 	    VR;
 	_ ->
-	    _ = lager:debug("[group_elements] Unknown (~p, ~p)", [Group, Element]),
+	    logger:debug("[group_elements] Unknown (~p, ~p)", [Group, Element]),
 	    "UN"
     end;
 vr_lookup(_, _, VR) ->

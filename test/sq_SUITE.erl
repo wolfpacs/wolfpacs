@@ -9,7 +9,6 @@
 all() -> [test_sq].
 
 init_per_suite(Cfg) ->
-    lager_common_test_backend:bounce(debug),
     Cfg.
 
 end_per_suite(Cfg) ->

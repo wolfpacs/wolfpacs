@@ -11,7 +11,6 @@ all() -> [test_c_echo_scp_scu,
 	  test_storescu_associate_rq].
 
 init_per_suite(Cfg) ->
-    lager_common_test_backend:bounce(debug),
     {ok, _} = application:ensure_all_started(wolfpacs),
     Cfg.
 

@@ -41,7 +41,7 @@ handle_info({_, eof}, #{host := Host, port := Port}) ->
     {noreply, #{host => Host, port => Port}};
 
 handle_info(What, State) ->
-    lager:warning("info ~p", [What]),
+    logger:warning("info ~p", [What]),
     {noreply, State}.
 
 terminate(_Reason, _State) ->

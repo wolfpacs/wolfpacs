@@ -153,7 +153,7 @@ encode(Flow, Strategy, G, E, "xs", Value, _Extra) ->
 encode(Flow, Strategy, G, E, VR, Bytes, Extra) ->
     case maps:get({G, E}, Extra, missing) of
 	missing ->
-	    _ = lager:warning("[DataElement] Unable to encode (~p, ~p): ~p", [G, E, VR]),
+	    logger:warning("[DataElement] Unable to encode (~p, ~p): ~p", [G, E, VR]),
 	    wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("unable to pick encoder ~p ~p ~p", [G, E, VR])),
 	    <<>>;
 	RecoveredVR ->
