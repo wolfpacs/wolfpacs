@@ -22,7 +22,6 @@ all() -> [ test_setup
 	 ].
 
 init_per_suite(Cfg) ->
-    lager_common_test_backend:bounce(debug),
     application:ensure_all_started(wolfpacs),
     wolfpacs_test_common:reset(),
     init_clients(),

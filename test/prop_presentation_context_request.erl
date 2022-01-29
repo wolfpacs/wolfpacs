@@ -22,7 +22,7 @@ prop_test() ->
 		    error ->
 			true;
 		    What  ->
-			lager:warning("~p", [What]),
+			logger:warning("~p", [What]),
 			false
 		end
 	    end).

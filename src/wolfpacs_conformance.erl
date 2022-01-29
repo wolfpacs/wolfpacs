@@ -38,7 +38,7 @@
 supported(PresentationContexts, true) ->
     supported(PresentationContexts, [], #{});
 supported(PresentationContexts, false) ->
-    _ = lager:warning("Only allow verification"),
+    logger:warning("Only allow verification"),
     supported(lists:filter(fun only_keep_verification/1,
 			   PresentationContexts),
 	      true).

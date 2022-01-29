@@ -27,7 +27,7 @@ send_dataset(StoreSCU, Host, Port, DataSet) ->
     Content = wolfpacs_data_elements:encode(Flow, {explicit, little}, DataSet),
     Encoded = wolfpacs_file_format:encode(Flow, {explicit, little}, Content),
     Filename = generate_filename(DataSet),
-    lager:warning("SEND ~p", [Filename]),
+    logger:warning("SEND ~p", [Filename]),
     ok = file:write_file(Filename, Encoded),
     gen_server:call(StoreSCU, {send, Host, Port, Filename}),
     %% It is much more stable if we wait removing the filename
@@ -48,7 +48,7 @@ handle_call(stop, _From, State=#{process := Process}) ->
     {reply, {ok, closing}, State};
 
 handle_call({send, Host, Port, Filename}, From, State) ->
-    lager:warning("** SENDING ** ~p ~p ~p", [Host, Port, Filename]),
+    logger:warning("** SENDING ** ~p ~p ~p", [Host, Port, Filename]),
     Cmd = {spawn_executable, os:find_executable("storescu")},
     Options = [exit_status, use_stdio, stderr_to_stdout,
 	       {line, 4096}, {args, ["-aec", "ninja", "-v", "-d", Host, str(Port), Filename]}],
@@ -66,7 +66,7 @@ handle_info({_Port, {exit_status, 0}}, State=#{from := From}) ->
     {noreply, State#{process => none, from => none}};
 
 handle_info({_Port, {exit_status, N}}, State=#{from := From}) ->
-    lager:warning("[DCMTKStoreSCU] Unable to send"),
+    logger:warning("[DCMTKStoreSCU] Unable to send"),
     gen_server:reply(From, {error, N}),
     {noreply, State#{process => none, from => none}};
 

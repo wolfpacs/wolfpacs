@@ -15,7 +15,6 @@ all() -> [test_file_meta_information,
 	  test_big_explicit].
 
 init_per_suite(Cfg) ->
-    lager_common_test_backend:bounce(debug),
     Cfg.
 
 end_per_suite(Cfg) ->
@@ -55,7 +54,7 @@ test_file_meta_information(Config) ->
     ok.
 
 check_file_read_ok(Filename) ->
-    lager:warning("FILE: ~p", [Filename]),
+    logger:warning("FILE: ~p", [Filename]),
     {ok, Flow} = wolfpacs_flow:start_link(),
     {ok, Content} = file:read_file(Filename),
     Strategy = {explicit, little},

@@ -1,6 +1,6 @@
 # Build
 
-FROM erlang:22-alpine as builder
+FROM erlang:24-alpine as builder
 
 RUN apk --upgrade add --no-cache alpine-sdk
 

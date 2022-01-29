@@ -1,6 +1,6 @@
 # WolfPACS
 
-[![Build Status](https://travis-ci.org/wolfpacs/wolfpacs.svg?branch=master)](https://travis-ci.org/wolfpacs/wolfpacs)
+![Build status](https://github.com/wolfpacs/wolfpacs/actions/workflows/main/badge.svg)
 [![codecov.io](https://codecov.io/gh/wolfpacs/wolfpacs/coverage.svg?branch=master)](https://codecov.io/gh/wolfpacs/wolfpacs?branch=master)
 [![Docker build](https://img.shields.io/docker/cloud/build/wolfpacs/wolfpacs.svg?color=green)](https://hub.docker.com/r/wolfpacs/wolfpacs)
 [![License GPLv3](https://img.shields.io/badge/License-GPLv3-blue)](https://www.gnu.org/licenses)

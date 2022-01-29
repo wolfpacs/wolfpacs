@@ -75,7 +75,7 @@ init([Side, Socket, Transport, _Opts = []]) ->
 
 %% @hidden
 handle_call(What, _From, State) ->
-    _ = lager:warning("unhandle call ~p", [What]),
+    logger:warning("unhandle call ~p", [What]),
     {reply, {error, What}, State}.
 
 %% @hidden
@@ -84,7 +84,7 @@ handle_cast({responde, Payload}, State) ->
     {noreply, State};
 
 handle_cast(What, State) ->
-    _ = lager:warning("unhandle cast ~p", [What]),
+    logger:warning("unhandle cast ~p", [What]),
     {noreply, State}.
 
 %% @hidden
@@ -103,7 +103,7 @@ handle_info({send_response, Payload}, State) ->
     {noreply, State};
 
 handle_info(What, State) ->
-    _ = lager:warning("[UpperLayer] Unhandle ~p", [What]),
+    logger:warning("[UpperLayer] Unhandle ~p", [What]),
     {noreply, State}.
 
 %% @hidden

@@ -7,7 +7,6 @@
    [kernel,
     stdlib,
     ranch,
-    lager,
     cowboy,
     jiffy
    ]},

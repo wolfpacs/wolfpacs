@@ -74,7 +74,7 @@ inc_load(Remote=#wolfpacs_remote{}) ->
 	{ok, Name} ->
 	    inc_load(Name);
 	_ ->
-	    lager:warning("[Workers] Unable to incease load"),
+	    logger:warning("[Workers] Unable to incease load"),
 	    error
     end;
 inc_load(Name) ->
@@ -85,7 +85,7 @@ dec_load(Remote=#wolfpacs_remote{}) ->
 	{ok, Name} ->
 	    dec_load(Name);
 	_ ->
-	    lager:warning("[Workers] Unable to decrease load"),
+	    logger:warning("[Workers] Unable to decrease load"),
 	    error
     end;
 dec_load(Name) ->
@@ -225,9 +225,9 @@ b(String) when is_list(String) ->
 b(Data) when is_binary(Data) ->
     Data.
 
-worker_sorter({ok, #wolfpacs_remote{ae=AE0}, Load, _Paused}, {ok, #wolfpacs_remote{ae=AE1}, Load, _Paused}) ->
+worker_sorter({ok, #wolfpacs_remote{ae=AE0}, Load, _}, {ok, #wolfpacs_remote{ae=AE1}, Load, _}) ->
     AE0 =< AE1;
-worker_sorter({ok, _, Load0, _Paused}, {ok, _, Load1, _Paused}) ->
+worker_sorter({ok, _, Load0, _}, {ok, _, Load1, _}) ->
     Load0 =< Load1.
 
 %%==============================================================================

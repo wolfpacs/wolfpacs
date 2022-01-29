@@ -132,15 +132,15 @@ idle(cast, {pdu, 7, PDU}, Data) ->
 idle(cast, {pdu, N, _PDU}, Data) ->
     #wolfpacs_upper_layer_fsm_data{upper_layer=UpperLayer} = Data,
     UpperLayer ! {unknown_pdu, N},
-    _ = lager:warning("unknown pdu type ~p", [N]),
+    logger:warning("unknown pdu type ~p", [N]),
     {keep_state, Data, []};
 
 idle(cast, What, Data) ->
-    _ = lager:warning("cast what ~p", [What]),
+    logger:warning("cast what ~p", [What]),
     {keep_state, Data, []};
 
 idle(Type, What, Data) ->
-    _ = lager:warning("unhandle ~p ~p", [Type, What]),
+    logger:warning("unhandle ~p ~p", [Type, What]),
     {keep_state, Data, []}.
 
 %%-------------------------------------------------------------------
@@ -150,7 +150,7 @@ idle(Type, What, Data) ->
 %%-------------------------------------------------------------------
 
 abort(enter, _Prev, Data) ->
-    _ = lager:warning("[UpperLayer] [Abort] Send abort"),
+    logger:warning("[UpperLayer] [Abort] Send abort"),
     #wolfpacs_upper_layer_fsm_data{flow = Flow, upper_layer=UpperLayer} = Data,
     Abort = wolfpacs_abort:encode(Flow, 2, 0),
     wolfpacs_upper_layer:responde(UpperLayer, Abort),
@@ -162,7 +162,7 @@ abort(timeout, close, Data) ->
     {keep_state, Data, []};
 
 abort(A, B, Data) ->
-    _ = lager:warning("[UpperLayer] [Abort] Received ~p ~p", [A, B]),
+    logger:warning("[UpperLayer] [Abort] Received ~p ~p", [A, B]),
     {keep_state, Data, []}.
 
 %%=============================================================================
@@ -170,7 +170,7 @@ abort(A, B, Data) ->
 %%==============================================================================
 
 handle_associate_rq(error, Data) ->
-    _ = lager:warning("associate rq decode error"),
+    logger:warning("associate rq decode error"),
     {keep_state, Data, []};
 
 handle_associate_rq(AssociateRQ, Data) ->
@@ -202,7 +202,7 @@ handle_associate_rq(AssociateRQ, Data) ->
 handle_abort(error, Data) ->
     {keep_state, Data, []};
 handle_abort({ok, _Source, _Reason, _}, Data) ->
-    _ = lager:debug("[upper_layer_fsm] received abort"),
+    logger:debug("[upper_layer_fsm] received abort"),
     {keep_state, Data, []}.
 
 handle_p_data_tf(error, Data) ->
@@ -309,7 +309,7 @@ handle_pdv_item({_AbstractSyntrax, Strategy}, _, true, true, Fragment, Data) ->
     {keep_state, NewData, []};
 
 handle_pdv_item(Tag, PrCID, A, B, _, Data) ->
-    _ = lager:warning("unhandle pdv item ~p, ~p, ~p, ~p", [Tag, PrCID, A, B]),
+    logger:warning("unhandle pdv item ~p, ~p, ~p, ~p", [Tag, PrCID, A, B]),
     {keep_state, Data, []}.
 
 %%
@@ -330,7 +330,8 @@ route_payload(Flow, RouteTag, CalledAE, CallingAE, DataSet) ->
 	wolfpacs_inside ->
 	    inside_route(StudyUID, DataSet);
 	_ ->
-	    lager:warning("[UpperLayerFSM] Critical error. Incorrect RouteTag: ~p", [RouteTag])
+        logger:warning("[UpperLayerFSM] Critical error. Incorrect RouteTag: ~p", [RouteTag]),
+        error
     end.
 
 %%==============================================================================
@@ -342,7 +343,7 @@ outside_route(CalledAE, StudyUID, DataSet) ->
 	{ok, Remote} ->
 	    wolfpacs_sender_pool:send(Remote, DataSet);
 	_ ->
-	    _ = lager:warning("[UpperLayerFSM] Unable to route client AE: ~p", [CalledAE])
+	    logger:warning("[UpperLayerFSM] Unable to route client AE: ~p", [CalledAE])
     end.
 
 inside_route(StudyUID, DataSet) ->
@@ -350,7 +351,7 @@ inside_route(StudyUID, DataSet) ->
 	{ok, Remote} ->
 	    wolfpacs_sender_pool:send(Remote, DataSet);
 	_ ->
-	    _ = lager:warning("[UpperLayerFSM] Unable to route study uid: ~p", [StudyUID])
+	    logger:warning("[UpperLayerFSM] Unable to route study uid: ~p", [StudyUID])
     end.
 
 

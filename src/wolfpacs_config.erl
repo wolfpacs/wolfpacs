@@ -36,7 +36,7 @@ load() ->
     ok.
 
 load_config_in_folder(false) ->
-    _ = lager:warning("[Config] No config file specified");
+    logger:warning("[Config] No config file specified");
 load_config_in_folder(Folder) ->
     Filename = filename:join(Folder, "wolfpacs.conf"),
     load_config_file(Filename).
@@ -47,10 +47,10 @@ load_config_file(Filename) ->
 load_config_content({ok, Terms}) ->
     load_terms(Terms);
 load_config_content({error, enoent}) ->
-    lager:warning("[Config] Config file named but missing"),
+    logger:warning("[Config] Config file named but missing"),
     error;
 load_config_content({error, Reason}) ->
-    lager:warning("[Config] Config error ~p", [Reason]),
+    logger:warning("[Config] Config error ~p", [Reason]),
     error.
 
 load_terms([]) ->
@@ -77,5 +77,5 @@ load_terms([{client_destination, ClientName, DestinationName}|Terms]) ->
     load_terms(Terms);
 
 load_terms([Item|_Terms]) ->
-    _ = lager:warning("[Config] Don't understand ~p", [Item]),
+    logger:warning("[Config] Don't understand ~p", [Item]),
     error.
