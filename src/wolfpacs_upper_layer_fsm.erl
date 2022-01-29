@@ -330,7 +330,8 @@ route_payload(Flow, RouteTag, CalledAE, CallingAE, DataSet) ->
 	wolfpacs_inside ->
 	    inside_route(StudyUID, DataSet);
 	_ ->
-	    logger:warning("[UpperLayerFSM] Critical error. Incorrect RouteTag: ~p", [RouteTag])
+        logger:warning("[UpperLayerFSM] Critical error. Incorrect RouteTag: ~p", [RouteTag]),
+        error
     end.
 
 %%==============================================================================
