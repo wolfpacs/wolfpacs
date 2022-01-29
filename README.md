@@ -5,7 +5,7 @@
 [![Docker build](https://img.shields.io/docker/cloud/build/wolfpacs/wolfpacs.svg?color=green)](https://hub.docker.com/r/wolfpacs/wolfpacs)
 [![License GPLv3](https://img.shields.io/badge/License-GPLv3-blue)](https://www.gnu.org/licenses)
 [![Documentation](https://img.shields.io/badge/documentation-documentation-yellowgreen)](https://wolfpacs.github.io/wolfpacs/)
-[![Version Observance](https://img.shields.io/badge/semver-0.3.4-blue)](https://semver.org/)
+[![Version Observance](https://img.shields.io/badge/semver-0.4.0-blue)](https://semver.org/)
 
 ![Logo](priv/logo.png)
 

@@ -1,6 +1,6 @@
 @author Niklas Johansson <raphexion@gmail.com>
 @copyright 2019 Niklas Johansson
-@version 0.3.4
+@version 0.4.0
 @title WolfPACS
 @doc `WolfPACS' A Open Source PACS solution written in Erlang.
 
