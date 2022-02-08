@@ -1,6 +1,6 @@
 # WolfPACS
 
-![Build status](https://github.com/wolfpacs/wolfpacs/actions/workflows/main/badge.svg)
+![Build status](https://github.com/wolfpacs/wolfpacs/actions/workflows/main.yml/badge.svg)
 [![codecov.io](https://codecov.io/gh/wolfpacs/wolfpacs/coverage.svg?branch=master)](https://codecov.io/gh/wolfpacs/wolfpacs?branch=master)
 [![Docker build](https://img.shields.io/docker/cloud/build/wolfpacs/wolfpacs.svg?color=green)](https://hub.docker.com/r/wolfpacs/wolfpacs)
 [![License GPLv3](https://img.shields.io/badge/License-GPLv3-blue)](https://www.gnu.org/licenses)
@@ -30,23 +30,30 @@ Some critical bugs may still remain in the software.
 
 ## Bird's-eye view
 
-Imagine two hospitals that need help with processing data.
+Imagine a Medical AI company called __Stroke Insight__.
+They have developed a cutting-edge algorithm to analyse MRIs; to detect strokes.
+To analyse the images, they need computers with a lot of GPU power.
+These are critical resource, that need serve many clients concurrently.
+The machines are called **workers**.
+Once in a while they need to take the workers offline in order to upgrade the software and/or the hardware.
+To server multiple clients in a flexible way, they have deployed **WolfPACS** as a loadbalancer.
+
+Two clients, a hosptial in Stockholm and one in Berlin as bought their newest version of their software.
 Let's call them Stockholm Hospital (S) and Berlin Hospital (B).
 Both Stockholm and Berlin have their own central PACS systems.
-Let's call them S-PACS and B-PACS.
 
-A medical company provides a software solution, that provides extra information
-(derived series) to a medical study. Their software is running on external
-computers (called workers).
+To run their algorithm, __Stroke Insight__ needs to get the original images to generate the extra information; the **derived series**.
 
 ![Logo](priv/dream1.png)
 
 Steps in figure above.
 
-1. A Radiologist sends the primary series to WolfPACS.
-2. WolfPACS receives the series, routes the data to the correct worker.
+1. A Radiologist sends the primary series to __Stroke Insight__ (which are running WolfPACS as a loadbalancer.)
+2. WolfPACS receives the series and routes the images to an appropriate worker with the right software [1].
 3. The worker sends the new derived series back to WolfPACS.
-4. Finally, WolfPACS sends then new series to the correct destination.
+4. Finally, WolfPACS sends the new series back to the correct destination.
+
+[1] A series is contains many imanges and WolfPACS makes sure that the whole series ends up on the same worker.
 
 ## Mental model
 
