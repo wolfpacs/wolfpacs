@@ -35,7 +35,6 @@
 %%====================================================================
 
 start(_StartType, _StartArgs) ->
-    wolfpacs_config:load(),
     Dispatch = cowboy_router:compile(
 		 [{'_', [{"/", root_handler, []},
 			 {"/clients", clients_handler, []},
