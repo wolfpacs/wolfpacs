@@ -68,10 +68,10 @@ init([]) ->
     RouteLogic = #{id => wolfpacs_route_logic,
 		    start => {wolfpacs_route_logic, start_link, []}},
     OutsideListener = ranch:child_spec(wolfpacs_outside,
-				       ranch_tcp, [{port, 11112}],
+				       ranch_tcp, [{port, outside_port()}],
 				       wolfpacs_upper_layer, []),
     InsideListener = ranch:child_spec(wolfpacs_inside,
-				      ranch_tcp, [{port, 11113}],
+				      ranch_tcp, [{port, inside_port()}],
 				      wolfpacs_upper_layer, []),
     Children = [Storage,
 		GroupElementsCache,
@@ -89,3 +89,9 @@ init([]) ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
+
+outside_port() ->
+    list_to_integer(os:getenv("WOLFPACS_OUTSIDE_PORT", "11112")).
+
+inside_port() ->
+    list_to_integer(os:getenv("WOLFPACS_INSIDE_PORT", "11113")).

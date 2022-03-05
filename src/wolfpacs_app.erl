@@ -46,7 +46,7 @@ start(_StartType, _StartArgs) ->
 			]}
 		 ]),
     cowboy:start_clear(rest_listener,
-		       [{port, 8080}],
+		       [{port, admin_port()}],
 		       #{env => #{dispatch => Dispatch}}
 		      ),
     wolfpacs_sup:start_link().
@@ -59,3 +59,6 @@ stop(_State) ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
+
+admin_port() ->
+    list_to_integer(os:getenv("WOLFPACS_ADMIN_PORT", "8080")).

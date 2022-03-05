@@ -113,6 +113,16 @@ Debug WolfPACS instance
 docker run -it -p 11112:11112 -p 11113:11113 -p 8080:8080 wolfpacs/wolfpacs console
 ```
 
+## Environment variables
+
+It is possible to configure some parts of WolfPACS using environmental variables.
+
+| Variable              | Description                           | Default |
+|-----------------------|---------------------------------------|---------|
+| WOLFPACS_INSIDE_PORT  | The port towards the workers          | 11112   |
+| WOLFPACS_OUTSIDE_PORT | The port facing the outside world     | 11113   |
+| WOLFPACS_ADMIN_PORT   | The port for administration over http | 8080    |
+
 ## DICOM Conformance Statement
 
 The following transfer syntax are are supported:
