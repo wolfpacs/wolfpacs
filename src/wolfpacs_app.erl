@@ -35,29 +35,12 @@
 %%====================================================================
 
 start(_StartType, _StartArgs) ->
-    Dispatch = cowboy_router:compile(
-		 [{'_', [{"/", root_handler, []},
-			 {"/clients", clients_handler, []},
-			 {"/clients/:client_name/workers", client_workers_handler, []},
-			 {"/clients/:client_name/dests", client_dest_handler, []},
-			 {"/workers", workers_handler, []},
-			 {"/dests", dests_handler, []}
-			]}
-		 ]),
-    cowboy:start_clear(rest_listener,
-		       [{port, admin_port()}],
-		       #{env => #{dispatch => Dispatch}}
-		      ),
     wolfpacs_sup:start_link().
 
 %%--------------------------------------------------------------------
 stop(_State) ->
-    cowboy:stop_listener(rest_listener),
     ok.
 
 %%====================================================================
 %% Internal functions
 %%====================================================================
-
-admin_port() ->
-    list_to_integer(os:getenv("WOLFPACS_ADMIN_PORT", "8080")).
