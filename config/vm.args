@@ -1,12 +1,14 @@
-# Name and cookie
+## Name of the node
 -name wolfpacs@127.0.0.1
--setcookie wolfpacs
 
-# Sets the maximum number of simultaneously existing processes
+## Cookie for distributed erlang
+-setcookie wolfpacs-cookie
+
+## Sets the maximum number of simultaneously existing processes
 +P 262144
 
-# Kernel polling can improve performance if many file descriptors are in use.
+## Kernel polling can improve performance if many file descriptors are in use.
 +K true
 
-# Set the maximum number of simultaneously existing system processes.
+## Set the maximum number of simultaneously existing system processes.
 +P 256000
