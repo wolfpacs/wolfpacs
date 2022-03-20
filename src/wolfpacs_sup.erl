@@ -91,7 +91,17 @@ init([]) ->
 %%====================================================================
 
 outside_port() ->
-    list_to_integer(os:getenv("WOLFPACS_OUTSIDE_PORT", "11112")).
+    case os:getenv("WOLFPACS_OUTSIDE_PORT", missing) of
+        missing ->
+            application:get_env(wolfpacs, outside_port, 11112);
+        Port ->
+            list_to_integer(Port)
+    end.
 
 inside_port() ->
-    list_to_integer(os:getenv("WOLFPACS_INSIDE_PORT", "11113")).
+    case os:getenv("WOLFPACS_INSIDE_PORT", missing) of
+        missing ->
+            application:get_env(wolfpacs, inside_port, 11113);
+        Port ->
+            list_to_integer(Port)
+    end.
