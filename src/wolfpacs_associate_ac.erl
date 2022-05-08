@@ -26,7 +26,7 @@
 
 -module(wolfpacs_associate_ac).
 -export([encode/7,
-	 decode/1]).
+         decode/1]).
 
 %%-------------------------------------------------------------------
 %% @doc Encodes an Associate Accept.
@@ -37,11 +37,11 @@
 encode(CalledAE, CallingAE, R, SupportedContexts, MaxPDUSize, Class, VersionName) ->
     VariableItems = wolfpacs_variable_items_accept:encode(SupportedContexts, MaxPDUSize, Class, VersionName),
     Payload = <<1:16,  %% Protocol Version
-		0:16,  %% Reserved
-		CalledAE/binary,
-		CallingAE/binary,
-		R/binary,
-		VariableItems/binary>>,
+                0:16,  %% Reserved
+                CalledAE/binary,
+                CallingAE/binary,
+                R/binary,
+                VariableItems/binary>>,
     Length = byte_size(Payload),
     <<16#2,
       0,
@@ -55,15 +55,15 @@ encode(CalledAE, CallingAE, R, SupportedContexts, MaxPDUSize, Class, VersionName
 %%-------------------------------------------------------------------
 decode(AllData = <<16#2, _, Length:32, Data/binary>>) ->
     case wolfpacs_utils:split(Data, Length) of
-	{ok, Part, Rest} ->
-	    case decode_info(Part) of
-		{ok, CalledAE, CallingAE, R, Contexts, MaxPDUSize, Class, VersionName, _} ->
-		    {ok, CalledAE, CallingAE, R, Contexts, MaxPDUSize, Class, VersionName, Rest};
-		{error, _, Error} ->
-		    {error, AllData, ["unable to decode info"|Error]}
-	    end;
-	_ ->
-	    {error, AllData, ["not enough data"]}
+        {ok, Part, Rest} ->
+            case decode_info(Part) of
+                {ok, CalledAE, CallingAE, R, Contexts, MaxPDUSize, Class, VersionName, _} ->
+                    {ok, CalledAE, CallingAE, R, Contexts, MaxPDUSize, Class, VersionName, Rest};
+                {error, _, Error} ->
+                    {error, AllData, ["unable to decode info"|Error]}
+            end;
+        _ ->
+            {error, AllData, ["not enough data"]}
     end;
 decode(AllData) ->
     {error, AllData, ["incorrect header"]}.
@@ -74,10 +74,10 @@ decode(AllData) ->
 
 decode_info(AllData = <<_:16, _:16, CalledAE:128/bitstring, CallingAE:128/bitstring, R:256/bitstring, Data/binary>>) ->
     case wolfpacs_variable_items_accept:decode(Data) of
-	{ok, _, Contexts, MaxPDUSize, Class, VersionName, _} ->
-	    {ok, CalledAE, CallingAE, R, Contexts, MaxPDUSize, Class, VersionName, <<>>};
-	{error, _, Error} ->
-	    {error, AllData, ["unable to decode items accept"|Error]}
+        {ok, _, Contexts, MaxPDUSize, Class, VersionName, _} ->
+            {ok, CalledAE, CallingAE, R, Contexts, MaxPDUSize, Class, VersionName, <<>>};
+        {error, _, Error} ->
+            {error, AllData, ["unable to decode items accept"|Error]}
     end;
 decode_info(OrgData) ->
     {error, OrgData, ["not enough data for decode_info"]}.
@@ -86,6 +86,7 @@ decode_info(OrgData) ->
 %%==============================================================================
 %% Test
 %%==============================================================================
+-ifdef(TEST).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -93,7 +94,7 @@ storescp_echoscu_test() ->
     CalledAE =  <<"ANY-SCP         ">>,
     CallingAE = <<"ECHOSCU         ">>,
     R = <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
     PrCID = 1,
     TransferSyntax = <<"1.2.840.10008.1.2">>,
     MaxPDUSize = 16384,
@@ -101,39 +102,39 @@ storescp_echoscu_test() ->
     VersionName = <<"OFFIS_DCMTK_364">>,
 
     Correct = wolfpacs_utils:log_to_binary(
-	"02, 00, 00, 00, 00, b8, 00, 01, 00, 00, 41, 4e, 59, 2d, 53, 43,
-         50, 20, 20, 20, 20, 20, 20, 20, 20, 20, 45, 43, 48, 4f, 53, 43,
-         55, 20, 20, 20, 20, 20, 20, 20, 20, 20,
+                "02, 00, 00, 00, 00, b8, 00, 01, 00, 00, 41, 4e, 59, 2d, 53, 43,
+                50, 20, 20, 20, 20, 20, 20, 20, 20, 20, 45, 43, 48, 4f, 53, 43,
+                55, 20, 20, 20, 20, 20, 20, 20, 20, 20,
 
-         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+                00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+                00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
 
-         10, 00, 00, 15,
-         31, 2e, 32, 2e, 38, 34, 30, 2e, 31, 30, 30, 30, 38, 2e, 33, 2e,
-         31, 2e, 31, 2e, 31,
+                10, 00, 00, 15,
+                31, 2e, 32, 2e, 38, 34, 30, 2e, 31, 30, 30, 30, 38, 2e, 33, 2e,
+                31, 2e, 31, 2e, 31,
 
-         21, 00, 00, 19,
-         01, 00, 00, 00,
-         40, 00, 00, 11,
-         31, 2e, 32, 2e, 38, 34, 30, 2e, 31, 30, 30, 30, 38, 2e, 31, 2e,
-         32,
+                21, 00, 00, 19,
+                01, 00, 00, 00,
+                40, 00, 00, 11,
+                31, 2e, 32, 2e, 38, 34, 30, 2e, 31, 30, 30, 30, 38, 2e, 31, 2e,
+                32,
 
-         50, 00, 00, 3a, 51, 00, 00, 04, 00, 00, 40, 00,
+                50, 00, 00, 3a, 51, 00, 00, 04, 00, 00, 40, 00,
 
-         52, 00, 00, 1b,
-         31, 2e, 32, 2e, 32, 37, 36, 2e, 30, 2e, 37, 32, 33, 30, 30, 31,
-         30, 2e, 33, 2e, 30, 2e, 33, 2e, 36, 2e, 34,
+                52, 00, 00, 1b,
+                31, 2e, 32, 2e, 32, 37, 36, 2e, 30, 2e, 37, 32, 33, 30, 30, 31,
+                30, 2e, 33, 2e, 30, 2e, 33, 2e, 36, 2e, 34,
 
-         55, 00, 00, 0f,
-         4f, 46, 46, 49, 53, 5f, 44, 43, 4d, 54, 4b, 5f, 33, 36, 34"),
+                55, 00, 00, 0f,
+                4f, 46, 46, 49, 53, 5f, 44, 43, 4d, 54, 4b, 5f, 33, 36, 34"),
     ?assertEqual(encode(CalledAE, CallingAE, R, [{PrCID, TransferSyntax}], MaxPDUSize, Class, VersionName),
-		 Correct).
+                 Correct).
 
 encode_decode_test_() ->
     CalledAE =  <<"ANY-SCP         ">>,
     CallingAE = <<"ECHOSCU         ">>,
     R = <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
     PrCID = 1,
     TransferSyntax = <<"1.2.840.10008.1.2">>,
     MaxPDUSize = 16384,
@@ -141,8 +142,8 @@ encode_decode_test_() ->
     VersionName = <<"OFFIS_DCMTK_364">>,
 
     Encoded0 = encode(CalledAE, CallingAE, R,
-		      [{PrCID, TransferSyntax}],
-		      MaxPDUSize, Class, VersionName),
+                      [{PrCID, TransferSyntax}],
+                      MaxPDUSize, Class, VersionName),
     Encoded1 = <<Encoded0/binary, 42>>,
 
     Incorrect0 = wolfpacs_utils:drop_last_byte(Encoded0),
@@ -166,8 +167,10 @@ encode_decode_test_() ->
     , ?_assertEqual(decode(Incorrect4), {error, Incorrect4, ["not enough data"]})
     , ?_assertEqual(decode(Incorrect5), {error, Incorrect5, ["incorrect header"]})
     , ?_assertEqual(decode(Incorrect6), {error, Incorrect6, ["unable to decode info",
-							     "not enough data for decode_info"]})
+                                                             "not enough data for decode_info"]})
     , ?_assertEqual(decode(Incorrect7), {error, Incorrect7, ["unable to decode info",
-							     "unable to decode items accept",
-							     "unable to decode accept"]})
+                                                             "unable to decode items accept",
+                                                             "unable to decode accept"]})
     ].
+
+-endif.

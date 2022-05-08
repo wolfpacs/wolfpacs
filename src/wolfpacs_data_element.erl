@@ -37,9 +37,9 @@
 
 -module(wolfpacs_data_element).
 -export([encode/6,
-	 encode/7,
-	 decode/3,
-	 decode/4]).
+         encode/7,
+         decode/3,
+         decode/4]).
 -include("wolfpacs_types.hrl").
 
 %%-------------------------------------------------------------------
@@ -152,12 +152,12 @@ encode(Flow, Strategy, G, E, "xs", Value, _Extra) ->
     encode_common(Strategy, G, E, "US", wolfpacs_vr_xs:encode(Flow, Strategy, Value));
 encode(Flow, Strategy, G, E, VR, Bytes, Extra) ->
     case maps:get({G, E}, Extra, missing) of
-	missing ->
-	    logger:warning("[DataElement] Unable to encode (~p, ~p): ~p", [G, E, VR]),
-	    wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("unable to pick encoder ~p ~p ~p", [G, E, VR])),
-	    <<>>;
-	RecoveredVR ->
-	    encode(Flow, Strategy, G, E, RecoveredVR, Bytes, Extra)
+        missing ->
+            logger:warning("[DataElement] Unable to encode (~p, ~p): ~p", [G, E, VR]),
+            wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("unable to pick encoder ~p ~p ~p", [G, E, VR])),
+            <<>>;
+        RecoveredVR ->
+            encode(Flow, Strategy, G, E, RecoveredVR, Bytes, Extra)
     end.
 
 %%-------------------------------------------------------------------
@@ -291,11 +291,11 @@ decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<"SQ", _:16, Data/binary>
 
 decode_correct_vr(Flow, Strategy={explicit, _}, G, E, <<VRTag:16/bitstring, Data/binary>>, Extra) ->
     VR = case maps:get({G, E}, Extra, missing) of
-	     missing ->
-		 binary_to_list(VRTag);
-	     FoundVR ->
-		 FoundVR
-	 end,
+             missing ->
+                 binary_to_list(VRTag);
+             FoundVR ->
+                 FoundVR
+         end,
     wolfpacs_flow:good(Flow, ?MODULE, "decode_correct_vr"),
     wolfpacs_group_elements_cache:add(G, E, VR),
     decode_with_vr_16bit_length(Flow, Strategy, G, E, VR, Data);
@@ -345,22 +345,22 @@ decode_common_with_decoder(Flow, Strategy={_, little}, G, E, 16#ffffffff, Data, 
 decode_common_with_decoder(Flow, Strategy, G, E, Len, Data, Decoder) ->
     wolfpacs_flow:good(Flow, ?MODULE, io_lib:format("common_with_decoder (~.16B, ~.16B)", [G, E])),
     case wolfpacs_utils:split(Data, Len) of
-	{ok, Bytes, Rest2} ->
-	    case Decoder:decode(Flow, Strategy, Bytes) of
-		{ok, Value, Rest1} ->
-		    wolfpacs_flow:success(Flow, ?MODULE),
-		    Tag = io_lib:format("(~.16B, ~.16B)", [G, E]),
-		    wolfpacs_flow:good(Flow, ?MODULE, Tag),
+        {ok, Bytes, Rest2} ->
+            case Decoder:decode(Flow, Strategy, Bytes) of
+                {ok, Value, Rest1} ->
+                    wolfpacs_flow:success(Flow, ?MODULE),
+                    Tag = io_lib:format("(~.16B, ~.16B)", [G, E]),
+                    wolfpacs_flow:good(Flow, ?MODULE, Tag),
 
-		    {ok, {{G, E}, Value}, <<Rest1/binary, Rest2/binary>>};
-		_ ->
-		    wolfpacs_flow:failed(Flow, ?MODULE, "decoder failed"),
-		    wolfpacs_flow:failed(Flow, ?MODULE, Bytes),
-		    error
-	    end;
-	_ ->
-	    wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("not enough data ~.16B < ~.16B", [byte_size(Data), Len])),
-	    error
+                    {ok, {{G, E}, Value}, <<Rest1/binary, Rest2/binary>>};
+                _ ->
+                    wolfpacs_flow:failed(Flow, ?MODULE, "decoder failed"),
+                    wolfpacs_flow:failed(Flow, ?MODULE, Bytes),
+                    error
+            end;
+        _ ->
+            wolfpacs_flow:failed(Flow, ?MODULE, io_lib:format("not enough data ~.16B < ~.16B", [byte_size(Data), Len])),
+            error
     end.
 
 %%-------------------------------------------------------------------
@@ -487,6 +487,7 @@ decode_common(Flow, _Strategy, G, E, VR, _Len, _Data) ->
 %%==============================================================================
 %% Test
 %%==============================================================================
+-ifdef(TEST).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -688,16 +689,16 @@ decode_example_one_test() ->
     %% (fffe,e0dd) na (SequenceDelimitationItem for re-encod.) #   0, 0 SequenceDelimitationItem
 
     Correct = [#{{112,2} => <<"ANNOTATION LAYER">>,
-		{112,98} => 1,
-		{112,104} => <<"Annotations">>}],
+                 {112,98} => 1,
+                 {112,104} => <<"Annotations">>}],
 
     Encoded = wolfpacs_utils:hexl_log_to_binary(
-		"" ++
-		    "7000 6000 5351 0000 3e00 0000 " ++
-		    "feff 00e0 3600 0000 7000 0200 4353 1000 " ++
-		    "414e 4e4f 5441 5449 4f4e 204c 4159 4552 " ++
-		    "7000 6200 4953 0200 3120 7000 6800 4c4f " ++
-		    "0c00 416e 6e6f 7461 7469 6f6e 7320"),
+                "" ++
+                    "7000 6000 5351 0000 3e00 0000 " ++
+                    "feff 00e0 3600 0000 7000 0200 4353 1000 " ++
+                    "414e 4e4f 5441 5449 4f4e 204c 4159 4552 " ++
+                    "7000 6200 4953 0200 3120 7000 6800 4c4f " ++
+                    "0c00 416e 6e6f 7461 7469 6f6e 7320"),
 
     {ok, Flow} = wolfpacs_flow:start_link(),
     Decoded = decode(Flow, {explicit, little}, Encoded),
@@ -713,31 +714,33 @@ nested_sq_explicit_little_test_() ->
 
 
     Correct = {{G, E}, [#{{8,4416} => [#{{8,4432} => SOPClassUID,
-					 {8,4437} => SOPInstance}],
-			  {32,14} => SeriesUID
-			 }]},
+                                         {8,4437} => SOPInstance}],
+                          {32,14} => SeriesUID
+                         }]},
 
     Encoded = wolfpacs_utils:hexl_log_to_binary(
-		"" ++
-		    "                                   0800 " ++
-		    "1511 5351 0000 ffff ffff feff 00e0 ffff " ++
-		    "ffff 0800 4011 5351 0000 ffff ffff feff " ++
-		    "00e0 ffff ffff 0800 5011 5549 1a00 312e " ++
-		    "322e 3834 302e 3130 3030 382e 352e 312e " ++
-		    "342e 312e 312e 3400 0800 5511 5549 4000 " ++
-		    "312e 322e 3832 362e 302e 312e 3336 3830 " ++
-		    "3034 332e 322e 3131 3235 2e31 2e39 3231 " ++
-		    "3233 3239 3735 3531 3830 3030 3139 3436 " ++
-		    "3030 3431 3337 3739 3233 3335 3837 3634 " ++
-		    "feff 0de0 0000 0000 feff dde0 0000 0000 " ++
-		    "2000 0e00 5549 4000 312e 322e 3832 362e " ++
-		    "302e 312e 3336 3830 3034 332e 322e 3131 " ++
-		    "3235 2e31 2e37 3333 3734 3339 3534 3538 " ++
-		    "3732 3134 3336 3235 3535 3635 3239 3132 " ++
-		    "3533 3133 3934 3434 feff 0de0 0000 0000 " ++
-		    "feff dde0 0000 0000 0102                "),
+                "" ++
+                    "                                   0800 " ++
+                    "1511 5351 0000 ffff ffff feff 00e0 ffff " ++
+                    "ffff 0800 4011 5351 0000 ffff ffff feff " ++
+                    "00e0 ffff ffff 0800 5011 5549 1a00 312e " ++
+                    "322e 3834 302e 3130 3030 382e 352e 312e " ++
+                    "342e 312e 312e 3400 0800 5511 5549 4000 " ++
+                    "312e 322e 3832 362e 302e 312e 3336 3830 " ++
+                    "3034 332e 322e 3131 3235 2e31 2e39 3231 " ++
+                    "3233 3239 3735 3531 3830 3030 3139 3436 " ++
+                    "3030 3431 3337 3739 3233 3335 3837 3634 " ++
+                    "feff 0de0 0000 0000 feff dde0 0000 0000 " ++
+                    "2000 0e00 5549 4000 312e 322e 3832 362e " ++
+                    "302e 312e 3336 3830 3034 332e 322e 3131 " ++
+                    "3235 2e31 2e37 3333 3734 3339 3534 3538 " ++
+                    "3732 3134 3336 3235 3535 3635 3239 3132 " ++
+                    "3533 3133 3934 3434 feff 0de0 0000 0000 " ++
+                    "feff dde0 0000 0000 0102                "),
     {ok, Flow} = wolfpacs_flow:start_link(),
     {ok, Decoded, Rest} = decode(Flow, {explicit, little}, Encoded),
     [ ?_assertEqual(Decoded, Correct)
     , ?_assertEqual(Rest, <<1, 2>>)
     ].
+
+-endif.

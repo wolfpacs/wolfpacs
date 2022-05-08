@@ -161,6 +161,7 @@ send_release_rq(State=#{sock := Sock}) ->
 %%==============================================================================
 %% Test
 %%==============================================================================
+-ifdef(TEST).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -181,3 +182,5 @@ gen_server_test_() ->
 code_change_test() ->
     start_link(),
     ?assertEqual(code_change(1, state, extra), {ok, state}).
+
+-endif.

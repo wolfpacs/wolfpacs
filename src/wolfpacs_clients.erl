@@ -30,25 +30,25 @@
 -include("wolfpacs_types.hrl").
 
 -export([start_link/0,
-	 stop/0,
-	 reset/0]).
+         stop/0,
+         reset/0]).
 -export([add/2,
-	 assoc_worker/2,
-	 assoc_dest/2,
-	 assoc_studyuid/2,
-	 is_client_registered/1,
-	 workers_for_name/1,
-	 workers_for_ae/1,
-	 dest_for_name/1,
-	 dest_for_ae/1,
-	 dest_for_studyuid/1,
-	 all/0]).
+         assoc_worker/2,
+         assoc_dest/2,
+         assoc_studyuid/2,
+         is_client_registered/1,
+         workers_for_name/1,
+         workers_for_ae/1,
+         dest_for_name/1,
+         dest_for_ae/1,
+         dest_for_studyuid/1,
+         all/0]).
 -export([init/1,
-	 handle_call/3,
-	 handle_cast/2,
-	 handle_info/2,
-	 terminate/2,
-	 code_change/3]).
+         handle_call/3,
+         handle_cast/2,
+         handle_info/2,
+         terminate/2,
+         code_change/3]).
 
 -import(wolfpacs_utils, [b/1]).
 
@@ -103,11 +103,11 @@ all() ->
 %%=============================================================================
 
 -record(state, { names_to_ae = #{} :: map()
-	       , ae_to_names = #{} :: map()
-	       , ae_to_workers = #{} :: map()
-	       , ae_to_dests = #{} :: map()
-	       , studyuid_to_dests = #{} :: map()
-	       }).
+               , ae_to_names = #{} :: map()
+               , ae_to_workers = #{} :: map()
+               , ae_to_dests = #{} :: map()
+               , studyuid_to_dests = #{} :: map()
+               }).
 
 init(_) ->
     {ok, #state{}}.
@@ -115,15 +115,15 @@ init(_) ->
 handle_call({is_client_registered, AE}, _From, State) ->
     #state{ae_to_names=AEToNames} = State,
     case maps:get(AE, AEToNames, missing) of
-	missing ->
-	    {reply, {ok, false}, State};
-	_ ->
-	    {reply, {ok, true}, State}
+        missing ->
+            {reply, {ok, false}, State};
+        _ ->
+            {reply, {ok, true}, State}
     end;
 
 handle_call({workers_for_name, Name}, _From, State) ->
     #state{ names_to_ae=NamesToAE
-	  , ae_to_workers=AEToWorkers } = State,
+          , ae_to_workers=AEToWorkers } = State,
     AE = maps:get(Name, NamesToAE, missing),
     Workers = maps:get(AE, AEToWorkers, []),
     {reply, {ok, Workers}, State};
@@ -135,7 +135,7 @@ handle_call({workers_for_ae, AE}, _From, State) ->
 
 handle_call({dest_for_name, Name}, _From, State) ->
     #state{ names_to_ae=NamesToAE
-	  , ae_to_dests=AEToDests } = State,
+          , ae_to_dests=AEToDests } = State,
     AE = maps:get(Name, NamesToAE, missing),
     Dests = maps:get(AE, AEToDests, []),
     {reply, {ok, Dests}, State};
@@ -148,11 +148,11 @@ handle_call({dest_for_ae, AE}, _From, State) ->
 handle_call({dest_for_studyuid, StudyUID}, _From, State) ->
     #state{ studyuid_to_dests=StudyUIDToDests } = State,
     case maps:get(StudyUID, StudyUIDToDests, missing) of
-	missing ->
-	    {reply, {error, studyuid_not_mapped}, State};
-	DestName ->
-	    Result = wolfpacs_dests:remote(DestName),
-	    {reply, Result, State}
+        missing ->
+            {reply, {error, studyuid_not_mapped}, State};
+        DestName ->
+            Result = wolfpacs_dests:remote(DestName),
+            {reply, Result, State}
     end;
 
 handle_call(all, _From, State) ->
@@ -168,32 +168,32 @@ handle_cast(reset, _State) ->
 
 handle_cast({add, Name, AE}, State) ->
     #state{ names_to_ae=NamesToAE
-	  , ae_to_names=AEToNames
-	  , ae_to_workers=AEToWorkers
-	  , ae_to_dests=AEToDests
-	  } = State,
+          , ae_to_names=AEToNames
+          , ae_to_workers=AEToWorkers
+          , ae_to_dests=AEToDests
+          } = State,
     NewState = #state{names_to_ae=NamesToAE#{Name => AE},
-		      ae_to_names=AEToNames#{AE => Name},
-		      ae_to_workers=AEToWorkers#{AE => []},
-		      ae_to_dests=AEToDests#{AE => []}},
+                      ae_to_names=AEToNames#{AE => Name},
+                      ae_to_workers=AEToWorkers#{AE => []},
+                      ae_to_dests=AEToDests#{AE => []}},
     {noreply, NewState};
 
 handle_cast({assoc_worker, Name, Worker}, State) ->
     #state{ names_to_ae=NamesToAE
-	  , ae_to_workers=AEToWorkers } = State,
+          , ae_to_workers=AEToWorkers } = State,
     AE = maps:get(Name, NamesToAE),
     Workers = maps:get(AE, AEToWorkers, []),
     {noreply, State#state{ae_to_workers=AEToWorkers#{AE => [Worker|Workers]}}};
 
 handle_cast({assoc_dest, Name, Dest}, State) ->
     #state{ names_to_ae=NamesToAE
-	  , ae_to_dests=AEToDests } = State,
+          , ae_to_dests=AEToDests } = State,
     AE = maps:get(Name, NamesToAE),
     {noreply, State#state{ae_to_dests=AEToDests#{AE => Dest}}};
 
 handle_cast({assoc_studyuid, AE, StudyUID}, State) ->
     #state{ studyuid_to_dests=StudyUIDToDests
-	  , ae_to_dests=AEToDests } = State,
+          , ae_to_dests=AEToDests } = State,
     Dest = maps:get(AE, AEToDests),
     {noreply, State#state{studyuid_to_dests=StudyUIDToDests#{StudyUID => Dest}}};
 
@@ -221,12 +221,7 @@ trim(Item) ->
 %%==============================================================================
 %% Test
 %%==============================================================================
-
--include_lib("eunit/include/eunit.hrl").
-
-%%==============================================================================
-%% Test
-%%==============================================================================
+-ifdef(TEST).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -298,3 +293,5 @@ info_test() ->
 code_change_test() ->
     start_link(),
     ?assertEqual(code_change(1, state, extra), {ok, state}).
+
+-endif.

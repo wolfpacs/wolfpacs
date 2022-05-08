@@ -26,7 +26,7 @@
 
 -module(wolfpacs_abort).
 -export([encode/3,
-	 decode/2]).
+         decode/2]).
 
 -include("wolfpacs_types.hrl").
 
@@ -55,6 +55,8 @@ decode(Flow, _Data) ->
 %% Test
 %%==============================================================================
 
+-ifdef(TEST).
+
 -include_lib("eunit/include/eunit.hrl").
 
 encode_decode_test_() ->
@@ -70,3 +72,5 @@ encode_decode_test_() ->
     , ?_assertEqual(decode(no_flow, Incorrect0), error)
     , ?_assertEqual(decode(no_flow, Incorrect1), error)
     ].
+
+-endif.

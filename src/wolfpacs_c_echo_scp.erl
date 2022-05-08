@@ -46,6 +46,7 @@ encode(Flow, Strategy, UID, RQID) ->
 %%==============================================================================
 %% Test
 %%==============================================================================
+-ifdef(TEST).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -67,3 +68,5 @@ encode_test_() ->
     [ ?_assertEqual(encode(Flow, {implicit, little}, UID, RQID), Correct)
     , ?_assertEqual(encode(Flow, {explicit, little}, UID, RQID), Correct)
     ].
+
+-endif.

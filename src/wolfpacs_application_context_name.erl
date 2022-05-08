@@ -55,6 +55,7 @@ decode(Flow, _Data) ->
 %%==============================================================================
 %% Test
 %%==============================================================================
+-ifdef(TEST).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -70,3 +71,5 @@ test_encode_test_() ->
     , ?_assertEqual(decode(Flow, I0), error)
     , ?_assertEqual(decode(Flow, I1), error)
     ].
+
+-endif.

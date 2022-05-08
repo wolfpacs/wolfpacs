@@ -135,6 +135,7 @@ decode(Flow, Strategy, Data) ->
 %%==============================================================================
 %% Test
 %%==============================================================================
+-ifdef(TEST).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -168,3 +169,5 @@ encode_test() ->
     Correct = encoded(),
     Encoded = encode(no_flow, {explicit, little}, ?CLASS_UID, ?INSTANCE_UID),
     ?assertEqual(Encoded, Correct).
+
+-endif.

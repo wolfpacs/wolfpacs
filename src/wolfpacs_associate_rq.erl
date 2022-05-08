@@ -138,6 +138,7 @@ decode_variable_items(Flow, _, _, _, _) ->
 %%==============================================================================
 %% Test
 %%==============================================================================
+-ifdef(TEST).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -250,3 +251,5 @@ broken_encoded_decode_test() ->
     {ok, Broken, _} = wolfpacs_utils:split(Encoded, Length div 2),
 
     ?assertEqual(decode(no_flow, Broken), error).
+
+-endif.

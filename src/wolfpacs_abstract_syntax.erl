@@ -28,8 +28,7 @@
 
 -module(wolfpacs_abstract_syntax).
 -export([encode/1,
-	 decode/1]).
--import(wolfpacs_utils, [drop_last_byte/1]).
+         decode/1]).
 
 %%-------------------------------------------------------------------
 %% @doc Encodes an Abstract Syntax UID.
@@ -53,12 +52,12 @@ encode(AbstractSyntaxUID) ->
 decode(Payload = <<16#30, _, Length:16, Data/binary>>) ->
     NbBytes = byte_size(Data),
     case Length =< NbBytes of
-	true ->
-	    AbstractSyntaxString = binary:part(Data, 0, Length),
-	    Rest = binary:part(Data, Length, NbBytes - Length),
-	    {ok, AbstractSyntaxString, Rest};
-	false ->
-	    {error, Payload}
+        true ->
+            AbstractSyntaxString = binary:part(Data, 0, Length),
+            Rest = binary:part(Data, Length, NbBytes - Length),
+            {ok, AbstractSyntaxString, Rest};
+        false ->
+            {error, Payload}
     end;
 decode(Data) ->
     {error, Data}.
@@ -66,6 +65,7 @@ decode(Data) ->
 %%==============================================================================
 %% Test
 %%==============================================================================
+-ifdef(TEST).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -73,9 +73,11 @@ test_encode_test_() ->
     V0 = <<"1.2.840.10008.1.1">>,
     E0 = encode(V0),
     E1 = <<E0/binary, 42>>,
-    I0 = drop_last_byte(E0),
+    I0 = wolfpacs_utils:drop_last_byte(E0),
     I1 = <<1,2,3,4>>,
     [ ?_assert(decode(E0) =:= {ok, V0, <<>>}),
       ?_assert(decode(E1) =:= {ok, V0, <<42>>}),
       ?_assert(decode(I0) =:= {error, I0}),
       ?_assert(decode(I1) =:= {error, I1})].
+
+-endif.
