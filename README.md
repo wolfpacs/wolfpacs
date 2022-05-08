@@ -121,3 +121,44 @@ We use four different test in WolfPACS and we aim to test the software thoroughl
 | Integration tests      | Many Modules          | [Erlang Common Tests](https://erlang.org/doc/apps/common_test/introduction.html) |
 | Validation testing     | User requirements     | [Python Robot Framework](https://robotframework.org/)                            |
 | Property based testing | Hidden bugs / Fussing | [Erlang proper](https://propertesting.com/)                                      |
+
+## Distributed WolfPACS
+
+This section is inspired by the Riak Core Lite [getting started](https://riak-core-lite.github.io/blog/pages/getting-started/).
+
+### Build the nodes
+
+In this example we will create a three node cluster. To do that we need to create three slightly different releases.
+Please see the files `config/sys_devN.config` and `config/vm_devN.args` files for more detailes.
+
+``` sh
+make devrel
+```
+
+### Run the three nodes
+
+Open four different terminal windows/panes.
+
+#### Node 1
+
+``` sh
+make dev1-console
+```
+
+#### Node 2
+
+``` sh
+make dev2-console
+```
+
+#### Node 3
+
+``` sh
+make dev3-console
+```
+
+#### Status
+
+``` sh
+make devrel-status
+```

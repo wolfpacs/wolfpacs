@@ -6,7 +6,9 @@
   {applications,
    [kernel,
     stdlib,
-    ranch
+    ranch,
+    riak_core,
+    riak_core_lite_util
    ]},
   {env,[]},
   {modules, []},

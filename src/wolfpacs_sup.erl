@@ -51,38 +51,44 @@ start_link() ->
 %% Before OTP 18 tuples must be used to specify a child. e.g.
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
+    VNodeMaster = { wolfpacs_vnode_master,
+                    {riak_core_vnode_master, start_link, [wolfpacs_vnode]},
+                    permanent, 5000, worker, [riak_core_vnode_master]},
     Storage = #{id => wolfpacs_storage,
-		start => {wolfpacs_storage, start_link, []}},
+                start => {wolfpacs_storage, start_link, []}},
     GroupElementsCache = #{id => wolfpacs_group_elements_cache,
-			  start => {wolfpacs_group_elements_cache, start_link, []}},
+                           start => {wolfpacs_group_elements_cache, start_link, []}},
     SenderPool = #{id => wolfpacs_sender_pool,
-		   start => {wolfpacs_sender_pool, start_link, []}},
+                   start => {wolfpacs_sender_pool, start_link, []}},
     Clients = #{id => wolfpacs_clients,
-		start => {wolfpacs_clients, start_link, []}},
+                start => {wolfpacs_clients, start_link, []}},
     Workers = #{id => wolfpacs_workers,
-		start => {wolfpacs_workers, start_link, []}},
+                start => {wolfpacs_workers, start_link, []}},
     Dests = #{id => wolfpacs_dests,
-		start => {wolfpacs_dests, start_link, []}},
+              start => {wolfpacs_dests, start_link, []}},
     RouterInsight = #{id => wolfpacs_router_insight,
-		      start => {wolfpacs_router_insight, start_link, []}},
+                      start => {wolfpacs_router_insight, start_link, []}},
     RouteLogic = #{id => wolfpacs_route_logic,
-		    start => {wolfpacs_route_logic, start_link, []}},
+                   start => {wolfpacs_route_logic, start_link, []}},
     OutsideListener = ranch:child_spec(wolfpacs_outside,
-				       ranch_tcp, [{port, outside_port()}],
-				       wolfpacs_upper_layer, []),
+                                       ranch_tcp, [{port, outside_port()}],
+                                       wolfpacs_upper_layer, []),
     InsideListener = ranch:child_spec(wolfpacs_inside,
-				      ranch_tcp, [{port, inside_port()}],
-				      wolfpacs_upper_layer, []),
-    Children = [Storage,
-		GroupElementsCache,
-		SenderPool,
-		Clients,
-		Workers,
-		Dests,
-		RouterInsight,
-		RouteLogic,
-		OutsideListener,
-		InsideListener],
+                                      ranch_tcp, [{port, inside_port()}],
+                                      wolfpacs_upper_layer, []),
+
+    Children = [ VNodeMaster
+               , Storage
+               , GroupElementsCache
+               , SenderPool
+               , Clients
+               , Workers
+               , Dests
+               , RouterInsight
+               , RouteLogic
+               , OutsideListener
+               , InsideListener
+               ],
 
     {ok, {{one_for_one, 1, 1}, Children}}.
 
