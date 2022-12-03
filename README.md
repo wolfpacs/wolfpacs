@@ -26,6 +26,10 @@ Some critical bugs may still remain in the software.
 
 **WolfPACS** needs more black-box testing. If you have a use case please write raphexion+wolfpacs@gmail.com.
 
+### Next milestone
+
+- [ ] Support a secondary node which can take over or run in parallel to the main node.
+
 ## Bird's-eye view
 
 Imagine a Medical AI company called __Stroke Insight__.
