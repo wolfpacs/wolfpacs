@@ -13,7 +13,7 @@ jobs:
     name: OTP ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
     strategy:
       matrix:
-        otp: ["24.2.1"]
+        otp: ["24.3.4"]
         rebar: ["3.20.0"]
     env:
       cache_version: 1
