@@ -14,6 +14,7 @@ jobs:
     strategy:
       matrix:
         otp: ["24.2.1"]
+        rebar: ["3.20.0"]
     env:
       cache_version: 1
 
@@ -28,7 +29,7 @@ jobs:
         name: Setup Beam
         with:
           otp-version: ${{matrix.otp}}
-          elixir-version: ${{matrix.elixir}}
+          rebar3-version: ${{matrix.rebar}}
 
       - run: rebar3 compile
       - run: rebar3 xref
