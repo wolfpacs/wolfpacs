@@ -1,13 +1,13 @@
 %% encoding: UTF-8
 {application,wolfpacs}.
-{modules,[client_dest_handler,client_workers_handler,clients_handler,
-          dests_handler,wolfpacs_abort,wolfpacs_abstract_syntax,wolfpacs_app,
+{modules,[wolfpacs_abort,wolfpacs_abstract_syntax,wolfpacs_app,
           wolfpacs_application_context_name,wolfpacs_associate_ac,
           wolfpacs_associate_rq,wolfpacs_c_echo_scp,wolfpacs_c_echo_scu,
           wolfpacs_c_store_rq,wolfpacs_c_store_scp,wolfpacs_clients,
           wolfpacs_conformance,wolfpacs_data_element,wolfpacs_data_elements,
-          wolfpacs_dests,wolfpacs_file_format,wolfpacs_file_meta_information,
-          wolfpacs_flow,wolfpacs_group_elements,wolfpacs_group_elements_cache,
+          wolfpacs_db,wolfpacs_dests,wolfpacs_file_format,
+          wolfpacs_file_meta_information,wolfpacs_flow,
+          wolfpacs_group_elements,wolfpacs_group_elements_cache,
           wolfpacs_group_elements_db,wolfpacs_implementation_class,
           wolfpacs_item_inspector,wolfpacs_max_length,wolfpacs_p_data_tf,
           wolfpacs_pdv_item,wolfpacs_pdv_item_fragement,
@@ -28,4 +28,4 @@
           wolfpacs_vr_sl,wolfpacs_vr_sq,wolfpacs_vr_sq_item,
           wolfpacs_vr_sq_items,wolfpacs_vr_ss,wolfpacs_vr_st,wolfpacs_vr_tm,
           wolfpacs_vr_ui,wolfpacs_vr_ul,wolfpacs_vr_un,wolfpacs_vr_us,
-          wolfpacs_vr_utils,wolfpacs_vr_xs,wolfpacs_workers,workers_handler]}.
+          wolfpacs_vr_utils,wolfpacs_vr_xs,wolfpacs_workers]}.

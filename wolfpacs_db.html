@@ -2,15 +2,15 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Module wolfpacs_pdv_item_fragement</title>
+<title>Module wolfpacs_db</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
 <body bgcolor="white">
 <div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
 <hr>
 
-<h1>Module wolfpacs_pdv_item_fragement</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>WolfPACS's Protocol Data Value (PDV) Framgment Item.
+<h1>Module wolfpacs_db</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>wolfpacs database layer.
 <p>Copyright © 2019, Niklas Johansson &lt;raphexion@gmail.com&gt;
  
   WolfPACS is a DICOM load-balancer.
@@ -32,39 +32,39 @@
 
 <p><b>Authors:</b> Niklas Johansson (<a href="mailto:raphexion@gmail.com"><tt>raphexion@gmail.com</tt></a>).</p>
 
-<h2><a name="description">Description</a></h2><p>WolfPACS's Protocol Data Value (PDV) Framgment Item</p>
- 
-  <p>If bit 0 is set to 1, the following fragment shall contain Message Command information.  
-If bit 0 is set to 0, the following fragment shall contain Message Data Set information.</p>
- 
-  <p>If bit 1 is set to 1, the following fragment shall contain the last fragment.  
-If bit 1 is set to 0, the following fragment does not contain the last fragment.</p>
- 
-  <p>0 0 0 0 0 0 L? C?</p>
- 
-  <a href="http://dicom.nema.org/dicom/2013/output/chtml/part08/sect_E.2.html" target="_top"><tt>http://dicom.nema.org/dicom/2013/output/chtml/part08/sect_E.2.html</tt></a>
-  DICOM book pg 200
- 
+<h2><a name="description">Description</a></h2>wolfpacs database layer
 <h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#decode-1">decode/1</a></td><td>Decodes ad PDV Fragment Item.</td></tr>
-<tr><td valign="top"><a href="#encode-3">encode/3</a></td><td>Encodes ad PDV Fragment Item.</td></tr>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#add_client-2">add_client/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#add_worker-4">add_worker/4</a></td><td></td></tr>
+<tr><td valign="top"><a href="#install-1">install/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#uninstall-1">uninstall/1</a></td><td></td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
 
-<h3 class="function"><a name="decode-1">decode/1</a></h3>
+<h3 class="function"><a name="add_client-2">add_client/2</a></h3>
 <div class="spec">
-<p><tt>decode(Data::binary()) -&gt; {ok, IsLast::boolean(), IsCommand::boolean(), PDVData::binary()} | {error, binary()}</tt><br></p>
+<p><tt>add_client(Name, AE) -&gt; any()</tt></p>
 <p> </p>
-</div><p>Decodes ad PDV Fragment Item.
- </p>
+</div>
 
-<h3 class="function"><a name="encode-3">encode/3</a></h3>
+<h3 class="function"><a name="add_worker-4">add_worker/4</a></h3>
 <div class="spec">
-<p><tt>encode(IsLast::boolean(), IsCommand::boolean(), DVData::binary()) -&gt; &lt;&lt;_:8, _:_*8&gt;&gt;</tt><br></p>
+<p><tt>add_worker(Name, Host, Port, AE) -&gt; any()</tt></p>
 <p> </p>
-</div><p>Encodes ad PDV Fragment Item.
- </p>
+</div>
+
+<h3 class="function"><a name="install-1">install/1</a></h3>
+<div class="spec">
+<p><tt>install(Nodes) -&gt; any()</tt></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="uninstall-1">uninstall/1</a></h3>
+<div class="spec">
+<p><tt>uninstall(Nodes) -&gt; any()</tt></p>
+<p> </p>
+</div>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
