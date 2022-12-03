@@ -136,7 +136,19 @@ Workers on the other side, should contact WolfPACS on port 11113.
 Therefore, if you deploy WolfPACS, you need to expose 11112 to the outside world.
 Whereas you want to keep 11113 open inside the firewall (trusted side).
 
-![Logo](priv/mental-model.png)
+``` mermaid
+flowchart LR
+
+subgraph WolfPACS
+WP[Primary node]
+SD[Secondary node]
+end
+
+WP-.->WA
+
+CA[Clients]-->|Port 11112|WolfPACS
+WA[Workers]-->|Port 11113|WP
+```
 
 ## Client vs Destination
 
