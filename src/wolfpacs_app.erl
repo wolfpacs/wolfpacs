@@ -34,7 +34,10 @@
 %% API
 %%====================================================================
 
-start(_StartType, _StartArgs) ->
+start(normal, []) ->
+    Tables = [wolfpacs_db_workers, wolfpacs_db_clients],
+    Timeout = 5000,
+    mnesia:wait_for_tables(Tables, Timeout),
     wolfpacs_sup:start_link().
 
 %%--------------------------------------------------------------------
