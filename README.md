@@ -33,31 +33,98 @@ Some critical bugs may still remain in the software.
 ## Bird's-eye view
 
 Imagine a Medical AI company called __Stroke Insight__.
-They have developed a cutting-edge algorithm to analyse MRIs; to detect strokes.
-To analyse the images, they need computers with a lot of GPU power.
-These are critical resource, that need serve many clients concurrently.
-The machines are called **workers**.
-Once in a while they need to take the workers offline in order to upgrade the software and/or the hardware.
-To server multiple clients in a flexible way, they have deployed **WolfPACS** as a loadbalancer.
+They have developed a cutting-edge algorithm to analyze MRIs; to detect strokes.
+To analyze the images, they need computers with a lot of GPU power.
+We call these machines **workers**.
 
-Two clients, a hosptial in Stockholm and one in Berlin as bought their newest version of their software.
-Let's call them Stockholm Hospital (S) and Berlin Hospital (B).
-Both Stockholm and Berlin have their own central PACS systems.
+These expensive computers are critical resources, that need serve many clients concurrently.
+Moreover, once in a while, they need to take one or more workers offline in order to upgrade the software and/or the hardware.
+To avoid announcing a service window, they want to be able to move load between workers in a safe way.
 
-To run their algorithm, __Stroke Insight__ needs to get the original images to generate the extra information; the **derived series**.
+For this flexibility, they need and use **WolfPACS**.
+Which can enable a pool of heterogeneous workers (hardware, software) to serve multiple clients in a flexible way.
 
-![Logo](priv/dream1.png)
+### Image flow (primary and derived images)
 
-Steps in figure above.
+Two clients, a hospital in Stockholm and one in Berlin are using __Stroke Insight's__ software.
+Naturally, both the hospital in Stockholm and Berlin have their own central PACS systems on premises.
+Whereas, __Stroke Insight__ has their computers in a data center.
 
-1. A Radiologist sends the primary series to __Stroke Insight__ (which are running WolfPACS as a loadbalancer.)
-2. WolfPACS receives the series and routes the images to an appropriate worker with the right software [1].
+### Incoming
+
+```mermaid
+flowchart LR
+
+subgraph Stockholm
+S_CLIENT[Radiologist] -->|Trigger| S_PACS[Local PACS]
+end
+
+S_PACS -->|Primary series| WP
+
+subgraph Berlin
+B_CLIENT[Radiologist] -->|Trigger| B_PACS[Local PACS]
+end
+
+B_PACS -->WP
+
+subgraph WolfPACS
+WP[Primary node]
+SD[Secondary node]
+end
+
+subgraph Worker pool
+WP-->|Series with the same StudyUID\nwill always end up on the same worker|WA[Worker C]
+WB[Worker D]
+end
+
+subgraph Worker pool
+WP-->WC[Worker A]
+WD[Worker B]
+end
+```
+
+1. A Radiologist sends the primary series to __Stroke Insight__ (which are running WolfPACS as a load balancer.)
+2. WolfPACS receives the series and routes the images to an appropriate worker with the right software.
+
+### Returning
+
+``` mermaid
+flowchart LR
+
+subgraph Worker pool
+WA[Worker A]
+WB[Worker B]
+end
+
+subgraph Worker pool
+WC[Worker C]
+WD[Worker D]
+end
+
+WA-->|Derived series|WP
+WC-->WP
+
+subgraph WolfPACS
+WP[Primary node]
+SD[Secondary node]
+end
+
+WP-->|Route the derived series\nto the original sender|S_PACS
+WP-->B_PACS
+
+subgraph Berlin
+B_PACS[Local PACS]-->B_CLIENT[Radiologist]
+end
+
+subgraph Stockholm
+S_PACS[Local PACS]-->S_CLIENT[Radiologist]
+end
+```
+
 3. The worker sends the new derived series back to WolfPACS.
 4. Finally, WolfPACS sends the new series back to the correct destination.
 
-[1] A series is contains many imanges and WolfPACS makes sure that the whole series ends up on the same worker.
-
-## Mental model
+## Mental model for WolfPACS administration
 
 Any router / load balancer has two sides.
 One side facing the outside world.
@@ -75,8 +142,8 @@ Whereas you want to keep 11113 open inside the firewall (trusted side).
 
 A client is anyone with the correct Application Entity (AE). This acts as a shared secret / password.
 
-A destionation is a server that can receive DICOM data.
-WolfPACS needs a hostname, IP-address and called AE.
+A destination is a server that can receive DICOM data.
+WolfPACS needs a hostname, an IP-address and a called AE.
 
 So the client will send data to WolfPACS and the destination will receive data from WolfPACS.
 
