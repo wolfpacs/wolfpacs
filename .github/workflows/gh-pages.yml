@@ -14,7 +14,8 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      - uses: gleam-lang/setup-erlang@v1.1.0
+      - uses: erlef/setup-beam@v1
+        name: Setup elixir
         with:
           otp-version: 22.1
 
