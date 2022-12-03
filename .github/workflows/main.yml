@@ -21,7 +21,7 @@ jobs:
       - name: Install dcmtk (needed by common tests)
         run: sudo apt-get -y install dcmtk
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         name: Checkout
 
       - uses: erlef/setup-beam@v1
