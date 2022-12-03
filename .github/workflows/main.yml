@@ -14,6 +14,7 @@ jobs:
     strategy:
       matrix:
         otp: ["24.2.1"]
+        rebar: ["3.20.0"]
     env:
       cache_version: 1
 
@@ -21,14 +22,14 @@ jobs:
       - name: Install dcmtk (needed by common tests)
         run: sudo apt-get -y install dcmtk
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         name: Checkout
 
       - uses: erlef/setup-beam@v1
         name: Setup Beam
         with:
           otp-version: ${{matrix.otp}}
-          elixir-version: ${{matrix.elixir}}
+          rebar3-version: ${{matrix.rebar}}
 
       - run: rebar3 compile
       - run: rebar3 xref

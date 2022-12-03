@@ -22,7 +22,6 @@ USER appuser
 
 EXPOSE 11112
 EXPOSE 11113
-EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/wolfpacs"]
 CMD ["foreground"]

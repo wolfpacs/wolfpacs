@@ -7,8 +7,7 @@
    [kernel,
     stdlib,
     ranch,
-    cowboy,
-    jiffy
+    mnesia
    ]},
   {env,[]},
   {modules, []},
