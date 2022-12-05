@@ -35,7 +35,7 @@
 %%====================================================================
 
 start(normal, []) ->
-    Tables = [wolfpacs_db_workers, wolfpacs_db_clients],
+    Tables = [wolfpacs_db_worker, wolfpacs_db_client],
     Timeout = 5000,
     mnesia:wait_for_tables(Tables, Timeout),
     wolfpacs_sup:start_link().

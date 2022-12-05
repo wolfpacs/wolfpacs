@@ -16,3 +16,14 @@
 			 , port = 1112 :: integer()
 			 , ae = <<"ae">> :: binary()
 			 }).
+
+-record(wolfpacs_worker,
+        {name :: binary(),
+         host :: binary(),
+         port :: pos_integer(),
+         ae :: integer(),
+         accepting :: boolean()}).
+-record(wolfpacs_client,
+        {name :: binary(),
+         ae :: binary(),
+         workers :: [binary()]}).

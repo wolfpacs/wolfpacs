@@ -26,27 +26,19 @@
 
 -export([install/1, uninstall/1]).
 -export([add_worker/4, add_client/2]).
+-export([worker_by_name/1, client_by_name/1]).
 
--record(wolfpacs_workers,
-        {name :: binary(),
-         host :: binary(),
-         port :: pos_integer(),
-         ae :: integer(),
-         accepting :: boolean()}).
--record(wolfpacs_clients,
-        {name :: binary(),
-         ae :: binary(),
-         workers :: [binary()]}).
+-include("wolfpacs_types.hrl").
 
 install(Nodes) ->
     ok = mnesia:create_schema(Nodes),
     rpc:multicall(Nodes, application, start, [mnesia]),
-    mnesia:create_table(wolfpacs_workers,
-                        [{attributes, record_info(fields, wolfpacs_workers)},
-                         {index, [#wolfpacs_workers.host]},
+    mnesia:create_table(wolfpacs_worker,
+                        [{attributes, record_info(fields, wolfpacs_worker)},
+                         {index, [#wolfpacs_worker.host]},
                          {disc_copies, Nodes}]),
-    mnesia:create_table(wolfpacs_clients,
-                        [{attributes, record_info(fields, wolfpacs_clients)},
+    mnesia:create_table(wolfpacs_client,
+                        [{attributes, record_info(fields, wolfpacs_client)},
                          {disc_copies, Nodes},
                          {type, bag}]),
     rpc:multicall(Nodes, application, stop, [mnesia]).
@@ -58,19 +50,39 @@ add_worker(Name, Host, Port, AE) ->
     add_worker(Name, Host, Port, AE, true).
 
 add_worker(Name, Host, Port, AE, Accepting) ->
-    F = fun() ->
-                mnesia:write(#wolfpacs_workers{name=Name,
-                                               host=Host,
-                                               port=Port,
-                                               ae=AE,
-                                               accepting=Accepting})
-        end,
+    Worker = #wolfpacs_worker{name=Name,
+                              host=Host,
+                              port=Port,
+                              ae=AE,
+                              accepting=Accepting},
+    F = fun() -> mnesia:write(Worker) end,
     mnesia:activity(transaction, F).
 
 add_client(Name, AE) ->
+    Client = #wolfpacs_client{name=Name,
+                              ae=AE,
+                              workers=[]},
+    F = fun() -> mnesia:write(Client) end,
+    mnesia:activity(transaction, F).
+
+worker_by_name(Name) ->
     F = fun() ->
-                mnesia:write(#wolfpacs_clients{name=Name,
-                                               ae=AE,
-                                               workers=[]})
+                case mnesia:read({wolfpacs_worker, Name}) of
+                    [Worker] ->
+                        Worker;
+                    [] ->
+                        undefined
+                end
+        end,
+    mnesia:activity(transaction, F).
+
+client_by_name(Name) ->
+    F = fun() ->
+                case mnesia:read({wolfpacs_client, Name}) of
+                    [Client] ->
+                        Client;
+                    [] ->
+                        undefined
+                end
         end,
     mnesia:activity(transaction, F).
