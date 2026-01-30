@@ -1,7 +1,7 @@
 # WolfPACS
 
 ![Build status](https://github.com/wolfpacs/wolfpacs/actions/workflows/main.yml/badge.svg)
-[![codecov.io](https://codecov.io/gh/wolfpacs/wolfpacs/coverage.svg?branch=master)](https://codecov.io/gh/wolfpacs/wolfpacs?branch=master)
+[![codecov.io](https://codecov.io/gh/wolfpacs/wolfpacs/coverage.svg?branch=main)](https://codecov.io/gh/wolfpacs/wolfpacs?branch=main)
 [![Docker build](https://img.shields.io/docker/cloud/build/wolfpacs/wolfpacs.svg?color=green)](https://hub.docker.com/r/wolfpacs/wolfpacs)
 [![License GPLv3](https://img.shields.io/badge/License-GPLv3-blue)](https://www.gnu.org/licenses)
 [![Documentation](https://img.shields.io/badge/documentation-documentation-yellowgreen)](https://wolfpacs.github.io/wolfpacs/)
