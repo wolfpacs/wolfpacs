@@ -40,7 +40,7 @@ jobs:
       - run: rebar3 ct --readable true --cover --readable=false
       - run: rebar3 cover
 
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v4
         name: Upload coverage report
         with:
           fail_ci_if_error: true
