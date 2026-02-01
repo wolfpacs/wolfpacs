@@ -166,9 +166,11 @@ send_release_rq(State=#{sock := Sock}) ->
 
 bad_echo_test_() ->
     {ok, Echo} = start_link(),
-    [ ?_assertEqual(echo(Echo, "localhost1234", 11112, "foo", {explicit, little}), {error, nxdomain})
-    , ?_assertEqual(echo(Echo, "localhost", 21, "foo", {explicit, little}), {error, econnrefused})
-    , ?_assertEqual(echo(Echo, "localhost", 21, "foo", {foo, bar}), {error, econnrefused})
+    [ %% Use .invalid TLD (RFC 6761) - reserved and guaranteed to never resolve
+      ?_assertEqual(echo(Echo, "test.invalid", 11112, "foo", {explicit, little}), {error, nxdomain})
+      %% Use 127.0.0.1 instead of "localhost" for more predictable behavior
+    , ?_assertEqual(echo(Echo, "127.0.0.1", 1, "foo", {explicit, little}), {error, econnrefused})
+    , ?_assertEqual(echo(Echo, "127.0.0.1", 1, "foo", {foo, bar}), {error, econnrefused})
     ].
 
 gen_server_test_() ->
