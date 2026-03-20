@@ -18,11 +18,12 @@
     "default": {
         "pydicom": {
             "hashes": [
-                "sha256:1490b78152f275daa3058ae661a5dc720d8e99d17ab7dd62862beb5e87a200e2",
-                "sha256:881fe64316f1dbc137afec73df621a2ffa8b288b3ceb3cc639e75603cd38244e"
+                "sha256:35a594cc8ebae8dd40b1f632cd7c9f08ecaa147cb9305a9f9fbca2c03f5ccc93",
+                "sha256:ba2077bd76cb49e05fe51c3e1e0b2d77218f50c6c231120b443d29b38ea6b7a8"
             ],
             "index": "pypi",
-            "version": "==1.4.1"
+            "markers": "python_version >= '3.10'",
+            "version": "==2.4.5"
         },
         "pynetdicom": {
             "hashes": [
