@@ -35,15 +35,51 @@
 %%====================================================================
 
 start(normal, []) ->
-    Tables = [wolfpacs_db_worker, wolfpacs_db_client],
-    Timeout = 5000,
-    mnesia:wait_for_tables(Tables, Timeout),
+    ok = ensure_tables_ready(),
     wolfpacs_sup:start_link().
+
+%%====================================================================
+%% Internal functions
+%%====================================================================
+
+ensure_tables_ready() ->
+    %% Note: table names must match those created in wolfpacs_db:install/1.
+    ExpectedTables = [wolfpacs_worker, wolfpacs_client],
+    ExistingTables = mnesia:system_info(tables),
+    PresentTables = [T || T <- ExpectedTables, lists:member(T, ExistingTables)],
+
+    case PresentTables of
+        [] ->
+            %% Database is not installed (yet). WolfPACS currently runs without
+            %% relying on persistent Mnesia tables, so we don't fail startup.
+            logger:info("[WolfPACS] Mnesia tables not installed; skipping wait"),
+            ok;
+        _ ->
+            TimeoutMs = 5000,
+            case mnesia:wait_for_tables(PresentTables, TimeoutMs) of
+                ok ->
+                    ok;
+                {timeout, BadTabs} ->
+                    logger:warning("[WolfPACS] Timeout waiting for Mnesia tables: ~p", [BadTabs]),
+                    ok
+            end
+    end.
 
 %%--------------------------------------------------------------------
 stop(_State) ->
     ok.
 
 %%====================================================================
-%% Internal functions
+%% Test
 %%====================================================================
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+ensure_tables_ready_no_tables_test() ->
+    %% This test asserts that startup does not crash when the Mnesia schema/tables
+    %% are not installed (common in dev/test setups).
+    _ = application:ensure_all_started(mnesia),
+    ?assertEqual(ok, ensure_tables_ready()).
+
+-endif.
