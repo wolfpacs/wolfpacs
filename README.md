@@ -204,3 +204,36 @@ We use four different test in WolfPACS and we aim to test the software thoroughl
 | Integration tests      | Many Modules          | [Erlang Common Tests](https://erlang.org/doc/apps/common_test/introduction.html) |
 | Validation testing     | User requirements     | [Python Robot Framework](https://robotframework.org/)                            |
 | Property based testing | Hidden bugs / Fussing | [Erlang proper](https://propertesting.com/)                                      |
+
+## Development
+
+### Nix
+
+A simple Nix development shell is provided (Erlang/OTP, rebar3, dcmtk, and Python + Robot Framework for validation tests).
+
+Using flakes:
+
+```sh
+nix develop
+```
+
+Without flakes:
+
+```sh
+nix-shell
+```
+
+### Run tests & linting
+
+```sh
+make test        # eunit + common test + proper
+make xref
+make dialyzer
+```
+
+### Validation tests (Robot Framework)
+
+```sh
+cd validationtests
+robot tests/validation.robot
+```
