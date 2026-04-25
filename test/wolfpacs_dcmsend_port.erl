@@ -27,8 +27,20 @@ init({Host, Port}) ->
 handle_call({send, Filename}, From, State=#{host := Host, port := Port}) ->
     Args = ["-aec", "ninja", Host, Port, Filename],
     Options = [eof, {line, 4096}, exit_status, {args, Args}],
-    Proc = open_port({spawn_executable, "/usr/bin/dcmsend"}, Options),
+    Proc = open_port({spawn_executable, dcmsend_path()}, Options),
     {noreply, State#{from => From, proc => Proc}}.
+
+%% Resolve dcmsend path in a way that works both on CI and in Nix shells.
+%% You can override via the DCMSEND env var.
+dcmsend_path() ->
+    case os:getenv("DCMSEND") of
+        false ->
+            case os:find_executable("dcmsend") of
+                false -> "/usr/bin/dcmsend";
+                Path -> Path
+            end;
+        Path -> Path
+    end.
 
 handle_cast(_What, State) ->
     {noreply, State}.
